@@ -1,6 +1,9 @@
 # ไฟล์: board.py
 import sys, os
+import copy 
 from pieces import Rook, Knight, Bishop, Queen, King, Pawn
+# ✨ อัปเดต Path ให้ชี้ไปที่โฟลเดอร์ components
+from components.history_manager import HistoryManager 
 
 class ChessBoard:
     def __init__(self):
@@ -8,7 +11,8 @@ class ChessBoard:
         self.current_turn = 'white'
         self.last_move = None
         self.en_passant_target = None 
-        self.game_result = None # เก็บผลการแข่งขัน เช่น DRAW หรือ CHECKMATE
+        self.game_result = None
+        self.history = HistoryManager() 
 
     def create_initial_board(self):
         b = [[None for _ in range(8)] for _ in range(8)]
@@ -33,11 +37,9 @@ class ChessBoard:
         for r in range(8):
             for c in range(8):
                 if self.board[r][c] and self.board[r][c].color == piece.color: continue
-                # ส่งค่า En Passant ให้เบี้ยเช็ค
                 valid = piece.is_valid_move((sr, sc), (r, c), self.board, self.en_passant_target) if isinstance(piece, Pawn) else piece.is_valid_move((sr, sc), (r, c), self.board)
                 if valid and not self.simulate_move(sr, sc, r, c, piece.color):
                     moves.append((r, c))
-        # กติกาเข้าป้อม (Castling)
         if isinstance(piece, King) and not piece.has_moved and not self.is_in_check(piece.color):
             for tc in [2, 6]:
                 if self.check_castling_logic(sr, sc, sr, tc): moves.append((sr, tc))
@@ -60,19 +62,23 @@ class ChessBoard:
         if not p or p.color != self.current_turn or self.game_result: return False
         
         is_castle = isinstance(p, King) and abs(sc-ec) == 2
-        is_ep = isinstance(p, Pawn) and (er, ec) == self.en_passant_target # เช็คการกินผ่าน
+        is_ep = isinstance(p, Pawn) and (er, ec) == self.en_passant_target
         
         legal_moves = self.get_legal_moves((sr, sc))
         if (er, ec) not in legal_moves: return False
 
-        if is_ep: self.board[sr][ec] = None # ลบหมากที่โดนกินผ่าน
+        target = self.board[er][ec]
+        is_capture = (target is not None) or is_ep
+        move_text = self.history.generate_move_text(p, sr, sc, er, ec, is_capture, is_castle)
+        self.history.save_state(self, move_text)
+
+        if is_ep: self.board[sr][ec] = None 
         
         if is_castle:
             rc, nrc = (0, 3) if ec == 2 else (7, 5)
             self.board[sr][nrc], self.board[sr][rc] = self.board[sr][rc], None
             self.board[sr][nrc].has_moved = True
 
-        # ตั้งค่า En Passant Target สำหรับตาถัดไป ✨
         if isinstance(p, Pawn) and abs(sr - er) == 2:
             self.en_passant_target = ((sr + er) // 2, sc)
         else:
@@ -84,6 +90,16 @@ class ChessBoard:
 
         if isinstance(p, Pawn) and (er == 0 or er == 7): return "promote"
         self.complete_turn()
+        return True
+
+    def undo_move(self):
+        state = self.history.pop_state()
+        if not state: return False
+        self.board = state['board']
+        self.current_turn = state['current_turn']
+        self.last_move = state['last_move']
+        self.en_passant_target = state['en_passant_target']
+        self.game_result = state['game_result']
         return True
 
     def find_king(self, color):
@@ -103,19 +119,17 @@ class ChessBoard:
         return False
 
     def check_insufficient_material(self):
-        """✨ กฎการเสมอ: หมากไม่พอรุกฆาต"""
         pieces = []
         for row in self.board:
             for p in row:
                 if p: pieces.append(p.__class__.__name__)
-        if len(pieces) <= 2: return True # เหลือแค่ King ปะทะ King
+        if len(pieces) <= 2: return True 
         if len(pieces) == 3 and ('Bishop' in pieces or 'Knight' in pieces): return True
         return False
 
     def complete_turn(self):
         self.current_turn = 'black' if self.current_turn == 'white' else 'white'
         
-        # เช็ค Stalemate และ Checkmate ✨
         has_moves = False
         for r in range(8):
             for c in range(8):
@@ -124,16 +138,21 @@ class ChessBoard:
                     if self.get_legal_moves((r, c)): has_moves = True; break
             if has_moves: break
             
+        is_check = self.is_in_check(self.current_turn)
         if not has_moves:
-            if self.is_in_check(self.current_turn):
+            if is_check:
                 winner = 'black' if self.current_turn == 'white' else 'white'
                 self.game_result = f"CHECKMATE! {winner.upper()} WINS"
+                self.history.add_suffix_to_last_move("#") 
             else:
-                self.game_result = "DRAW - STALEMATE" # อับจน = เสมอ
+                self.game_result = "DRAW - STALEMATE" 
         elif self.check_insufficient_material():
             self.game_result = "DRAW - INSUFFICIENT MATERIAL"
+        elif is_check:
+            self.history.add_suffix_to_last_move("+") 
 
     def promote_pawn(self, r, c, cls):
         color = self.board[r][c].color
         self.board[r][c] = cls(color)
+        self.history.add_suffix_to_last_move(f"={self.board[r][c].name.upper()}")
         self.complete_turn()
