@@ -1,112 +1,123 @@
+# ไฟล์: gui.py
 from kivy.app import App
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.label import Label
 from kivy.uix.button import Button
 from kivy.uix.image import Image
+from kivy.uix.modalview import ModalView
+from kivy.graphics import Color, Line 
 from board import ChessBoard
 
 class ChessSquare(Button):
     def __init__(self, row, col, **kwargs):
         super().__init__(**kwargs)
-        self.row = row
-        self.col = col
+        self.row, self.col = row, col
         self.background_normal = '' 
         self.background_down = ''
-        self.update_color()
-
-        # สร้าง Image ฝังไว้ในปุ่มเลย (ตอนแรกยังไม่โชว์รูป)
         self.piece_img = Image(allow_stretch=True, keep_ratio=True, opacity=0)
         self.add_widget(self.piece_img)
+        self.is_last_move = False
+        self.is_legal = False
+        self.update_square_style()
+        self.bind(pos=self.sync_layout, size=self.sync_layout)
 
-        # ผูกตำแหน่งและขนาดของรูป ให้ขยายและขยับตามปุ่มเสมอ
-        self.bind(pos=self.update_img_pos_size, size=self.update_img_pos_size)
-
-    def update_img_pos_size(self, *args):
-        """จัดตำแหน่งรูปหมากให้อยู่ตรงกลางและมีขนาดพอดีกับช่อง"""
-        margin_x = self.width * 0.075
-        margin_y = self.height * 0.075
+    def sync_layout(self, *args):
         self.piece_img.size = (self.width * 0.85, self.height * 0.85)
-        self.piece_img.pos = (self.x + margin_x, self.y + margin_y)
+        self.piece_img.center = self.center
+        self.canvas.after.clear()
+        with self.canvas.after:
+            if self.is_legal:
+                Color(0.1, 1, 0.1, 1) # เขียวนีออน (ทางเดินได้)
+                Line(rectangle=(self.x + 1, self.y + 1, self.width - 2, self.height - 2), width=3)
+            elif self.is_last_move:
+                Color(1, 0.5, 0, 1) # ส้มสด (ตาเดินล่าสุด)
+                Line(rectangle=(self.x, self.y, self.width, self.height), width=2.5)
 
-    def update_color(self, highlight=False):
-        if highlight:
-            self.background_color = (1, 0.9, 0.3, 0.6)  # สีเหลืองไฮไลต์
-        elif (self.row + self.col) % 2 == 0:
-            self.background_color = (0.93, 0.93, 0.85, 1)  # สีครีม
-        else:
-            self.background_color = (0.46, 0.58, 0.34, 1)  # สีเขียวมะกอก
+    def update_square_style(self, highlight=False, is_legal=False, is_check=False, is_last=False):
+        self.is_last_move = is_last
+        self.is_legal = is_legal
+        if (self.row + self.col) % 2 == 0: self.background_color = (0.94, 0.94, 0.91, 1) # ขาวนวล
+        else: self.background_color = (0.46, 0.59, 0.74, 1) # ฟ้า Tournament
+        if is_check: self.background_color = (1, 0.2, 0.2, 0.8) # ราชาโดนรุก (แดง)
+        elif highlight: self.background_color = (1, 1, 0, 0.6) # เลือกหมาก (เหลือง)
+        self.sync_layout()
 
-    def set_piece(self, img_path):
-        """อัปเดตรูปภาพหมากในช่องนี้"""
-        if img_path:
-            self.piece_img.source = img_path
-            self.piece_img.opacity = 1  # โชว์รูป
-        else:
-            self.piece_img.opacity = 0  # ซ่อนรูปถ้าไม่มีหมาก
+    def set_piece_icon(self, path):
+        if path:
+            self.piece_img.source = path
+            self.piece_img.opacity = 1
+        else: self.piece_img.opacity = 0
+
+class PromotionPopup(ModalView):
+    def __init__(self, color, callback, **kwargs):
+        super().__init__(size_hint=(0.6, 0.2), auto_dismiss=False, **kwargs)
+        layout = GridLayout(cols=4, padding=10, spacing=10)
+        from pieces import Queen, Rook, Bishop, Knight
+        ops = [Queen, Rook, Bishop, Knight]; names = ['queen', 'rook', 'bishop', 'knight']
+        for cls, n in zip(ops, names):
+            btn = Button(background_normal=f"assets/{color}/{n}.png")
+            btn.bind(on_release=lambda b, c=cls: callback(c))
+            layout.add_widget(btn)
+        self.add_widget(layout)
 
 class ChessGameUI(BoxLayout):
     def __init__(self, **kwargs):
         super().__init__(orientation='vertical', **kwargs)
         self.game = ChessBoard()
-        self.selected_square = None
-        
-        self.board_container = BoxLayout(orientation='horizontal')
-        self.create_ui()
-        self.add_widget(self.board_container)
+        self.selected = None
+        # เพิ่มแถบแจ้งสถานะเกม ✨
+        self.info_label = Label(text="WHITE'S TURN", size_hint_y=0.1, color=(0.2,0.2,0.2,1))
+        self.add_widget(self.info_label)
+        self.container = BoxLayout(orientation='horizontal')
+        self.add_widget(self.container)
+        self.init_board_ui()
 
-    def create_ui(self):
-        # แถบตัวเลข 8-1 ด้านซ้าย
+    def init_board_ui(self):
+        self.container.clear_widgets()
         ranks = GridLayout(cols=1, size_hint_x=0.05)
-        for i in range(8, 0, -1):
-            ranks.add_widget(Label(text=str(i), color=(0.2, 0.2, 0.2, 1)))
-        self.board_container.add_widget(ranks)
-
-        # สร้างตาราง 8x8
+        for i in range(8, 0, -1): ranks.add_widget(Label(text=str(i), color=(0.2, 0.2, 0.2, 1)))
+        self.container.add_widget(ranks)
         self.grid = GridLayout(cols=8, rows=8)
         self.squares = {}
         for r in range(8):
             for c in range(8):
-                square = ChessSquare(row=r, col=c)
-                square.bind(on_release=self.on_square_click)
-                self.grid.add_widget(square)
-                self.squares[(r, c)] = square
-        
-        self.board_container.add_widget(self.grid)
-        self.update_board_ui()
+                sq = ChessSquare(row=r, col=c); sq.bind(on_release=self.on_square_tap)
+                self.grid.add_widget(sq); self.squares[(r, c)] = sq
+        self.container.add_widget(self.grid)
+        self.refresh_ui()
 
-    def update_board_ui(self):
-        """วาดกระดานและอัปเดตหมากใหม่ทั้งหมด"""
-        for (r, c), square in self.squares.items():
-            square.update_color(highlight=(self.selected_square == (r, c)))
-            
-            piece = self.game.board[r][c]
-            if piece:
-                piece_name = piece.__class__.__name__.lower()
-                img_path = f"assets/{piece.color}/{piece_name}.png"
-                square.set_piece(img_path)
-            else:
-                square.set_piece(None)
-
-    def on_square_click(self, instance):
-        r, c = instance.row, instance.col
-        
-        if self.selected_square is None:
-            if self.game.board[r][c] and self.game.board[r][c].color == self.game.current_turn:
-                self.selected_square = (r, c)
-            elif self.game.board[r][c]:
-                print(f"❌ ยังไม่ใช่ตาของสี {self.game.board[r][c].color}!")
+    def refresh_ui(self, legal_moves=[]):
+        # อัปเดตข้อความแจ้งตาเดินหรือผลเกม
+        if self.game.game_result:
+            self.info_label.text = self.game.game_result
         else:
-            start_r, start_c = self.selected_square
-            self.game.move_piece(start_r, start_c, r, c)
-            self.selected_square = None
-        
-        self.update_board_ui()
+            self.info_label.text = f"{self.game.current_turn.upper()}'S TURN"
+
+        check_pos = self.game.find_king(self.game.current_turn) if self.game.is_in_check(self.game.current_turn) else None
+        for (r, c), sq in self.squares.items():
+            is_last = (r, c) in self.game.last_move if self.game.last_move else False
+            sq.update_square_style(highlight=(self.selected == (r, c)), is_legal=((r,c) in legal_moves), is_check=((r,c) == check_pos), is_last=is_last)
+            p = self.game.board[r][c]
+            sq.set_piece_icon(f"assets/{p.color}/{p.__class__.__name__.lower()}.png" if p else None)
+
+    def on_square_tap(self, instance):
+        if self.game.game_result: return # จบเกมแล้วกดไม่ได้
+        r, c = instance.row, instance.col
+        if self.selected is None:
+            if self.game.board[r][c] and self.game.board[r][c].color == self.game.current_turn:
+                self.selected = (r, c)
+                self.refresh_ui(self.game.get_legal_moves((r, c)))
+        else:
+            sr, sc = self.selected
+            res = self.game.move_piece(sr, sc, r, c)
+            if res == "promote":
+                def do_p(cls): self.game.promote_pawn(r, c, cls); pop.dismiss(); self.refresh_ui()
+                pop = PromotionPopup(self.game.board[r][c].color, do_p); pop.open()
+            self.selected = None
+            self.refresh_ui()
 
 class ChessApp(App):
-    def build(self):
-        self.title = "Roguelike Chess - Pro Edition"
-        return ChessGameUI()
+    def build(self): return ChessGameUI()
 
-if __name__ == "__main__":
-    ChessApp().run()
+if __name__ == "__main__": ChessApp().run()

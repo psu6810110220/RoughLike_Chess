@@ -1,170 +1,61 @@
 # ไฟล์: pieces.py
 
 class Piece:
-    # แม่แบบของหมากทุกตัว
     def __init__(self, color, name):
-        self.color = color  # 'white' หรือ 'black'
-        self.name = name    # ตัวอักษรที่จะแสดงบนกระดาน เช่น 'R', 'n'
-        
-    def is_valid_move(self, start_pos, end_pos, board):
-        # ฟังก์ชันนี้จะถูกเขียนทับ (Override) โดยหมากแต่ละชนิด
-        pass
+        self.color = color
+        self.name = name
+        self.has_moved = False
+
+    def is_path_clear(self, start, end, board):
+        """เช็คเส้นทางเดินห้ามมีหมากขวาง"""
+        sr, sc, er, ec = start[0], start[1], end[0], end[1]
+        step_r = 0 if sr == er else (1 if er > sr else -1)
+        step_c = 0 if sc == ec else (1 if ec > sc else -1)
+        cr, cc = sr + step_r, sc + step_c
+        while (cr, cc) != (er, ec):
+            if board[cr][cc]: return False
+            cr, cc = cr + step_r, cc + step_c
+        return True
 
 class Rook(Piece):
-    def __init__(self, color):
-        name = 'R' if color == 'white' else 'r'
-        super().__init__(color, name)
-        
-    def is_valid_move(self, start_pos, end_pos, board):
-        start_row, start_col = start_pos
-        end_row, end_col = end_pos
-        
-        # เดินเส้นตรง
-        if start_row == end_row or start_col == end_col:
-            step_row = 0 if start_row == end_row else (1 if end_row > start_row else -1)
-            step_col = 0 if start_col == end_col else (1 if end_col > start_col else -1)
-            
-            curr_row, curr_col = start_row + step_row, start_col + step_col
-            while curr_row != end_row or curr_col != end_col:
-                if board[curr_row][curr_col] is not None:
-                    print(f"ผิดกติกา! มีหมากขวางทาง {self.name} อยู่")
-                    return False
-                curr_row += step_row
-                curr_col += step_col
-            return True
-            
-        print(f"ผิดกติกา! {self.name} (เรือ) ต้องเดินเป็นเส้นตรง")
+    def __init__(self, color): super().__init__(color, 'R' if color == 'white' else 'r')
+    def is_valid_move(self, start, end, board):
+        if start[0] == end[0] or start[1] == end[1]: return self.is_path_clear(start, end, board)
         return False
 
 class Knight(Piece):
-    def __init__(self, color):
-        name = 'N' if color == 'white' else 'n'
-        super().__init__(color, name)
-        
-    def is_valid_move(self, start_pos, end_pos, board):
-        start_row, start_col = start_pos
-        end_row, end_col = end_pos
-        
-        row_diff = abs(start_row - end_row)
-        col_diff = abs(start_col - end_col)
-        
-        # เดินรูปตัว L
-        if (row_diff == 2 and col_diff == 1) or (row_diff == 1 and col_diff == 2):
-            return True
-            
-        print(f"ผิดกติกา! {self.name} (ม้า) ต้องเดินเป็นรูปตัว L")
-        return False
+    def __init__(self, color): super().__init__(color, 'N' if color == 'white' else 'n')
+    def is_valid_move(self, start, end, board):
+        rd, cd = abs(start[0]-end[0]), abs(start[1]-end[1])
+        return (rd == 2 and cd == 1) or (rd == 1 and cd == 2)
 
 class Bishop(Piece):
-    def __init__(self, color):
-        name = 'B' if color == 'white' else 'b'
-        super().__init__(color, name)
-        
-    def is_valid_move(self, start_pos, end_pos, board):
-        start_row, start_col = start_pos
-        end_row, end_col = end_pos
-        
-        # เดินแนวทแยง
-        if abs(start_row - end_row) == abs(start_col - end_col):
-            step_row = 1 if end_row > start_row else -1
-            step_col = 1 if end_col > start_col else -1
-            
-            curr_row, curr_col = start_row + step_row, start_col + step_col
-            while curr_row != end_row and curr_col != end_col:
-                if board[curr_row][curr_col] is not None:
-                    print(f"ผิดกติกา! มีหมากขวางทาง {self.name} อยู่")
-                    return False
-                curr_row += step_row
-                curr_col += step_col
-            return True
-            
-        print(f"ผิดกติกา! {self.name} (บิชอป) ต้องเดินแนวทแยง")
+    def __init__(self, color): super().__init__(color, 'B' if color == 'white' else 'b')
+    def is_valid_move(self, start, end, board):
+        if abs(start[0]-end[0]) == abs(start[1]-end[1]): return self.is_path_clear(start, end, board)
         return False
 
 class Queen(Piece):
-    def __init__(self, color):
-        name = 'Q' if color == 'white' else 'q'
-        super().__init__(color, name)
-        
-    def is_valid_move(self, start_pos, end_pos, board):
-        start_row, start_col = start_pos
-        end_row, end_col = end_pos
-        
-        is_straight = (start_row == end_row or start_col == end_col)
-        is_diagonal = (abs(start_row - end_row) == abs(start_col - end_col))
-        
-        # ควีน = เดินตรง (เรือ) + เดินเฉียง (บิชอป)
-        if is_straight or is_diagonal:
-            step_row = 0 if start_row == end_row else (1 if end_row > start_row else -1)
-            step_col = 0 if start_col == end_col else (1 if end_col > start_col else -1)
-            
-            curr_row, curr_col = start_row + step_row, start_col + step_col
-            while curr_row != end_row or curr_col != end_col:
-                if board[curr_row][curr_col] is not None:
-                    print(f"ผิดกติกา! มีหมากขวางทาง {self.name} อยู่")
-                    return False
-                curr_row += step_row
-                curr_col += step_col
-            return True
-            
-        print(f"ผิดกติกา! {self.name} (ควีน) ต้องเดินเป็นเส้นตรงหรือแนวทแยงเท่านั้น")
-        return False
+    def __init__(self, color): super().__init__(color, 'Q' if color == 'white' else 'q')
+    def is_valid_move(self, start, end, board):
+        return Rook(self.color).is_valid_move(start, end, board) or Bishop(self.color).is_valid_move(start, end, board)
 
 class King(Piece):
-    def __init__(self, color):
-        name = 'K' if color == 'white' else 'k'
-        super().__init__(color, name)
-        
-    def is_valid_move(self, start_pos, end_pos, board):
-        start_row, start_col = start_pos
-        end_row, end_col = end_pos
-        
-        # คิงเดินได้รอบทิศทาง แต่ไปได้แค่ทีละ 1 ช่อง
-        if max(abs(start_row - end_row), abs(start_col - end_col)) == 1:
-            return True
-            
-        print(f"ผิดกติกา! {self.name} (คิง) เดินได้แค่ทีละ 1 ช่องรอบตัว")
-        return False
+    def __init__(self, color): super().__init__(color, 'K' if color == 'white' else 'k')
+    def is_valid_move(self, start, end, board):
+        return max(abs(start[0]-end[0]), abs(start[1]-end[1])) == 1
 
 class Pawn(Piece):
-    def __init__(self, color):
-        name = 'P' if color == 'white' else 'p'
-        super().__init__(color, name)
-        
-    def is_valid_move(self, start_pos, end_pos, board):
-        start_row, start_col = start_pos
-        end_row, end_col = end_pos
-        target_piece = board[end_row][end_col]
-        
-        # กำหนดทิศทาง: สีขาวเดินขึ้น (-1), สีดำเดินลง (+1)
-        direction = -1 if self.color == 'white' else 1
-        # แถวเริ่มต้น: สีขาวเริ่มที่แถว 6, สีดำเริ่มที่แถว 1
-        start_row_initial = 6 if self.color == 'white' else 1
-        
-        # กติกาที่ 1: เดินตรง 1 ช่อง (ช่องเป้าหมายต้องเป็นช่องว่าง)
-        if start_col == end_col and end_row == start_row + direction:
-            if target_piece is None:
-                return True
-            else:
-                print("ผิดกติกา! เบี้ยเดินตรงไปกินหมากไม่ได้")
-                return False
-                
-        # กติกาที่ 2: เดินตรง 2 ช่อง (ทำได้เฉพาะก้าวแรก และไม่มีอะไรขวาง)
-        if start_col == end_col and start_row == start_row_initial and end_row == start_row + (2 * direction):
-            if target_piece is None and board[start_row + direction][start_col] is None:
-                return True
-            else:
-                print("ผิดกติกา! มีหมากขวางทาง หรือช่องเป้าหมายไม่ว่าง")
-                return False
-                
-        # กติกาที่ 3: กินเฉียง 1 ช่อง (ต้องมีหมากฝ่ายตรงข้ามอยู่)
-        if abs(start_col - end_col) == 1 and end_row == start_row + direction:
-            if target_piece is not None:
-                # ระบบสีเดียวกันห้ามกินถูกเช็คใน board.py แล้ว ตรงนี้เลยผ่านได้
-                return True
-            else:
-                print("ผิดกติกา! เบี้ยเดินเฉียงช่องว่างไม่ได้ (ต้องกินเท่านั้น)")
-                return False
-                
-        print(f"ผิดกติกา! {self.name} (เบี้ย) เดินแบบนั้นไม่ได้")
+    def __init__(self, color): super().__init__(color, 'P' if color == 'white' else 'p')
+    def is_valid_move(self, start, end, board, ep_target=None):
+        sr, sc, er, ec = start[0], start[1], end[0], end[1]
+        dir = -1 if self.color == 'white' else 1
+        target = board[er][ec]
+        # เดินตรง 1-2 ช่อง
+        if sc == ec and er == sr + dir and not target: return True
+        if sc == ec and sr == (6 if self.color == 'white' else 1) and er == sr + 2*dir and not target and not board[sr+dir][sc]: return True
+        # กินเฉียงปกติ
+        if abs(sc - ec) == 1 and er == sr + dir and target: return True
+        # ✨ กติกา En Passant (การกินผ่าน)
+        if ep_target and (er, ec) == ep_target and abs(sc - ec) == 1 and er == sr + dir: return True
         return False

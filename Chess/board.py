@@ -1,122 +1,139 @@
-import sys
-import os
+# ไฟล์: board.py
+import sys, os
 from pieces import Rook, Knight, Bishop, Queen, King, Pawn
 
 class ChessBoard:
     def __init__(self):
         self.board = self.create_initial_board()
-        self.current_turn = 'white'  # เริ่มเกมที่สีขาวเสมอ
+        self.current_turn = 'white'
+        self.last_move = None
+        self.en_passant_target = None 
+        self.game_result = None # เก็บผลการแข่งขัน เช่น DRAW หรือ CHECKMATE
 
     def create_initial_board(self):
-        board = [[None for _ in range(8)] for _ in range(8)]
-        # หมากสีดำ (ด้านบนสุด แถวที่ 0 และ 1)
-        board[0] = [Rook('black'), Knight('black'), Bishop('black'), Queen('black'), King('black'), Bishop('black'), Knight('black'), Rook('black')]
-        board[1] = [Pawn('black') for _ in range(8)]
-        
-        # หมากสีขาว (ด้านล่างสุด แถวที่ 6 และ 7)
-        board[6] = [Pawn('white') for _ in range(8)]
-        board[7] = [Rook('white'), Knight('white'), Bishop('white'), Queen('white'), King('white'), Bishop('white'), Knight('white'), Rook('white')]
-        return board
+        b = [[None for _ in range(8)] for _ in range(8)]
+        b[0] = [Rook('black'), Knight('black'), Bishop('black'), Queen('black'), King('black'), Bishop('black'), Knight('black'), Rook('black')]
+        b[1] = [Pawn('black') for _ in range(8)]
+        b[6] = [Pawn('white') for _ in range(8)]
+        b[7] = [Rook('white'), Knight('white'), Bishop('white'), Queen('white'), King('white'), Bishop('white'), Knight('white'), Rook('white')]
+        return b
 
-    def display(self):
-        print("\n  0 1 2 3 4 5 6 7")
-        print("  ----------------")
-        for i, row in enumerate(self.board):
-            row_display = [piece.__class__.__name__[:1] if piece else '.' for piece in row]
-            print(f"{i}|" + " ".join(row_display))
-        print("\n")
+    def simulate_move(self, sr, sc, er, ec, color):
+        p, t = self.board[sr][sc], self.board[er][ec]
+        self.board[sr][sc], self.board[er][ec] = None, p
+        check = self.is_in_check(color)
+        self.board[sr][sc], self.board[er][ec] = p, t
+        return check
+
+    def get_legal_moves(self, pos):
+        sr, sc = pos
+        piece = self.board[sr][sc]
+        if not piece: return []
+        moves = []
+        for r in range(8):
+            for c in range(8):
+                if self.board[r][c] and self.board[r][c].color == piece.color: continue
+                # ส่งค่า En Passant ให้เบี้ยเช็ค
+                valid = piece.is_valid_move((sr, sc), (r, c), self.board, self.en_passant_target) if isinstance(piece, Pawn) else piece.is_valid_move((sr, sc), (r, c), self.board)
+                if valid and not self.simulate_move(sr, sc, r, c, piece.color):
+                    moves.append((r, c))
+        # กติกาเข้าป้อม (Castling)
+        if isinstance(piece, King) and not piece.has_moved and not self.is_in_check(piece.color):
+            for tc in [2, 6]:
+                if self.check_castling_logic(sr, sc, sr, tc): moves.append((sr, tc))
+        return moves
+
+    def check_castling_logic(self, sr, sc, er, ec):
+        p = self.board[sr][sc]
+        rc = 0 if ec == 2 else 7
+        rook = self.board[sr][rc]
+        if not rook or not isinstance(rook, Rook) or rook.has_moved: return False
+        step = 1 if ec == 6 else -1
+        for col in range(sc + step, rc, step):
+            if self.board[sr][col]: return False
+        for col in [sc + step, sc + 2*step]:
+            if self.simulate_move(sr, sc, sr, col, p.color): return False
+        return True
+
+    def move_piece(self, sr, sc, er, ec):
+        p = self.board[sr][sc]
+        if not p or p.color != self.current_turn or self.game_result: return False
+        
+        is_castle = isinstance(p, King) and abs(sc-ec) == 2
+        is_ep = isinstance(p, Pawn) and (er, ec) == self.en_passant_target # เช็คการกินผ่าน
+        
+        legal_moves = self.get_legal_moves((sr, sc))
+        if (er, ec) not in legal_moves: return False
+
+        if is_ep: self.board[sr][ec] = None # ลบหมากที่โดนกินผ่าน
+        
+        if is_castle:
+            rc, nrc = (0, 3) if ec == 2 else (7, 5)
+            self.board[sr][nrc], self.board[sr][rc] = self.board[sr][rc], None
+            self.board[sr][nrc].has_moved = True
+
+        # ตั้งค่า En Passant Target สำหรับตาถัดไป ✨
+        if isinstance(p, Pawn) and abs(sr - er) == 2:
+            self.en_passant_target = ((sr + er) // 2, sc)
+        else:
+            self.en_passant_target = None
+
+        self.last_move = ((sr, sc), (er, ec))
+        self.board[er][ec], self.board[sr][sc] = p, None
+        p.has_moved = True
+
+        if isinstance(p, Pawn) and (er == 0 or er == 7): return "promote"
+        self.complete_turn()
+        return True
 
     def find_king(self, color):
         for r in range(8):
             for c in range(8):
                 p = self.board[r][c]
-                # เช็คจากชื่อคลาสตรงๆ เพื่อความแม่นยำ
-                if p and p.__class__.__name__.lower() == 'king' and p.color == color:
-                    return (r, c)
+                if p and isinstance(p, King) and p.color == color: return (r, c)
         return None
 
     def is_in_check(self, color):
-        king_pos = self.find_king(color)
-        if not king_pos: return False
-
-        old_stdout = sys.stdout
-        sys.stdout = open(os.devnull, 'w')
-        try:
-            for r in range(8):
-                for c in range(8):
-                    p = self.board[r][c]
-                    if p and p.color != color:
-                        if p.is_valid_move((r, c), king_pos, self.board):
-                            return True
-        finally:
-            sys.stdout.close()
-            sys.stdout = old_stdout
+        kp = self.find_king(color)
+        if not kp: return False
+        for r in range(8):
+            for c in range(8):
+                p = self.board[r][c]
+                if p and p.color != color and p.is_valid_move((r, c), kp, self.board): return True
         return False
 
-    def is_checkmate(self, color):
-        if not self.is_in_check(color): return False
+    def check_insufficient_material(self):
+        """✨ กฎการเสมอ: หมากไม่พอรุกฆาต"""
+        pieces = []
+        for row in self.board:
+            for p in row:
+                if p: pieces.append(p.__class__.__name__)
+        if len(pieces) <= 2: return True # เหลือแค่ King ปะทะ King
+        if len(pieces) == 3 and ('Bishop' in pieces or 'Knight' in pieces): return True
+        return False
 
-        old_stdout = sys.stdout
-        sys.stdout = open(os.devnull, 'w')
-        try:
-            for r in range(8):
-                for c in range(8):
-                    p = self.board[r][c]
-                    if p and p.color == color:
-                        for tr in range(8):
-                            for tc in range(8):
-                                if p.is_valid_move((r, c), (tr, tc), self.board):
-                                    target = self.board[tr][tc]
-                                    self.board[r][c] = None
-                                    self.board[tr][tc] = p
-                                    still_check = self.is_in_check(color)
-                                    self.board[r][c] = p
-                                    self.board[tr][tc] = target
-                                    if not still_check: return False
-        finally:
-            sys.stdout.close()
-            sys.stdout = old_stdout
-        return True
-
-    def move_piece(self, start_row, start_col, end_row, end_col):
-        piece = self.board[start_row][start_col]
-        target = self.board[end_row][end_col]
-
-        # เช็คว่าเป็นตาของตัวเองหรือไม่
-        if not piece: return False
-        if piece.color != self.current_turn: return False
-        
-        # เช็คกฎการเดิน
-        if target and target.color == piece.color: return False
-        if not piece.is_valid_move((start_row, start_col), (end_row, end_col), self.board): return False
-
-        # จำลองการเดิน (Self-Check)
-        self.board[start_row][start_col] = None
-        self.board[end_row][end_col] = piece
-        is_self_check = self.is_in_check(piece.color)
-        
-        # คืนค่าก่อน (Rollback)
-        self.board[start_row][start_col] = piece
-        self.board[end_row][end_col] = target
-
-        if is_self_check:
-            print(f"❌ ผิดกติกา! คิงสี {piece.color} จะโดนรุก")
-            return False
-
-        # --- เดินจริง ---
-        self.board[start_row][start_col] = None
-        self.board[end_row][end_col] = piece
-        
-        # สลับตาเดิน
+    def complete_turn(self):
         self.current_turn = 'black' if self.current_turn == 'white' else 'white'
-        print(f"✅ ย้ายสำเร็จ! ต่อไปตาของ: {self.current_turn.upper()}")
-
-        # เช็ครุก/รุกฆาต
-        enemy = self.current_turn
-        if self.is_in_check(enemy):
-            if self.is_checkmate(enemy):
-                print(f"💀 รุกฆาต!! (CHECKMATE) สี {piece.color} ชนะ!")
-            else:
-                print(f"🔥 รุก! (Check) คิงสี {enemy} อันตราย!")
         
-        return True
+        # เช็ค Stalemate และ Checkmate ✨
+        has_moves = False
+        for r in range(8):
+            for c in range(8):
+                p = self.board[r][c]
+                if p and p.color == self.current_turn:
+                    if self.get_legal_moves((r, c)): has_moves = True; break
+            if has_moves: break
+            
+        if not has_moves:
+            if self.is_in_check(self.current_turn):
+                winner = 'black' if self.current_turn == 'white' else 'white'
+                self.game_result = f"CHECKMATE! {winner.upper()} WINS"
+            else:
+                self.game_result = "DRAW - STALEMATE" # อับจน = เสมอ
+        elif self.check_insufficient_material():
+            self.game_result = "DRAW - INSUFFICIENT MATERIAL"
+
+    def promote_pawn(self, r, c, cls):
+        color = self.board[r][c].color
+        self.board[r][c] = cls(color)
+        self.complete_turn()
