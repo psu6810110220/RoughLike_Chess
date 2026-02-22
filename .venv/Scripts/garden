@@ -1,4 +1,4 @@
-#!D:\Roughlike_Chess - Copy\.venv\Scripts\python.exe
+#!D:\Roughlike_Chess\.venv\Scripts\python.exe
 
 import sys
 import argparse

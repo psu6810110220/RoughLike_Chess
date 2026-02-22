@@ -8,6 +8,8 @@ from kivy.uix.modalview import ModalView
 from logic.board import ChessBoard
 from components.chess_square import ChessSquare
 from components.sidebar_ui import SidebarUI
+from kivy.clock import Clock # ✨ นำเข้า Clock สำหรับหน่วงเวลาให้ AI คิด
+from logic.ai_logic import ChessAI # ✨ นำเข้าสมองกล AI
 
 class PromotionPopup(ModalView):
     def __init__(self, color, callback, **kwargs):
@@ -89,6 +91,11 @@ class GameplayScreen(Screen):
 
     def on_square_tap(self, instance):
         if self.game.game_result: return 
+        
+        # ✨ ดักจับ: ถ้าเป็นโหมด PVE และเป็นตาสีดำ (AI) ห้ามผู้เล่นกดกระดานเล่น
+        if getattr(self, 'game_mode', 'PVP') == 'PVE' and self.game.current_turn == 'black':
+            return 
+
         r, c = instance.row, instance.col
         
         if self.selected is None:
@@ -103,12 +110,36 @@ class GameplayScreen(Screen):
                 def do_p(cls): 
                     self.game.promote_pawn(r, c, cls)
                     pop.dismiss()
-                    self.init_board_ui() # ✨ เปลี่ยนมาเคลียร์กระดานเฉยๆ ไม่เรียก AI แล้ว
+                    self.init_board_ui()
+                    self.check_ai_turn() # ✨ เรียก AI หลังโปรโมท
                 pop = PromotionPopup(self.game.board[r][c].color, do_p)
                 pop.open()
             elif res == True:
                 self.selected = None
-                self.init_board_ui() # ✨ เปลี่ยนมาเคลียร์กระดานเฉยๆ ไม่เรียก AI แล้ว
+                self.init_board_ui()
+                self.check_ai_turn() # ✨ เรียก AI หลังเดินเสร็จ
             else: 
                 self.selected = None
                 self.refresh_ui()
+
+    def check_ai_turn(self):
+        """✨ ตรวจสอบว่าถึงตา AI หรือยัง"""
+        if getattr(self, 'game_mode', 'PVP') == 'PVE' and self.game.current_turn == 'black' and not self.game.game_result:
+            # หน่วงเวลา 0.8 วินาทีให้ดูเหมือน AI กำลังคิด
+            Clock.schedule_once(self.trigger_ai_move, 0.8)
+
+    def trigger_ai_move(self, dt):
+        """✨ สั่งให้ AI คำนวณและเดินหมาก"""
+        move = ChessAI.get_best_move(self.game, ai_color='black')
+        if move:
+            (sr, sc), (er, ec) = move
+            # ให้ AI เดินหมาก
+            res = self.game.move_piece(sr, sc, er, ec)
+            
+            # ถ้า AI เดินไปสุดกระดานและต้องโปรโมท (สุ่มเป็น Queen ให้เลยเพื่อความง่าย)
+            if res == "promote":
+                from logic.pieces import Queen
+                self.game.promote_pawn(er, ec, Queen)
+            
+            # อัปเดตกระดานหลัง AI เดินเสร็จ
+            self.init_board_ui()
