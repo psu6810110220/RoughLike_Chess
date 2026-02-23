@@ -4,6 +4,7 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
 from kivy.uix.label import Label
 from kivy.core.window import Window
+from kivy.app import App # นำเข้า App เพื่อใช้สั่งปิดแอป
 
 class MainMenuScreen(Screen):
     def __init__(self, **kwargs):
@@ -27,11 +28,17 @@ class MainMenuScreen(Screen):
         # Buttons
         btn_box = BoxLayout(orientation='vertical', spacing=15, size_hint=(0.4, 0.4), pos_hint={'center_x': 0.5})
         
+        # 1. ปุ่ม PLAY
         play_btn = Button(text="PLAY", background_color=(1, 0.3, 0, 1), bold=True, font_size='24sp')
         play_btn.bind(on_release=lambda x: setattr(self.manager, 'current', 'setup'))
         
+        # 2. ปุ่ม Options (เพิ่มจุดเชื่อมต่อตรงนี้ครับ ✨)
         opt_btn = Button(text="Options", background_color=(0.2, 0.2, 0.3, 1))
+        opt_btn.bind(on_release=lambda x: setattr(self.manager, 'current', 'options'))
+        
+        # 3. ปุ่ม Exit (เพิ่มฟังก์ชันปิดแอป ✨)
         exit_btn = Button(text="Exit", background_color=(0.5, 0.1, 0.1, 1))
+        exit_btn.bind(on_release=lambda x: App.get_running_app().stop())
         
         btn_box.add_widget(play_btn)
         btn_box.add_widget(opt_btn)
