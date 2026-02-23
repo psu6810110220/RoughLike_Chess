@@ -54,14 +54,20 @@ class GameplayScreen(Screen):
     def init_board_ui(self):
         self.container.clear_widgets()
         ranks = GridLayout(cols=1, size_hint_x=0.05)
-        rank_order = range(8, 0, -1) if self.game.current_turn == 'white' else range(1, 9)
+
+        if getattr(self, 'game_mode', 'PVP') == 'PVE':
+            view_perspective = 'white'
+        else:
+            view_perspective = self.game.current_turn
+
+        rank_order = range(8, 0, -1) if view_perspective == 'white' else range(1, 9)
         for i in rank_order: ranks.add_widget(Label(text=str(i), color=(1, 1, 1, 1)))
         self.container.add_widget(ranks)
         
         self.grid = GridLayout(cols=8, rows=8)
         self.squares = {}
-        row_order = range(8) if self.game.current_turn == 'white' else range(7, -1, -1)
-        col_order = range(8) if self.game.current_turn == 'white' else range(7, -1, -1)
+        row_order = range(8) if view_perspective == 'white' else range(7, -1, -1)
+        col_order = range(8) if view_perspective == 'white' else range(7, -1, -1)
         for r in row_order:
             for c in col_order:
                 sq = ChessSquare(row=r, col=c)
