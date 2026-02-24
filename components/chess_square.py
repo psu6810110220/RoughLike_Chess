@@ -7,6 +7,8 @@ class ChessSquare(Button):
     def __init__(self, row, col, **kwargs):
         super().__init__(**kwargs)
         self.row, self.col = row, col
+        
+        # ปิดการแสดงสีพื้นหลังแบบปุ่มปกติของ Kivy ทิ้งไป
         self.background_normal = '' 
         self.background_down = ''
         
@@ -17,27 +19,22 @@ class ChessSquare(Button):
         self.is_last_move = False
         self.is_legal = False
         
-        # ตั้งค่าสีเริ่มต้นของช่อง
+        # ตั้งค่าสีเริ่มต้น (จะกลายเป็นช่องใส)
         self.update_square_style()
         
-        # ผูกฟังก์ชันการจัดวางรูปและวาดกราฟิกนีออน
         self.bind(pos=self.sync_layout, size=self.sync_layout)
 
     def sync_layout(self, *args):
         """จัดตำแหน่งรูปหมากและวาดเส้นขอบนีออน (Neon UI)"""
-        # ปรับขนาดรูปหมากให้พอดี (85% ของช่อง)
         self.piece_img.size = (self.width * 0.85, self.height * 0.85)
         self.piece_img.center = self.center
         
-        # วาดเส้นขอบ (Neon Effect)
         self.canvas.after.clear()
         with self.canvas.after:
             if self.is_legal:
-                # สีเขียวนีออน สำหรับช่องที่เดินได้
                 Color(0.1, 1, 0.1, 1) 
                 Line(rectangle=(self.x + 1, self.y + 1, self.width - 2, self.height - 2), width=3)
             elif self.is_last_move:
-                # สีส้มสด สำหรับตาเดินล่าสุด
                 Color(1, 0.5, 0, 1) 
                 Line(rectangle=(self.x, self.y, self.width, self.height), width=2.5)
 
@@ -46,19 +43,15 @@ class ChessSquare(Button):
         self.is_last_move = is_last
         self.is_legal = is_legal
         
-        # 1. กำหนดสีขาว-ฟ้า พื้นฐาน (Standard Board)
-        if (self.row + self.col) % 2 == 0: 
-            self.background_color = (0.94, 0.94, 0.91, 1) # ขาวนวล
-        else: 
-            self.background_color = (0.46, 0.59, 0.74, 1) # ฟ้า Tournament
-            
-        # 2. ใส่สีสถานะพิเศษ
+        # ✨ จุดสำคัญ: เปลี่ยนสีพื้นหลังปกติให้เป็น "สีใส" (Alpha = 0)
         if is_check: 
-            self.background_color = (1, 0.2, 0.2, 0.8) # ราชาโดนรุก (แดง)
+            self.background_color = (1, 0.2, 0.2, 0.8) # ราชาโดนรุก (แดงโปร่งแสง)
         elif highlight: 
-            self.background_color = (1, 1, 0, 0.6) # เลือกหมาก (เหลือง)
+            self.background_color = (1, 1, 0, 0.6) # เลือกหมาก (เหลืองโปร่งแสง)
+        else:
+            # ไม่ได้เลือกอะไรเลย ให้โปร่งใส 100% เพื่อโชว์รูปภาพพื้นหลังด่าน
+            self.background_color = (0, 0, 0, 0) 
             
-        # สั่งวาดกราฟิกใหม่
         self.sync_layout()
 
     def set_piece_icon(self, path):

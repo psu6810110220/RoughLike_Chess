@@ -11,6 +11,7 @@ class ChessBoard:
         self.en_passant_target = None 
         self.game_result = None
         self.history = HistoryManager() 
+        self.bg_image = '' # ✨ ตัวแปรเก็บที่อยู่รูปภาพ (ด่านคลาสสิกจะไม่มีรูป)
 
     def create_initial_board(self):
         b = [[None for _ in range(8)] for _ in range(8)]
@@ -162,6 +163,13 @@ class ChessBoard:
             self.game_result = "DRAW - INSUFFICIENT MATERIAL"
         elif is_check: 
             self.history.add_suffix_to_last_move("+") 
+            
+        # ✨ เรียกใช้งานเอฟเฟกต์ของด่านทุกครั้งที่จบตา (ถ้าด่านนั้นมี)
+        self.apply_map_effects()
+
+    def apply_map_effects(self):
+        """✨ ฟังก์ชันปลั๊กอินสำหรับด่านพิเศษ (กระดานคลาสสิกจะไม่มีเอฟเฟกต์)"""
+        pass
 
     def promote_pawn(self, r, c, cls):
         color = self.board[r][c].color

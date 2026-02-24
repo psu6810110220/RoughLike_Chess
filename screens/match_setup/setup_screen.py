@@ -1,5 +1,5 @@
 # screens/match_setup/setup_screen.py
-import random # ✨ เพิ่มไลบรารีสำหรับการสุ่ม
+import random
 from kivy.uix.screenmanager import Screen
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
@@ -7,6 +7,7 @@ from kivy.uix.label import Label
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.popup import Popup
 from kivy.core.window import Window
+from kivy.app import App # ✨ นำเข้า App เพื่อบันทึกค่าด่าน
 
 from screens.match_setup.setup_section import SetupSection
 
@@ -75,24 +76,17 @@ class MatchSetupScreen(Screen):
         self.content.add_widget(start_btn)
 
     def show_coming_soon_popup(self, item_name):
-        """แสดง Popup ภาษาอังกฤษเมื่อเลือกฟีเจอร์ที่ยังไม่เสร็จ"""
         content = BoxLayout(orientation='vertical', padding=10, spacing=10)
         content.add_widget(Label(text=f"[b]{item_name}[/b]\nis still in development!\n(Please select Classic for now)", markup=True, halign='center'))
-        
         close_btn = Button(text="OK", size_hint_y=None, height=40, background_color=(0.8, 0.2, 0.2, 1))
-        
         popup = Popup(title='Coming Soon', content=content, size_hint=(0.6, 0.35), auto_dismiss=True)
         close_btn.bind(on_release=popup.dismiss)
         content.add_widget(close_btn)
-        
         popup.open()
 
     def on_select(self, category, value, clicked_btn):
-        # ดักจับ Board: อนุญาตแค่ Classic Board กับ Random Board
-        if category == 'board' and value not in ["Classic Board", "Random Board"]:
-            self.show_coming_soon_popup(value)
-            return
-            
+        # ✨ ปลดล็อก Board ให้กดได้ทุกอันแล้ว
+        
         # ดักจับ Unit: อนุญาตแค่ Classic Knights
         if category == 'unit' and value != "Classic Knights":
             self.show_coming_soon_popup(value)
@@ -118,19 +112,18 @@ class MatchSetupScreen(Screen):
         self.manager.current = 'menu'
 
     def start_battle(self, instance):
-        """✨ ระบบสุ่มด่านจะทำงานที่นี่ตอนกดเริ่มเกม"""
         final_board = self.selected_data['board']
         final_unit = self.selected_data['unit']
         
-        # ถ้าระบบเลือก Random Board ไว้ ให้สุ่มจากด่านที่มีให้เล่นได้จริงๆ
         if final_board == "Random Board":
-            # ตอนนี้มีแค่ Classic แต่ถ้าด่านอื่นเสร็จก็เอาชื่อมาใส่ในลิสต์นี้เพิ่มได้เลยครับ
-            playable_boards = ["Classic Board"] 
+            playable_boards = ["Classic Board", "Enchanted Forest", "Desert Ruins", "Frozen Tundra"] 
             final_board = random.choice(playable_boards)
-            print(f"System randomized board to: {final_board}") # ปริ้นท์บอกใน Terminal
+            print(f"System randomized board to: {final_board}") 
+
+        # ✨ บันทึกชื่อด่านลงในตัวแปร App เพื่อให้หน้า GamePlay ดึงไปใช้
+        app = App.get_running_app()
+        app.selected_board = final_board
 
         game_screen = self.manager.get_screen('game')
-        
-        # ส่งข้อมูลโหมดการเล่นไปที่หน้ากระดาน (ในอนาคตเราจะส่ง final_board ไปด้วยเพื่อเปลี่ยนพื้นหลัง)
         game_screen.setup_game(self.selected_data['mode']) 
         self.manager.current = 'game'
