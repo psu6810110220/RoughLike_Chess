@@ -15,10 +15,17 @@ from logic.ai_logic import ChessAI
 from components.chess_square import ChessSquare
 from components.sidebar_ui import SidebarUI
 
+# ✨ ดึง ForestMap เข้ามา
 try:
     from logic.maps.forest_map import ForestMap
 except ImportError:
     ForestMap = None
+
+# ✨ ดึง DesertMap เข้ามา (อันที่เราเพิ่งสร้าง)
+try:
+    from logic.maps.desert_map import DesertMap
+except ImportError:
+    DesertMap = None
 
 class PromotionPopup(ModalView):
     def __init__(self, color, callback, **kwargs):
@@ -46,11 +53,13 @@ class GameplayScreen(Screen):
         app = App.get_running_app()
         selected_board = getattr(app, 'selected_board', 'Classic Board')
         
+        # ✨ เช็คเงื่อนไขว่าผู้เล่นเลือกด่านไหนมา
         if selected_board == 'Enchanted Forest' and ForestMap is not None:
             self.game = ForestMap()
+        elif selected_board == 'Desert Ruins' and DesertMap is not None:
+            self.game = DesertMap()
         else:
             self.game = ChessBoard() 
-            # ✨ สั่งให้ดึงภาพ classic.png มาใช้ถ้าเลือก Classic Board
             self.game.bg_image = 'assets/boards/classic.png'
             
         self.selected = None
@@ -109,7 +118,6 @@ class GameplayScreen(Screen):
         self.refresh_ui()
 
     def _keep_grid_square(self, instance, value):
-        """✨ ปรับกลับเป็น 1.0 (สี่เหลี่ยมจัตุรัสเป๊ะ) เพราะภาพเราเป็น 8x8 สมบูรณ์แบบแล้ว"""
         stretch_ratio = 1.0 
         
         h = instance.height
