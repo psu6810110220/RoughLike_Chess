@@ -4,7 +4,7 @@ from kivy.graphics import Rectangle, Color
 from kivy.uix.screenmanager import Screen
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.boxlayout import BoxLayout
-from kivy.uix.anchorlayout import AnchorLayout # ✨ นำเข้าตัวช่วยล็อกจัตุรัส
+from kivy.uix.anchorlayout import AnchorLayout
 from kivy.uix.label import Label
 from kivy.uix.button import Button
 from kivy.uix.modalview import ModalView
@@ -50,6 +50,8 @@ class GameplayScreen(Screen):
             self.game = ForestMap()
         else:
             self.game = ChessBoard() 
+            # ✨ สั่งให้ดึงภาพ classic.png มาใช้ถ้าเลือก Classic Board
+            self.game.bg_image = 'assets/boards/classic.png'
             
         self.selected = None
         
@@ -82,13 +84,11 @@ class GameplayScreen(Screen):
             ranks.add_widget(Label(text=str(i), color=(0.8, 0.7, 0.4, 1), bold=True))
         self.container.add_widget(ranks)
         
-        # ✨ บังคับให้กระดานอยู่ตรงกลาง และเป็นขนาด (None, None) เพื่อกำหนดเอง
         self.board_anchor = AnchorLayout(anchor_x='center', anchor_y='center')
         self.grid = GridLayout(cols=8, rows=8, size_hint=(None, None))
         self.board_anchor.add_widget(self.grid)
         self.container.add_widget(self.board_anchor)
         
-        # ✨ ผูกคำสั่งให้มันคอยคำนวณเป็นรูปจัตุรัสเสมอ
         self.board_anchor.bind(size=self._keep_grid_square)
 
         if hasattr(self.game, 'bg_image') and self.game.bg_image != '':
@@ -109,17 +109,12 @@ class GameplayScreen(Screen):
         self.refresh_ui()
 
     def _keep_grid_square(self, instance, value):
-        """✨ ปรับสัดส่วนตารางให้ยืดออกข้างได้ (Aspect Ratio)"""
+        """✨ ปรับกลับเป็น 1.0 (สี่เหลี่ยมจัตุรัสเป๊ะ) เพราะภาพเราเป็น 8x8 สมบูรณ์แบบแล้ว"""
+        stretch_ratio = 1.0 
         
-        # 🎯 ปรับตัวเลขตรงนี้ครับ! (1.0 คือจัตุรัส, ถ้าอยากให้กว้างขึ้นให้เพิ่มเลข)
-        # ลองใช้ 1.15 เป็นค่าเริ่มต้น (แปลว่ากว้างกว่าความสูง 15%)
-        stretch_ratio = 1.15 
-        
-        # คำนวณความกว้างและความสูงใหม่
         h = instance.height
         w = h * stretch_ratio
         
-        # เช็คกันเหนียว: ถ้าขยายแล้วมันกว้างทะลุจอ ให้ปรับหดลงมาให้พอดีจอ
         if w > instance.width:
             w = instance.width
             h = w / stretch_ratio
