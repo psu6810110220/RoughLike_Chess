@@ -15,17 +15,21 @@ from logic.ai_logic import ChessAI
 from components.chess_square import ChessSquare
 from components.sidebar_ui import SidebarUI
 
-# ✨ ดึง ForestMap เข้ามา
 try:
     from logic.maps.forest_map import ForestMap
 except ImportError:
     ForestMap = None
 
-# ✨ ดึง DesertMap เข้ามา (อันที่เราเพิ่งสร้าง)
 try:
     from logic.maps.desert_map import DesertMap
 except ImportError:
     DesertMap = None
+
+# ✨ ดึง TundraMap เข้ามา
+try:
+    from logic.maps.tundra_map import TundraMap
+except ImportError:
+    TundraMap = None
 
 class PromotionPopup(ModalView):
     def __init__(self, color, callback, **kwargs):
@@ -53,11 +57,13 @@ class GameplayScreen(Screen):
         app = App.get_running_app()
         selected_board = getattr(app, 'selected_board', 'Classic Board')
         
-        # ✨ เช็คเงื่อนไขว่าผู้เล่นเลือกด่านไหนมา
+        # ✨ เช็คเงื่อนไขให้ครบทุกด่าน
         if selected_board == 'Enchanted Forest' and ForestMap is not None:
             self.game = ForestMap()
         elif selected_board == 'Desert Ruins' and DesertMap is not None:
             self.game = DesertMap()
+        elif selected_board == 'Frozen Tundra' and TundraMap is not None:
+            self.game = TundraMap()
         else:
             self.game = ChessBoard() 
             self.game.bg_image = 'assets/boards/classic.png'
