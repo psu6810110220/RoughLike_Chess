@@ -62,7 +62,7 @@ class ChessBoard:
                 return False
         return True
 
-    def move_piece(self, sr, sc, er, ec):
+    def move_piece(self, sr, sc, er, ec, resolve_clash=False):
         p = self.board[sr][sc]
         if not p or p.color != self.current_turn or self.game_result: 
             return False
@@ -76,6 +76,11 @@ class ChessBoard:
             
         target = self.board[er][ec]
         is_capture = (target is not None) or is_ep
+
+        if is_capture and not resolve_clash:
+            captured_piece = target if not is_ep else self.board[sr][ec]
+            return ("clash", p, captured_piece)
+        
         move_text = self.history.generate_move_text(p, sr, sc, er, ec, is_capture, is_castle)
         self.history.save_state(self, move_text)
         
