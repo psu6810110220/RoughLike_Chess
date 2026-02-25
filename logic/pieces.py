@@ -28,6 +28,7 @@ class Rook(Piece):
     def __init__(self, color): 
         super().__init__(color, 'R' if color == 'white' else 'r')
         self.points = 3
+        self.flip_count = 3
         
     def is_valid_move(self, start, end, board):
         if start[0] == end[0] or start[1] == end[1]: 
@@ -38,6 +39,7 @@ class Knight(Piece):
     def __init__(self, color): 
         super().__init__(color, 'N' if color == 'white' else 'n')
         self.points = 2
+        self.flip_count = 3
         
     def is_valid_move(self, start, end, board):
         rd, cd = abs(start[0]-end[0]), abs(start[1]-end[1])
@@ -47,6 +49,7 @@ class Bishop(Piece):
     def __init__(self, color): 
         super().__init__(color, 'B' if color == 'white' else 'b')
         self.points = 3
+        self.flip_count = 2
         
     def is_valid_move(self, start, end, board):
         if abs(start[0]-end[0]) == abs(start[1]-end[1]): 
@@ -57,6 +60,7 @@ class Queen(Piece):
     def __init__(self, color): 
         super().__init__(color, 'Q' if color == 'white' else 'q')
         self.points = 1
+        self.flip_count = 7
         
     def is_valid_move(self, start, end, board):
         return Rook(self.color).is_valid_move(start, end, board) or Bishop(self.color).is_valid_move(start, end, board)
@@ -64,7 +68,8 @@ class Queen(Piece):
 class King(Piece):
     def __init__(self, color): 
         super().__init__(color, 'K' if color == 'white' else 'k')
-        self.points = 1
+        self.points = 2
+        self.flip_count = 2
         
     def is_valid_move(self, start, end, board):
         return max(abs(start[0]-end[0]), abs(start[1]-end[1])) == 1
@@ -73,6 +78,7 @@ class Pawn(Piece):
     def __init__(self, color): 
         super().__init__(color, 'P' if color == 'white' else 'p')
         self.points = 2
+        self.flip_count = 2
         
     def is_valid_move(self, start, end, board, ep_target=None):
         sr, sc, er, ec = start[0], start[1], end[0], end[1]
