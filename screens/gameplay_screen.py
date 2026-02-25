@@ -56,6 +56,7 @@ class GameplayScreen(Screen):
         self.root_layout.add_widget(self.main_layout)
         self.add_widget(self.root_layout)
         self.status_popup = None
+        self.clash_popup = None
 
     def setup_game(self, mode):
         self.main_layout.clear_widgets()
@@ -185,6 +186,12 @@ class GameplayScreen(Screen):
         else:
             sr, sc = self.selected
             res = self.game.move_piece(sr, sc, r, c)
+
+            # เช็คสถานะการ CLASH
+            if isinstance(res, tuple) and res[0] == "clash":
+                _, attacker, defender = res
+                self.show_clash_popup(attacker, defender, (sr, sc), (r, c))
+                return
             
             if res == "promote":
                 self.hide_piece_status() #  ซ่อน Pop-up
@@ -204,6 +211,82 @@ class GameplayScreen(Screen):
                 self.selected = None
                 self.hide_piece_status() #  ซ่อน Pop-up เมื่อกดที่อื่น (ยกเลิกการเลือก)
                 self.refresh_ui()
+
+        #  ฟังก์ชันสร้างหน้าต่าง CLASH
+    def show_clash_popup(self, attacker, defender, start_pos, end_pos):
+        self.hide_piece_status()
+        self.cancel_clash()
+        
+        # ไฮไลท์ช่องบนกระดานให้เห็นว่าใครสู้กับใคร
+        self.refresh_ui()
+        self.squares[start_pos].update_square_style(highlight=True)
+        self.squares[end_pos].update_square_style(is_check=True) # กรอบแดงตรงจุดที่โดนบุก
+        self.clash_popup = BoxLayout(orientation='vertical',size_hint=(None, None),size=(260, 320), 
+            pos_hint={'right': 0.96, 'center_y': 0.5},
+            padding=15,
+            spacing=10 )
+        
+        # พื้นหลัง
+        with self.clash_popup.canvas.before:
+            Color(0.12, 0.12, 0.15, 0.95) 
+            self.clash_popup.bg_rect = Rectangle(pos=self.clash_popup.pos, size=self.clash_popup.size)
+        self.clash_popup.bind(pos=self._update_clash_bg, size=self._update_clash_bg)
+        
+        # ข้อความ Header "CLASH"
+        title_lbl = Label(text="CLASH!", bold=True, font_size='28sp', color=(1, 0.2, 0.2, 1), size_hint_y=0.15)
+        self.clash_popup.add_widget(title_lbl)
+        
+        #  พื้นที่แสดงหมาก 2 ตัว 
+        combatants_layout = BoxLayout(orientation='horizontal', size_hint_y=0.5)
+        
+        # ฝ่ายโจมตี (Attacker)
+        atk_box = BoxLayout(orientation='vertical')
+        atk_img = Image(source=f"assets/pieces/classic/{attacker.color}/{attacker.__class__.__name__.lower()}.png")
+        atk_pts = getattr(attacker, 'points', 0)
+        atk_flips = getattr(attacker, 'flip_count', 0)
+        atk_box.add_widget(atk_img)
+        atk_box.add_widget(Label(text=f"Pts: {atk_pts}", font_size='14sp', color=(1, 0.8, 0.2, 1)))
+        atk_box.add_widget(Label(text=f"Flips: {atk_flips}", font_size='14sp', color=(0.7, 0.8, 1, 1)))
+        
+        # ข้อความ VS ตรงกลาง
+        vs_lbl = Label(text="VS", bold=True, font_size='24sp', color=(0.8, 0.8, 0.8, 1), size_hint_x=0.4)
+        
+        # ฝ่ายป้องกัน (Defender)
+        def_box = BoxLayout(orientation='vertical')
+        def_img = Image(source=f"assets/pieces/classic/{defender.color}/{defender.__class__.__name__.lower()}.png")
+        def_pts = getattr(defender, 'points', 0)
+        def_flips = getattr(defender, 'flip_count', 0)
+        def_box.add_widget(def_img)
+        def_box.add_widget(Label(text=f"Pts: {def_pts}", font_size='14sp', color=(1, 0.8, 0.2, 1)))
+        def_box.add_widget(Label(text=f"Flips: {def_flips}", font_size='14sp', color=(0.7, 0.8, 1, 1)))
+
+        combatants_layout.add_widget(atk_box)
+        combatants_layout.add_widget(vs_lbl)
+        combatants_layout.add_widget(def_box)
+        
+        self.clash_popup.add_widget(combatants_layout)
+        
+        # พื้นที่ปุ่มกด (แนวตั้ง)
+        btn_layout = BoxLayout(orientation='vertical', size_hint_y=0.35, spacing=10, padding=[0, 10, 0, 0])
+        
+        roll_btn = Button(text="ROLL!", bold=True, font_size='18sp', background_color=(0.8, 0.2, 0.2, 1))
+        roll_btn.bind(on_release=lambda x: self.resolve_clash(start_pos, end_pos))
+        
+        cancel_btn = Button(text="CANCEL", font_size='14sp', background_color=(0.3, 0.3, 0.3, 1))
+        cancel_btn.bind(on_release=lambda x: self.cancel_clash(reset_selection=True))
+        
+        btn_layout.add_widget(roll_btn)
+        btn_layout.add_widget(cancel_btn)
+        
+        self.clash_popup.add_widget(btn_layout)
+
+        self.root_layout.add_widget(self.clash_popup)
+        
+        # อนิเมชันให้สไลด์เข้ามาจากขวา
+        self.clash_popup.x += 30
+        self.clash_popup.opacity = 0
+        anim = Animation(x=self.clash_popup.x - 30, opacity=1, duration=0.2, t='out_quad')
+        anim.start(self.clash_popup)
 
     #  ฟังก์ชันแสดง Card/Pop-up โชว์ชื่อและแต้มของหมาก
     def show_piece_status(self, piece):
@@ -275,6 +358,10 @@ class GameplayScreen(Screen):
         if move:
             (sr, sc), (er, ec) = move
             res = self.game.move_piece(sr, sc, er, ec)
+            if isinstance(res, tuple) and res[0] == "clash":
+                _, attacker, defender = res
+                self.show_clash_popup(attacker, defender, (sr, sc), (er, ec))
+                return
             
             if res == "promote":
                 from logic.pieces import Queen
