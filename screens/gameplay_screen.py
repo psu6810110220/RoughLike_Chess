@@ -242,6 +242,11 @@ class GameplayScreen(Screen):
         if hasattr(instance, 'bg_rect'):
             instance.bg_rect.pos = instance.pos
             instance.bg_rect.size = instance.size
+    
+    def hide_piece_status(self):
+        if self.status_popup:
+            self.root_layout.remove_widget(self.status_popup)
+            self.status_popup = None
 
     def check_ai_turn(self):
         if getattr(self, 'game_mode', 'PVP') == 'PVE' and self.game.current_turn == 'black' and not self.game.game_result:
