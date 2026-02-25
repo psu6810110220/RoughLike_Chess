@@ -288,6 +288,45 @@ class GameplayScreen(Screen):
         anim = Animation(x=self.clash_popup.x - 30, opacity=1, duration=0.2, t='out_quad')
         anim.start(self.clash_popup)
 
+        #  ฟังก์ชันอัปเดตพื้นหลังของหน้าต่าง Clash
+    def _update_clash_bg(self, instance, value):
+        if hasattr(instance, 'bg_rect'):
+            instance.bg_rect.pos = instance.pos
+            instance.bg_rect.size = instance.size
+
+    #  ฟังก์ชันยกเลิกการต่อสู้ ปิดป๊อปอัป
+    def cancel_clash(self, reset_selection=False):
+        if self.clash_popup:
+            self.root_layout.remove_widget(self.clash_popup)
+            self.clash_popup = None
+        
+        if reset_selection:
+            self.selected = None
+            self.refresh_ui()
+
+    #  ฟังก์ชันยืนยันการโจมตี
+    def resolve_clash(self, start_pos, end_pos):
+        self.cancel_clash()
+            
+        sr, sc = start_pos
+        er, ec = end_pos
+        
+        # สั่ง move แบบ resolve_clash=True คือให้มันกินหมากไปเลย
+        res = self.game.move_piece(sr, sc, er, ec, resolve_clash=True)
+        
+        if res == "promote":
+            def do_p(cls):
+                self.game.promote_pawn(er, ec, cls)
+                pop.dismiss()
+                self.init_board_ui()
+                self.check_ai_turn()
+            pop = PromotionPopup(self.game.board[er][ec].color, do_p)
+            pop.open()
+        elif res == True:
+            self.selected = None
+            self.init_board_ui()
+            self.check_ai_turn()
+
     #  ฟังก์ชันแสดง Card/Pop-up โชว์ชื่อและแต้มของหมาก
     def show_piece_status(self, piece):
         self.hide_piece_status()
