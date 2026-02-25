@@ -212,7 +212,7 @@ class GameplayScreen(Screen):
         self.status_popup = BoxLayout(
             orientation='horizontal',
             size_hint=(None, None),
-            size=(220, 80),
+            size=(220, 100),
             pos_hint={'right': 0.95, 'center_y': 0.5},
             padding=10,
             spacing=10
@@ -237,6 +237,13 @@ class GameplayScreen(Screen):
         pts_lbl = Label(text=f"{piece.points} Points", font_size='16sp', color=(1, 0.8, 0.2, 1), halign='left')
         pts_lbl.bind(size=pts_lbl.setter('text_size')) 
         text_layout.add_widget(pts_lbl)
+
+        # จำนวนครั้งการทอย (Flip count)
+        # ใช้ getattr เพื่อดึงค่า flip_count ถ้าไม่มีจะตั้งเป็น 0 (กันตัวแปรบั๊กนะจ๊ะ)
+        flip_val = getattr(piece, 'flip_count', 0)
+        flip_lbl = Label(text=f"Flips: {flip_val}", font_size='14sp', color=(0.7, 0.8, 1, 1), halign='left')
+        flip_lbl.bind(size=flip_lbl.setter('text_size'))
+        text_layout.add_widget(flip_lbl)
         
         self.status_popup.add_widget(text_layout)
         self.root_layout.add_widget(self.status_popup)
