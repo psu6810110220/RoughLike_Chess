@@ -238,6 +238,11 @@ class GameplayScreen(Screen):
         anim = Animation(x=self.status_popup.x - 20, opacity=1, duration=0.15)
         anim.start(self.status_popup)
 
+    def _update_popup_bg(self, instance, value):
+        if hasattr(instance, 'bg_rect'):
+            instance.bg_rect.pos = instance.pos
+            instance.bg_rect.size = instance.size
+
     def check_ai_turn(self):
         if getattr(self, 'game_mode', 'PVP') == 'PVE' and self.game.current_turn == 'black' and not self.game.game_result:
             Clock.schedule_once(self.trigger_ai_move, 0.8)
