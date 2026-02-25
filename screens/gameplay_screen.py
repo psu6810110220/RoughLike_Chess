@@ -9,6 +9,7 @@ from kivy.uix.label import Label
 from kivy.uix.button import Button
 from kivy.uix.modalview import ModalView
 from kivy.clock import Clock 
+from kivy.uix.floatlayout import FloatLayout
 
 from logic.board import ChessBoard
 from logic.ai_logic import ChessAI 
@@ -47,7 +48,9 @@ class PromotionPopup(ModalView):
 class GameplayScreen(Screen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        self.root_layout = FloatLayout()
         self.main_layout = BoxLayout(orientation='horizontal')
+        self.root_layout.add_widget(self.main_layout)
         self.add_widget(self.main_layout)
 
     def setup_game(self, mode):
