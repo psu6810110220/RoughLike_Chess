@@ -8,13 +8,14 @@ from kivy.uix.anchorlayout import AnchorLayout
 from kivy.uix.label import Label
 from kivy.uix.button import Button
 from kivy.uix.modalview import ModalView
-from kivy.clock import Clock 
-from kivy.uix.floatlayout import FloatLayout
+from kivy.clock import Clock
+
 from kivy.animation import Animation
+from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.image import Image
 
 from logic.board import ChessBoard
-from logic.ai_logic import ChessAI 
+from logic.ai_logic import ChessAI
 from components.chess_square import ChessSquare
 from components.sidebar_ui import SidebarUI
 
@@ -53,7 +54,8 @@ class GameplayScreen(Screen):
         self.root_layout = FloatLayout()
         self.main_layout = BoxLayout(orientation='horizontal')
         self.root_layout.add_widget(self.main_layout)
-        self.add_widget(self.main_layout)
+        self.add_widget(self.root_layout)
+        self.status_popup = None
 
     def setup_game(self, mode):
         self.main_layout.clear_widgets()
@@ -70,7 +72,7 @@ class GameplayScreen(Screen):
         elif selected_board == 'Frozen Tundra' and TundraMap is not None:
             self.game = TundraMap()
         else:
-            self.game = ChessBoard() 
+            self.game = ChessBoard()
             self.game.bg_image = 'assets/boards/classic.png'
             
         self.selected = None
@@ -100,7 +102,7 @@ class GameplayScreen(Screen):
 
         ranks = GridLayout(cols=1, size_hint_x=0.05)
         rank_order = range(8, 0, -1) if view_perspective == 'white' else range(1, 9)
-        for i in rank_order: 
+        for i in rank_order:
             ranks.add_widget(Label(text=str(i), color=(0.8, 0.7, 0.4, 1), bold=True))
         self.container.add_widget(ranks)
         
@@ -113,7 +115,7 @@ class GameplayScreen(Screen):
 
         if hasattr(self.game, 'bg_image') and self.game.bg_image != '':
             with self.grid.canvas.before:
-                Color(1, 1, 1, 1) 
+                Color(1, 1, 1, 1)
                 self.bg_rect = Rectangle(source=self.game.bg_image, pos=self.grid.pos, size=self.grid.size)
             self.grid.bind(pos=self._update_bg, size=self._update_bg)
 
@@ -129,7 +131,7 @@ class GameplayScreen(Screen):
         self.refresh_ui()
 
     def _keep_grid_square(self, instance, value):
-        stretch_ratio = 1.0 
+        stretch_ratio = 1.0
         
         h = instance.height
         w = h * stretch_ratio
@@ -159,62 +161,68 @@ class GameplayScreen(Screen):
         self.sidebar.update_history_text(self.game.history.move_text_history)
 
     def on_undo_click(self):
-        if self.game.undo_move(): 
+        if self.game.undo_move():
             self.selected = None
-            self.hide_piece_status()
+            self.hide_piece_status() # ซ่อน Pop-up ถ้ายกเลิกการเดิน
             self.init_board_ui()
 
     def on_square_tap(self, instance):
-        if self.game.game_result: return 
+        if self.game.game_result: return
         
         if getattr(self, 'game_mode', 'PVP') == 'PVE' and self.game.current_turn == 'black':
-            return 
+            return
 
         r, c = instance.row, instance.col
         
         if self.selected is None:
-            if self.game.board[r][c] and self.game.board[r][c].color == self.game.current_turn:
+            piece = self.game.board[r][c]
+            if piece and piece.color == self.game.current_turn:
                 self.selected = (r, c)
-                self.refresh_ui(self.game.get_legal_moves((r, c)))                
+                self.refresh_ui(self.game.get_legal_moves((r, c)))
+                
+                # โชว์ Pop-up ข้อมูลหมากทางด้านขวา เมื่อมีการกดเลือกหมาก
+                self.show_piece_status(piece)
         else:
             sr, sc = self.selected
             res = self.game.move_piece(sr, sc, r, c)
             
             if res == "promote":
-                def do_p(cls): 
+                self.hide_piece_status() #  ซ่อน Pop-up
+                def do_p(cls):
                     self.game.promote_pawn(r, c, cls)
                     pop.dismiss()
                     self.init_board_ui()
-                    self.check_ai_turn() 
+                    self.check_ai_turn()
                 pop = PromotionPopup(self.game.board[r][c].color, do_p)
                 pop.open()
             elif res == True:
                 self.selected = None
-                self.hide_piece_status()
+                self.hide_piece_status() #  ซ่อน Pop-up เมื่อเดินเสร็จ
                 self.init_board_ui()
-                self.check_ai_turn() 
-            else: 
+                self.check_ai_turn()
+            else:
                 self.selected = None
-                self.hide_piece_status()
+                self.hide_piece_status() #  ซ่อน Pop-up เมื่อกดที่อื่น (ยกเลิกการเลือก)
                 self.refresh_ui()
-    
-    #  แสดง Card/Pop-up โชว์ชื่อและแต้มของหมาก
+
+    #  ฟังก์ชันแสดง Card/Pop-up โชว์ชื่อและแต้มของหมาก
     def show_piece_status(self, piece):
-        self.hide_piece_status() 
-        
-        # Layout ของ Card Pop-up
-        self.status_popup = BoxLayout(orientation='horizontal',size_hint=(None, None),size=(220, 80),
+        self.hide_piece_status()
+        # สร้าง Layout ของ Card Pop-up
+        self.status_popup = BoxLayout(
+            orientation='horizontal',
+            size_hint=(None, None),
+            size=(220, 80),
             pos_hint={'right': 0.95, 'center_y': 0.5},
             padding=10,
-            spacing=10 )
+            spacing=10
+        )
         
-        # พื้นหลังการ์ด
+        # วาดพื้นหลัง Card
         with self.status_popup.canvas.before:
             Color(0.15, 0.15, 0.15, 0.95) 
             self.status_popup.bg_rect = Rectangle(pos=self.status_popup.pos, size=self.status_popup.size)
         self.status_popup.bind(pos=self._update_popup_bg, size=self._update_popup_bg)
-        
-        # ภาพหมากตัวที่เลือก
         img_path = f"assets/pieces/classic/{piece.color}/{piece.__class__.__name__.lower()}.png"
         img = Image(source=img_path, size_hint_x=0.4)
         self.status_popup.add_widget(img)
@@ -222,27 +230,30 @@ class GameplayScreen(Screen):
         
         # ชื่อหมาก
         name_lbl = Label(text=piece.__class__.__name__.upper(), bold=True, font_size='20sp', halign='left')
-        name_lbl.bind(size=name_lbl.setter('text_size')) 
+        name_lbl.bind(size=name_lbl.setter('text_size'))
         text_layout.add_widget(name_lbl)
         
         # แต้มหมาก
         pts_lbl = Label(text=f"{piece.points} Points", font_size='16sp', color=(1, 0.8, 0.2, 1), halign='left')
         pts_lbl.bind(size=pts_lbl.setter('text_size')) 
         text_layout.add_widget(pts_lbl)
+        
         self.status_popup.add_widget(text_layout)
         self.root_layout.add_widget(self.status_popup)
-   
-        # ทำแอนิเมชัน
+        
+        # ทำแอนิเมชันให้การ์ดสไลด์เข้ามานิดหน่อยเพื่อความสมูท
         self.status_popup.x += 20
         self.status_popup.opacity = 0
         anim = Animation(x=self.status_popup.x - 20, opacity=1, duration=0.15)
         anim.start(self.status_popup)
 
+    # ฟังก์ชันอัปเดตพื้นหลัง Pop-up
     def _update_popup_bg(self, instance, value):
         if hasattr(instance, 'bg_rect'):
             instance.bg_rect.pos = instance.pos
             instance.bg_rect.size = instance.size
-    
+
+    # ฟังก์ชันซ่อนและทำลาย Pop-up
     def hide_piece_status(self):
         if self.status_popup:
             self.root_layout.remove_widget(self.status_popup)
