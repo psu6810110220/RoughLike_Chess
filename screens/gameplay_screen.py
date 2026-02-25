@@ -10,6 +10,8 @@ from kivy.uix.button import Button
 from kivy.uix.modalview import ModalView
 from kivy.clock import Clock 
 from kivy.uix.floatlayout import FloatLayout
+from kivy.animation import Animation
+from kivy.uix.image import Image
 
 from logic.board import ChessBoard
 from logic.ai_logic import ChessAI 
@@ -159,6 +161,7 @@ class GameplayScreen(Screen):
     def on_undo_click(self):
         if self.game.undo_move(): 
             self.selected = None
+            self.hide_piece_status()
             self.init_board_ui()
 
     def on_square_tap(self, instance):
@@ -172,7 +175,7 @@ class GameplayScreen(Screen):
         if self.selected is None:
             if self.game.board[r][c] and self.game.board[r][c].color == self.game.current_turn:
                 self.selected = (r, c)
-                self.refresh_ui(self.game.get_legal_moves((r, c)))
+                self.refresh_ui(self.game.get_legal_moves((r, c)))                
         else:
             sr, sc = self.selected
             res = self.game.move_piece(sr, sc, r, c)
@@ -187,11 +190,53 @@ class GameplayScreen(Screen):
                 pop.open()
             elif res == True:
                 self.selected = None
+                self.hide_piece_status()
                 self.init_board_ui()
                 self.check_ai_turn() 
             else: 
                 self.selected = None
+                self.hide_piece_status()
                 self.refresh_ui()
+    
+    #  แสดง Card/Pop-up โชว์ชื่อและแต้มของหมาก
+    def show_piece_status(self, piece):
+        self.hide_piece_status() 
+        
+        # Layout ของ Card Pop-up
+        self.status_popup = BoxLayout(orientation='horizontal',size_hint=(None, None),size=(220, 80),
+            pos_hint={'right': 0.95, 'center_y': 0.5},
+            padding=10,
+            spacing=10 )
+        
+        # พื้นหลังการ์ด
+        with self.status_popup.canvas.before:
+            Color(0.15, 0.15, 0.15, 0.95) 
+            self.status_popup.bg_rect = Rectangle(pos=self.status_popup.pos, size=self.status_popup.size)
+        self.status_popup.bind(pos=self._update_popup_bg, size=self._update_popup_bg)
+        
+        # ภาพหมากตัวที่เลือก
+        img_path = f"assets/pieces/classic/{piece.color}/{piece.__class__.__name__.lower()}.png"
+        img = Image(source=img_path, size_hint_x=0.4)
+        self.status_popup.add_widget(img)
+        text_layout = BoxLayout(orientation='vertical', size_hint_x=0.6)
+        
+        # ชื่อหมาก
+        name_lbl = Label(text=piece.__class__.__name__.upper(), bold=True, font_size='20sp', halign='left')
+        name_lbl.bind(size=name_lbl.setter('text_size')) 
+        text_layout.add_widget(name_lbl)
+        
+        # แต้มหมาก
+        pts_lbl = Label(text=f"{piece.points} Points", font_size='16sp', color=(1, 0.8, 0.2, 1), halign='left')
+        pts_lbl.bind(size=pts_lbl.setter('text_size')) 
+        text_layout.add_widget(pts_lbl)
+        self.status_popup.add_widget(text_layout)
+        self.root_layout.add_widget(self.status_popup)
+   
+        # ทำแอนิเมชัน
+        self.status_popup.x += 20
+        self.status_popup.opacity = 0
+        anim = Animation(x=self.status_popup.x - 20, opacity=1, duration=0.15)
+        anim.start(self.status_popup)
 
     def check_ai_turn(self):
         if getattr(self, 'game_mode', 'PVP') == 'PVE' and self.game.current_turn == 'black' and not self.game.game_result:
