@@ -26,3 +26,18 @@ def toss_coin():
                 return 2, "หัวสีแดง"
     else:
         return 1, "หัวสีเหลือง"
+
+        
+def calculate_total_points(base_points, num_coins):
+    """
+    คำนวณแต้มรวมทั้งหมดของตัวละคร
+    """
+    total_points = base_points
+    coin_results = []
+    
+    for _ in range(num_coins):
+        points, color = toss_coin()
+        total_points += points
+        coin_results.append(color)
+        
+    return total_points, coin_results
