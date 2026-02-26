@@ -62,7 +62,7 @@ class ChessBoard:
                 return False
         return True
 
-    def move_piece(self, sr, sc, er, ec, resolve_clash=False):
+    def move_piece(self, sr, sc, er, ec, resolve_crash=False, crash_won=True):
         p = self.board[sr][sc]
         if not p or p.color != self.current_turn or self.game_result: 
             return False
@@ -77,9 +77,18 @@ class ChessBoard:
         target = self.board[er][ec]
         is_capture = (target is not None) or is_ep
 
-        if is_capture and not resolve_clash:
+        # ---------------------------------------------------------
+        # ✨ ระบบ CRASH (ส่งสัญญาณไปให้ UI เปิดหน้าต่างแทนที่จะทำเอง)
+        # ---------------------------------------------------------
+        if is_capture and not resolve_crash:
             captured_piece = target if not is_ep else self.board[sr][ec]
-            return ("clash", p, captured_piece)
+            # คืนค่าบอก UI ว่าเกิดการ "crash" พร้อมหมากทั้ง 2 ฝ่าย
+            return ("crash", p, captured_piece)
+            
+        # ถ้ากลับมาจาก UI แล้วปรากฏว่าทอยเหรียญ "แพ้" ให้คืนค่า False ยกเลิกการเดิน
+        if is_capture and resolve_crash and not crash_won:
+            return False
+        # ---------------------------------------------------------
         
         move_text = self.history.generate_move_text(p, sr, sc, er, ec, is_capture, is_castle)
         self.history.save_state(self, move_text)
@@ -169,11 +178,9 @@ class ChessBoard:
         elif is_check: 
             self.history.add_suffix_to_last_move("+") 
             
-        # ✨ เรียกใช้งานเอฟเฟกต์ของด่านทุกครั้งที่จบตา (ถ้าด่านนั้นมี)
         self.apply_map_effects()
 
     def apply_map_effects(self):
-        """✨ ฟังก์ชันปลั๊กอินสำหรับด่านพิเศษ (กระดานคลาสสิกจะไม่มีเอฟเฟกต์)"""
         pass
 
     def promote_pawn(self, r, c, cls):
