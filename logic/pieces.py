@@ -5,6 +5,12 @@ class Piece:
         self.color = color
         self.name = name
         self.points = 0
+
+        # --- เพิ่ม 2 บรรทัดนี้สำหรับระบบ Crash ---
+        self.base_points = 5  # ค่าพลังตั้งต้นชั่วคราว (แก้ได้ตามใจชอบ)
+        self.coins = 3        # จำนวนเหรียญที่มีชั่วคราว (แก้ได้ตามใจชอบ)
+        # ----------------------------------
+        
         self.has_moved = False
 
     def is_path_clear(self, start, end, board):
