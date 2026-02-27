@@ -36,14 +36,23 @@ except ImportError:
     TundraMap = None
 
 class PromotionPopup(ModalView):
-    def __init__(self, color, callback, **kwargs):
+# ✨ เพิ่ม parameter theme เข้ามาเพื่อเช็คตอนโหลดรูป
+    def __init__(self, color, callback, theme="Classic Knights", **kwargs):
         super().__init__(size_hint=(0.6, 0.2), auto_dismiss=False, **kwargs)
         layout = GridLayout(cols=4, padding=10, spacing=10)
         from logic.pieces import Queen, Rook, Bishop, Knight
         ops = [Queen, Rook, Bishop, Knight]
         names = ['queen', 'rook', 'bishop', 'knight']
+        
         for cls, n in zip(ops, names):
-            btn = Button(background_normal=f"assets/pieces/classic/{color}/{n}.png")
+            # ✨ เช็ค Theme และชี้ path ให้ถูกต้อง
+            if theme == "Ayothaya":
+                mapping = {'queen': 'chess ayothaya2.png', 'rook': 'chess ayothaya3.png', 'bishop': 'chess ayothaya5.png', 'knight': 'chess ayothaya4.png'}
+                path = f"assets/pieces/ayothaya/{color}/{mapping[n]}"
+            else:
+                path = f"assets/pieces/classic/{color}/{n}.png"
+                
+            btn = Button(background_normal=path)
             btn.bind(on_release=lambda b, c=cls: callback(c))
             layout.add_widget(btn)
         self.add_widget(layout)
@@ -227,7 +236,9 @@ class GameplayScreen(Screen):
                     pop.dismiss()
                     self.init_board_ui()
                     self.check_ai_turn()
-                pop = PromotionPopup(self.game.board[r][c].color, do_p)
+                # ✨ ส่ง theme เข้าไปใน Popup ด้วย
+                theme = getattr(App.get_running_app(), 'selected_unit', 'Classic Knights')
+                pop = PromotionPopup(self.game.board[r][c].color, do_p, theme=theme)
                 pop.open()
             elif res == True:
                 self.selected = None
@@ -535,11 +546,13 @@ class GameplayScreen(Screen):
         
         if res == "promote":
             def do_p(cls):
-                self.game.promote_pawn(er, ec, cls)
+                self.game.promote_pawn(end_pos[0], end_pos[1], cls)
                 pop.dismiss()
                 self.init_board_ui()
                 self.check_ai_turn()
-            pop = PromotionPopup(self.game.board[er][ec].color, do_p)
+            # ✨ ส่ง theme เข้าไปใน Popup ด้วย
+            theme = getattr(App.get_running_app(), 'selected_unit', 'Classic Knights')
+            pop = PromotionPopup(self.game.board[end_pos[0]][end_pos[1]].color, do_p, theme=theme)
             pop.open()
         elif res == True:
             # เดินสำเร็จ (กินได้)
