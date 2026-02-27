@@ -322,6 +322,8 @@ class GameplayScreen(Screen):
 
     # ✨ ฟังก์ชันยกเลิกการต่อสู้ ปิดป๊อปอัป
     def cancel_crash(self, reset_selection=False):
+        if hasattr(self, 'spin_event') and self.spin_event:
+            self.spin_event.cancel()
         if self.crash_popup:
             self.root_layout.remove_widget(self.crash_popup)
             self.crash_popup = None
