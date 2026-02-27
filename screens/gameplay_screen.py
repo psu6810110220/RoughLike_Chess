@@ -212,79 +212,103 @@ class GameplayScreen(Screen):
                 self.hide_piece_status() #  ซ่อน Pop-up เมื่อกดที่อื่น (ยกเลิกการเลือก)
                 self.refresh_ui()
 
-    # ✨ ฟังก์ชันสร้างหน้าต่าง CRASH
+# ✨ ฟังก์ชันสร้างหน้าต่าง CRASH (อัปเดตหน้าตาใหม่)
     def show_crash_popup(self, attacker, defender, start_pos, end_pos):
         self.hide_piece_status()
         self.cancel_crash()
         
-        # ไฮไลท์ช่องบนกระดานให้เห็นว่าใครสู้กับใคร
+        # ไฮไลท์ช่องบนกระดาน
         self.refresh_ui()
         self.squares[start_pos].update_square_style(highlight=True)
-        self.squares[end_pos].update_square_style(is_check=True) # กรอบแดงตรงจุดที่โดนบุก
+        self.squares[end_pos].update_square_style(is_check=True)
         
-        self.crash_popup = BoxLayout(orientation='vertical', size_hint=(None, None), size=(260, 320), 
+        # ขยายขนาด Popup เล็กน้อยเพื่อรองรับพื้นที่เหรียญ
+        self.crash_popup = BoxLayout(orientation='vertical', size_hint=(None, None), size=(340, 400), 
             pos_hint={'right': 0.96, 'center_y': 0.5},
             padding=15,
             spacing=10)
         
-        # พื้นหลัง
         with self.crash_popup.canvas.before:
             Color(0.12, 0.12, 0.15, 0.95) 
             self.crash_popup.bg_rect = Rectangle(pos=self.crash_popup.pos, size=self.crash_popup.size)
         self.crash_popup.bind(pos=self._update_crash_bg, size=self._update_crash_bg)
         
-        # ข้อความ Header "CRASH"
         title_lbl = Label(text="CRASH!", bold=True, font_size='28sp', color=(1, 0.2, 0.2, 1), size_hint_y=0.15)
         self.crash_popup.add_widget(title_lbl)
         
-        #  พื้นที่แสดงหมาก 2 ตัว 
-        combatants_layout = BoxLayout(orientation='horizontal', size_hint_y=0.5)
+        combatants_layout = BoxLayout(orientation='horizontal', size_hint_y=0.55)
         
-        # ฝ่ายโจมตี (Attacker)
-        atk_box = BoxLayout(orientation='vertical')
-        atk_img = Image(source=f"assets/pieces/classic/{attacker.color}/{attacker.__class__.__name__.lower()}.png")
+        # === ฝ่ายโจมตี (Attacker) ===
+        atk_box = BoxLayout(orientation='vertical', spacing=5)
+        atk_img = Image(source=f"assets/pieces/classic/{attacker.color}/{attacker.__class__.__name__.lower()}.png", size_hint_y=0.4)
         atk_pts = getattr(attacker, 'base_points', 5)
         atk_coins = getattr(attacker, 'coins', 3)
         atk_box.add_widget(atk_img)
-        atk_box.add_widget(Label(text=f"Pts: {atk_pts}", font_size='14sp', color=(1, 0.8, 0.2, 1)))
-        atk_box.add_widget(Label(text=f"Coins: {atk_coins}", font_size='14sp', color=(0.7, 0.8, 1, 1)))
         
-        # ข้อความ VS ตรงกลาง
-        vs_lbl = Label(text="VS", bold=True, font_size='24sp', color=(0.8, 0.8, 0.8, 1), size_hint_x=0.4)
+        # ข้อมูล point (ห้ามแก้ไข)
+        atk_box.add_widget(Label(text=f"point : {atk_pts}", font_size='14sp', color=(1, 0.8, 0.2, 1), size_hint_y=0.15))
         
-        # ฝ่ายป้องกัน (Defender)
-        def_box = BoxLayout(orientation='vertical')
-        def_img = Image(source=f"assets/pieces/classic/{defender.color}/{defender.__class__.__name__.lower()}.png")
+        # ข้อมูล coin (แสดงทีละเหรียญ)
+        atk_coin_row = BoxLayout(orientation='horizontal', size_hint_y=0.2)
+        atk_coin_row.add_widget(Label(text="coin : ", font_size='14sp', size_hint_x=0.4))
+        self.atk_coin_labels = []
+        for _ in range(atk_coins):
+            lbl = Label(text="0", font_size='16sp', bold=True, color=(0.5, 0.5, 0.5, 1))
+            atk_coin_row.add_widget(lbl)
+            self.atk_coin_labels.append(lbl)
+        atk_box.add_widget(atk_coin_row)
+        
+        # ข้อมูล crash รวม
+        self.atk_total_lbl = Label(text=f"crash : {atk_pts}", font_size='16sp', color=(1, 0.4, 0.4, 1), bold=True, size_hint_y=0.2)
+        atk_box.add_widget(self.atk_total_lbl)
+        
+        self.vs_lbl = Label(text="VS", bold=True, font_size='24sp', color=(0.8, 0.8, 0.8, 1), size_hint_x=0.4, halign="center")
+        
+        # === ฝ่ายป้องกัน (Defender) ===
+        def_box = BoxLayout(orientation='vertical', spacing=5)
+        def_img = Image(source=f"assets/pieces/classic/{defender.color}/{defender.__class__.__name__.lower()}.png", size_hint_y=0.4)
         def_pts = getattr(defender, 'base_points', 5)
         def_coins = getattr(defender, 'coins', 3)
         def_box.add_widget(def_img)
-        def_box.add_widget(Label(text=f"Pts: {def_pts}", font_size='14sp', color=(1, 0.8, 0.2, 1)))
-        def_box.add_widget(Label(text=f"Coins: {def_coins}", font_size='14sp', color=(0.7, 0.8, 1, 1)))
-
+        
+        # ข้อมูล point (ห้ามแก้ไข)
+        def_box.add_widget(Label(text=f"point : {def_pts}", font_size='14sp', color=(1, 0.8, 0.2, 1), size_hint_y=0.15))
+        
+        # ข้อมูล coin (แสดงทีละเหรียญ)
+        def_coin_row = BoxLayout(orientation='horizontal', size_hint_y=0.2)
+        def_coin_row.add_widget(Label(text="coin : ", font_size='14sp', size_hint_x=0.4))
+        self.def_coin_labels = []
+        for _ in range(def_coins):
+            lbl = Label(text="0", font_size='16sp', bold=True, color=(0.5, 0.5, 0.5, 1))
+            def_coin_row.add_widget(lbl)
+            self.def_coin_labels.append(lbl)
+        def_box.add_widget(def_coin_row)
+        
+        # ข้อมูล crash รวม
+        self.def_total_lbl = Label(text=f"crash : {def_pts}", font_size='16sp', color=(0.4, 0.4, 1, 1), bold=True, size_hint_y=0.2)
+        def_box.add_widget(self.def_total_lbl)
+        
         combatants_layout.add_widget(atk_box)
-        combatants_layout.add_widget(vs_lbl)
+        combatants_layout.add_widget(self.vs_lbl)
         combatants_layout.add_widget(def_box)
         
         self.crash_popup.add_widget(combatants_layout)
         
-        # พื้นที่ปุ่มกด (แนวตั้ง)
-        btn_layout = BoxLayout(orientation='vertical', size_hint_y=0.35, spacing=10, padding=[0, 10, 0, 0])
+        btn_layout = BoxLayout(orientation='vertical', size_hint_y=0.3, spacing=10, padding=[0, 10, 0, 0])
         
-        # ✨ ปุ่ม CRASH! ที่จะทำงานสุ่มผลลัพธ์
-        crash_btn = Button(text="CRASH!", bold=True, font_size='18sp', background_color=(0.8, 0.2, 0.2, 1))
-        crash_btn.bind(on_release=lambda x: self.resolve_crash_ui(start_pos, end_pos))
+        # ปุ่มกดเริ่มทอยเหรียญ (เปลี่ยนจาก resolve_crash_ui เป็น start_crash_animation)
+        self.crash_btn = Button(text="CRASH!", bold=True, font_size='18sp', background_color=(0.8, 0.2, 0.2, 1))
+        self.crash_btn.bind(on_release=lambda x: self.start_crash_animation(start_pos, end_pos))
         
-        cancel_btn = Button(text="CANCEL", font_size='14sp', background_color=(0.3, 0.3, 0.3, 1))
-        cancel_btn.bind(on_release=lambda x: self.cancel_crash(reset_selection=True))
+        self.cancel_btn = Button(text="CANCEL", font_size='14sp', background_color=(0.3, 0.3, 0.3, 1))
+        self.cancel_btn.bind(on_release=lambda x: self.cancel_crash(reset_selection=True))
         
-        btn_layout.add_widget(crash_btn)
-        btn_layout.add_widget(cancel_btn)
+        btn_layout.add_widget(self.crash_btn)
+        btn_layout.add_widget(self.cancel_btn)
         
         self.crash_popup.add_widget(btn_layout)
-
         self.root_layout.add_widget(self.crash_popup)
         
-        # อนิเมชันให้สไลด์เข้ามาจากขวา
         self.crash_popup.x += 30
         self.crash_popup.opacity = 0
         anim = Animation(x=self.crash_popup.x - 30, opacity=1, duration=0.2, t='out_quad')
