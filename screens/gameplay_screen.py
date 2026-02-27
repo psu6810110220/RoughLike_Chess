@@ -460,6 +460,36 @@ class GameplayScreen(Screen):
         # หน่วงเวลาให้ผู้เล่นสะใจ 1.5 วิ แล้วค่อยขยับหมากบนกระดาน
         Clock.schedule_once(self.execute_board_move, 1.5)
 
+    def execute_board_move(self, dt):
+        start_pos = self.anim_state['start_pos']
+        end_pos = self.anim_state['end_pos']
+        a_tot = self.anim_state['a_current_total']
+        d_tot = self.anim_state['d_current_total']
+
+        is_attacker_won = (a_tot > d_tot)
+
+        self.cancel_crash() # ปิดหน้าต่าง
+
+        # ดำเนินการลบหมากหรือเดินหมากจาก Logic กระดาน
+        res = self.game.move_piece(start_pos[0], start_pos[1], end_pos[0], end_pos[1], resolve_crash=True, crash_won=is_attacker_won)
+
+        if res == "promote":
+            def do_p(cls):
+                self.game.promote_pawn(end_pos[0], end_pos[1], cls)
+                pop.dismiss()
+                self.init_board_ui()
+                self.check_ai_turn()
+            pop = PromotionPopup(self.game.board[end_pos[0]][end_pos[1]].color, do_p)
+            pop.open()
+        elif res == True:
+            self.selected = None
+            self.init_board_ui()
+            self.check_ai_turn()
+        else:
+            self.selected = None
+            self.refresh_ui()
+            self.check_ai_turn()
+
     # ✨ ฟังก์ชันคำนวณและประมวลผลการ Crash ในฝั่งจอเกม
     def resolve_crash_ui(self, start_pos, end_pos):
         self.cancel_crash()
