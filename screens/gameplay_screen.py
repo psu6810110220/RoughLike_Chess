@@ -450,14 +450,19 @@ class GameplayScreen(Screen):
     def finish_crash_animation(self):
         a_tot = self.anim_state['a_current_total']
         d_tot = self.anim_state['d_current_total']
-        winner_name = self.anim_state['attacker'].name if a_tot > d_tot else self.anim_state['defender'].name
 
-        # เปลี่ยนคำว่า VS เป็นคนชนะกระพริบ
-        self.vs_lbl.text = f"[color=00ff00]WINNER![/color]\n{winner_name.upper()}"
-        self.vs_lbl.font_size = '18sp'
+        # ✅ แก้ไขตรงนี้: เงื่อนไขการแสดงผลลัพธ์การปะทะ
+        if a_tot > d_tot:
+            result_text = "[color=00ff00]BREAKING[/color]" # สีเขียว (ชนะ)
+        elif a_tot == d_tot:
+            result_text = "[color=ffff00]DRAW[/color]" # สีเหลือง (เสมอ)
+        else:
+            result_text = "[color=ff0000]DISTORTION[/color]" # สีแดง (แพ้)
+
+        self.vs_lbl.text = result_text
+        self.vs_lbl.font_size = '20sp'
         self.vs_lbl.markup = True
 
-        # หน่วงเวลาให้ผู้เล่นสะใจ 1.5 วิ แล้วค่อยขยับหมากบนกระดาน
         Clock.schedule_once(self.execute_board_move, 1.5)
 
     def execute_board_move(self, dt):
@@ -465,7 +470,7 @@ class GameplayScreen(Screen):
         end_pos = self.anim_state['end_pos']
         a_tot = self.anim_state['a_current_total']
         d_tot = self.anim_state['d_current_total']
-        
+
         sr, sc = start_pos
         er, ec = end_pos
 
