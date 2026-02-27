@@ -181,7 +181,10 @@ class GameplayScreen(Screen):
             is_last = (r, c) in self.game.last_move if self.game.last_move else False
             sq.update_square_style(highlight=(self.selected == (r, c)), is_legal=((r,c) in legal_moves), is_check=((r,c) == check_pos), is_last=is_last)
             p = self.game.board[r][c]
-            path = f"assets/pieces/classic/{p.color}/{p.__class__.__name__.lower()}.png" if p else None
+            
+            # ✨ แก้ไขบรรทัดดึง path รูปภาพโดยเรียกใช้ฟังก์ชันใหม่
+            path = self.get_piece_image_path(p) if p else None
+            
             sq.set_piece_icon(path)
         self.sidebar.update_history_text(self.game.history.move_text_history)
 
@@ -264,7 +267,7 @@ class GameplayScreen(Screen):
         
         # === ฝ่ายโจมตี (Attacker) ===
         atk_box = BoxLayout(orientation='vertical', spacing=5)
-        atk_img = Image(source=f"assets/pieces/classic/{attacker.color}/{attacker.__class__.__name__.lower()}.png", size_hint_y=0.4)
+        atk_img = Image(source=self.get_piece_image_path(attacker), size_hint_y=0.4)
         atk_pts = getattr(attacker, 'base_points', 5)
         atk_coins = getattr(attacker, 'coins', 3)
         atk_box.add_widget(atk_img)
@@ -290,7 +293,7 @@ class GameplayScreen(Screen):
         
         # === ฝ่ายป้องกัน (Defender) ===
         def_box = BoxLayout(orientation='vertical', spacing=5)
-        def_img = Image(source=f"assets/pieces/classic/{defender.color}/{defender.__class__.__name__.lower()}.png", size_hint_y=0.4)
+        def_img = Image(source=self.get_piece_image_path(defender), size_hint_y=0.4)
         def_pts = getattr(defender, 'base_points', 5)
         def_coins = getattr(defender, 'coins', 3)
         def_box.add_widget(def_img)
@@ -568,7 +571,7 @@ class GameplayScreen(Screen):
             self.status_popup.bg_rect = Rectangle(pos=self.status_popup.pos, size=self.status_popup.size)
         self.status_popup.bind(pos=self._update_popup_bg, size=self._update_popup_bg)
         
-        img_path = f"assets/pieces/classic/{piece.color}/{piece.__class__.__name__.lower()}.png"
+        img_path = self.get_piece_image_path(piece)
         img = Image(source=img_path, size_hint_x=0.4)
         self.status_popup.add_widget(img)
         text_layout = BoxLayout(orientation='vertical', size_hint_x=0.6)
