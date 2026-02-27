@@ -379,6 +379,74 @@ class GameplayScreen(Screen):
         # เรียก Clock ให้หมุนเลขทุกๆ 0.05 วินาที
         self.spin_event = Clock.schedule_interval(self.animate_coin_step, 0.05)
 
+    def animate_coin_step(self, dt):
+        import random
+        state = self.anim_state
+        side = state['side']
+        idx = state['coin_idx']
+
+        # เช็คว่ากำลังแอนิเมทฝั่งไหน
+        if side == 'atk':
+            labels = self.atk_coin_labels
+            final_pts = self.a_pts_array
+            if idx >= len(final_pts):
+                state['side'] = 'def' # สลับไปฝั่งกัน
+                state['coin_idx'] = 0
+                return
+        else:
+            labels = self.def_coin_labels
+            final_pts = self.d_pts_array
+            if idx >= len(final_pts):
+                # จบแอนิเมชัน
+                self.spin_event.cancel()
+                self.finish_crash_animation()
+                return
+
+        target_val = final_pts[idx]
+        lbl = labels[idx]
+
+        if state['ticks'] < state['max_ticks']:
+            # หมุนเลขหลอกๆ ให้ดูมีความพยายาม
+            if target_val <= 1:
+                lbl.text = str(random.choice([0, 1]))
+                lbl.color = (1, 1, 1, 1)
+            elif target_val == 2:
+                lbl.text = str(random.choice([1, 2]))
+                lbl.color = (1, 0.6, 0.6, 1) # แดงจางๆ
+            elif target_val == 3:
+                lbl.text = str(random.choice([2, 3]))
+                lbl.color = (0.6, 0.6, 1, 1) # ฟ้าจางๆ
+            state['ticks'] += 1
+        else:
+            # จบรอบเหรียญ ยึดค่าจริง!
+            lbl.text = str(target_val)
+            
+            # เอฟเฟกต์สีและการเด้งเมื่อติดคริติคอล
+            if target_val == 0:
+                lbl.color = (0.5, 0.5, 0.5, 1) # เทา
+            elif target_val == 1:
+                lbl.color = (1, 1, 0.2, 1) # เหลือง
+            elif target_val == 2:
+                lbl.color = (1, 0.2, 0.2, 1) # แดง (มีโอกาสสุ่มต่อ)
+                anim = Animation(font_size=24, duration=0.1) + Animation(font_size=16, duration=0.1)
+                anim.start(lbl)
+            elif target_val == 3:
+                lbl.color = (0.2, 0.5, 1, 1) # น้ำเงิน
+                anim = Animation(font_size=24, duration=0.1) + Animation(font_size=16, duration=0.1)
+                anim.start(lbl)
+
+            # บวกเลขลงช่อง crashรวม
+            if side == 'atk':
+                state['a_current_total'] += target_val
+                self.atk_total_lbl.text = f"crash : {state['a_current_total']}"
+            else:
+                state['d_current_total'] += target_val
+                self.def_total_lbl.text = f"crash : {state['d_current_total']}"
+
+            # เตรียมเหรียญต่อไป
+            state['coin_idx'] += 1
+            state['ticks'] = 0
+
     # ✨ ฟังก์ชันคำนวณและประมวลผลการ Crash ในฝั่งจอเกม
     def resolve_crash_ui(self, start_pos, end_pos):
         self.cancel_crash()
