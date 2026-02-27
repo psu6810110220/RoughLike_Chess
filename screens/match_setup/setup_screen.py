@@ -62,7 +62,8 @@ class MatchSetupScreen(Screen):
         self.content.add_widget(sec)
 
     def show_unit_selection(self):
-        units = ["Classic Knights", "Royal Guard", "Arcane Order", "Shadow Assassins"]
+        # แก้ไขจาก "Royal Guard" เป็น "Ayothaya"
+        units = ["Classic Knights", "Ayothaya", "Arcane Order", "Shadow Assassins"]
         items = [(u, u) for u in units]
         sec = SetupSection("🛡 Select Your Units", items, cols=2, group_name="unit", 
                            on_select_callback=self.on_select, height=250)
@@ -88,7 +89,7 @@ class MatchSetupScreen(Screen):
         # ✨ ปลดล็อก Board ให้กดได้ทุกอันแล้ว
         
         # ดักจับ Unit: อนุญาตแค่ Classic Knights
-        if category == 'unit' and value != "Classic Knights":
+        if category == 'unit' and value not in ["Classic Knights", "Ayothaya"]:
             self.show_coming_soon_popup(value)
             return
 
@@ -111,7 +112,7 @@ class MatchSetupScreen(Screen):
     def go_back(self, instance):
         self.manager.current = 'menu'
 
-    def start_battle(self, instance):
+def start_battle(self, instance):
         final_board = self.selected_data['board']
         final_unit = self.selected_data['unit']
         
@@ -120,9 +121,10 @@ class MatchSetupScreen(Screen):
             final_board = random.choice(playable_boards)
             print(f"System randomized board to: {final_board}") 
 
-        # ✨ บันทึกชื่อด่านลงในตัวแปร App เพื่อให้หน้า GamePlay ดึงไปใช้
+        # บันทึกชื่อด่านและชื่อเผ่าหมากลงในตัวแปร App เพื่อให้หน้า GamePlay ดึงไปใช้
         app = App.get_running_app()
         app.selected_board = final_board
+        app.selected_unit = final_unit  # ✨ เพิ่มบรรทัดนี้
 
         game_screen = self.manager.get_screen('game')
         game_screen.setup_game(self.selected_data['mode']) 
