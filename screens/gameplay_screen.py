@@ -465,6 +465,9 @@ class GameplayScreen(Screen):
         end_pos = self.anim_state['end_pos']
         a_tot = self.anim_state['a_current_total']
         d_tot = self.anim_state['d_current_total']
+        
+        sr, sc = start_pos
+        er, ec = end_pos
 
         is_attacker_won = (a_tot > d_tot)
 
