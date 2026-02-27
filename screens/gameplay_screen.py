@@ -491,7 +491,9 @@ class GameplayScreen(Screen):
             self.check_ai_turn()
         
         # ตรวจสอบว่าฝ่ายบุกชนะหรือไม่
-        is_attacker_won = (crash_result["winner"] == attacker.name)
+        is_attacker_won = (a_tot > d_tot)
+
+        self.cancel_crash()
         
         # สั่งขยับหมากโดยส่งผลลัพธ์การ crash เข้าไปด้วย
         res = self.game.move_piece(sr, sc, er, ec, resolve_crash=True, crash_won=is_attacker_won)
