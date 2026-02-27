@@ -332,6 +332,53 @@ class GameplayScreen(Screen):
             self.selected = None
             self.refresh_ui()
 
+    # ✨ ชุดฟังก์ชันใหม่สำหรับจัดการ Animation หมุนตัวเลข
+    def start_crash_animation(self, start_pos, end_pos):
+        self.crash_btn.disabled = True
+        self.cancel_btn.disabled = True
+
+        sr, sc = start_pos
+        er, ec = end_pos
+        attacker = self.game.board[sr][sc]
+        defender = self.game.board[er][ec]
+
+        a_base = getattr(attacker, 'base_points', 5)
+        a_coins = getattr(attacker, 'coins', 3)
+        d_base = getattr(defender, 'base_points', 5)
+        d_coins = getattr(defender, 'coins', 3)
+
+        # สุ่มผลลัพธ์ล่วงหน้าเพื่อให้แอนิเมชันวิ่งไปหาคำตอบที่ถูกต้อง
+        from logic.crash_logic import calculate_total_points
+        self.a_final_total, self.a_results = calculate_total_points(a_base, a_coins)
+        self.d_final_total, self.d_results = calculate_total_points(d_base, d_coins)
+
+        # แปลงข้อความเป็นค่าตัวเลข เพื่อนำไปโชว์ในช่อง coin
+        def get_pt(res_str):
+            if "น้ำเงิน" in res_str: return 3
+            if "แดง" in res_str: return 2
+            if "เหลือง" in res_str: return 1
+            return 0
+
+        self.a_pts_array = [get_pt(r) for r in self.a_results]
+        self.d_pts_array = [get_pt(r) for r in self.d_results]
+
+        # เก็บรอบของ Animation
+        self.anim_state = {
+            'side': 'atk',
+            'coin_idx': 0,
+            'ticks': 0,
+            'max_ticks': 15, # ความยาวของการหมุนต่อ 1 เหรียญ
+            'a_current_total': a_base,
+            'd_current_total': d_base,
+            'start_pos': start_pos,
+            'end_pos': end_pos,
+            'attacker': attacker,
+            'defender': defender
+        }
+
+        # เรียก Clock ให้หมุนเลขทุกๆ 0.05 วินาที
+        self.spin_event = Clock.schedule_interval(self.animate_coin_step, 0.05)
+
     # ✨ ฟังก์ชันคำนวณและประมวลผลการ Crash ในฝั่งจอเกม
     def resolve_crash_ui(self, start_pos, end_pos):
         self.cancel_crash()
