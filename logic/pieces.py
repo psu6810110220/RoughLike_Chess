@@ -4,7 +4,6 @@ class Piece:
     def __init__(self, color, name):
         self.color = color
         self.name = name
-        self.points = 0
 
         # --- เพิ่ม 2 บรรทัดนี้สำหรับระบบ Crash ---
         self.base_points = 5  # ค่าพลังตั้งต้นชั่วคราว (แก้ได้ตามใจชอบ)
@@ -33,7 +32,7 @@ class Piece:
 class Rook(Piece):
     def __init__(self, color): 
         super().__init__(color, 'R' if color == 'white' else 'r')
-        self.points = 3
+        self.base_points = 3
         self.coins = 3
         
     def is_valid_move(self, start, end, board):
@@ -44,7 +43,7 @@ class Rook(Piece):
 class Knight(Piece):
     def __init__(self, color): 
         super().__init__(color, 'N' if color == 'white' else 'n')
-        self.points = 2
+        self.base_points = 2
         self.coins = 3
         
     def is_valid_move(self, start, end, board):
@@ -54,7 +53,7 @@ class Knight(Piece):
 class Bishop(Piece):
     def __init__(self, color): 
         super().__init__(color, 'B' if color == 'white' else 'b')
-        self.points = 3
+        self.base_points = 3
         self.coins = 2
         
     def is_valid_move(self, start, end, board):
@@ -65,7 +64,7 @@ class Bishop(Piece):
 class Queen(Piece):
     def __init__(self, color): 
         super().__init__(color, 'Q' if color == 'white' else 'q')
-        self.points = 1
+        self.base_points = 1
         self.coins = 7
         
     def is_valid_move(self, start, end, board):
@@ -74,7 +73,7 @@ class Queen(Piece):
 class King(Piece):
     def __init__(self, color): 
         super().__init__(color, 'K' if color == 'white' else 'k')
-        self.points = 2
+        self.base_points = 2
         self.coins = 2
         
     def is_valid_move(self, start, end, board):
@@ -83,7 +82,7 @@ class King(Piece):
 class Pawn(Piece):
     def __init__(self, color): 
         super().__init__(color, 'P' if color == 'white' else 'p')
-        self.points = 2
+        self.base_points = 2
         self.coins = 2
         
     def is_valid_move(self, start, end, board, ep_target=None):
