@@ -447,6 +447,19 @@ class GameplayScreen(Screen):
             state['coin_idx'] += 1
             state['ticks'] = 0
 
+    def finish_crash_animation(self):
+        a_tot = self.anim_state['a_current_total']
+        d_tot = self.anim_state['d_current_total']
+        winner_name = self.anim_state['attacker'].name if a_tot > d_tot else self.anim_state['defender'].name
+
+        # เปลี่ยนคำว่า VS เป็นคนชนะกระพริบ
+        self.vs_lbl.text = f"[color=00ff00]WINNER![/color]\n{winner_name.upper()}"
+        self.vs_lbl.font_size = '18sp'
+        self.vs_lbl.markup = True
+
+        # หน่วงเวลาให้ผู้เล่นสะใจ 1.5 วิ แล้วค่อยขยับหมากบนกระดาน
+        Clock.schedule_once(self.execute_board_move, 1.5)
+
     # ✨ ฟังก์ชันคำนวณและประมวลผลการ Crash ในฝั่งจอเกม
     def resolve_crash_ui(self, start_pos, end_pos):
         self.cancel_crash()
