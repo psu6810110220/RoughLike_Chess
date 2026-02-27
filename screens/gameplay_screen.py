@@ -489,28 +489,6 @@ class GameplayScreen(Screen):
             self.selected = None
             self.refresh_ui()
             self.check_ai_turn()
-
-    # ✨ ฟังก์ชันคำนวณและประมวลผลการ Crash ในฝั่งจอเกม
-    def resolve_crash_ui(self, start_pos, end_pos):
-        self.cancel_crash()
-            
-        sr, sc = start_pos
-        er, ec = end_pos
-        
-        attacker = self.game.board[sr][sc]
-        defender = self.game.board[er][ec]
-        
-        a_base = getattr(attacker, 'base_points', 5)
-        a_coins = getattr(attacker, 'coins', 3)
-        d_base = getattr(defender, 'base_points', 5)
-        d_coins = getattr(defender, 'coins', 3)
-        
-        # ดึง logic สุ่มทอยเหรียญมาคำนวณแพ้ชนะ
-        from logic.crash_logic import resolve_crash
-        crash_result = resolve_crash(
-            attacker.name, a_base, a_coins,
-            defender.name, d_base, d_coins
-        )
         
         # ตรวจสอบว่าฝ่ายบุกชนะหรือไม่
         is_attacker_won = (crash_result["winner"] == attacker.name)
