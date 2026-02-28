@@ -102,13 +102,12 @@ class GameplayScreen(Screen):
     def get_piece_image_path(self, piece):
         """✨ ฟังก์ชันสำหรับดึง Path รูปภาพหมากตามเผ่า (Theme) ที่ผู้เล่นเลือก"""
         app = App.get_running_app()
-        theme = getattr(app, 'selected_unit', 'Classic Knights')
+        theme = getattr(app, 'selected_unit', 'Medieval Knights')
         
         p_color = piece.color
         p_name = piece.__class__.__name__.lower()
         
         if theme == "Ayothaya":
-            # Mapping ของเผ่าอโยธยาตามที่กำหนด (Pawn ใช้เบอร์ 6 ตัวเดียว)
             mapping = {
                 'king': 'chess ayothaya1.png',
                 'queen': 'chess ayothaya2.png',
@@ -119,6 +118,18 @@ class GameplayScreen(Screen):
             }
             filename = mapping.get(p_name, 'chess ayothaya6.png')
             return f"assets/pieces/ayothaya/{p_color}/{filename}"
+        else:
+            # ✨ แก้ไขเป็นของ Medieval
+            mapping = {
+                'king': 'chess medieval1.png',
+                'queen': 'chess medieval2.png',
+                'rook': 'chess medieval3.png',
+                'knight': 'chess medieval4.png',
+                'bishop': 'chess medieval5.png',
+                'pawn': 'chess medieval6.png'
+            }
+            filename = mapping.get(p_name, 'chess medieval6.png')
+            return f"assets/pieces/medieval/{p_color}/{filename}"
         else:
             # คืนค่าแบบดั้งเดิม (Classic)
             return f"assets/pieces/classic/{p_color}/{p_name}.png"
