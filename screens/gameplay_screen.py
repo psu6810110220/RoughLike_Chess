@@ -53,7 +53,7 @@ class PromotionPopup(ModalView):
                 # ✨ แก้ไขเป็นของ Medieval
                 mapping = {'queen': 'chess medieval2.png', 'rook': 'chess medieval3.png', 'bishop': 'chess medieval5.png', 'knight': 'chess medieval4.png'}
                 path = f"assets/pieces/medieval/{color}/{mapping[n]}"
-                
+
             btn = Button(background_normal=path)
             btn.bind(on_release=lambda b, c=cls: callback(c))
             layout.add_widget(btn)
@@ -132,9 +132,6 @@ class GameplayScreen(Screen):
             }
             filename = mapping.get(p_name, 'chess medieval6.png')
             return f"assets/pieces/medieval/{p_color}/{filename}"
-        else:
-            # คืนค่าแบบดั้งเดิม (Classic)
-            return f"assets/pieces/classic/{p_color}/{p_name}.png"
 
     def on_quit(self):
         self.manager.current = 'setup'
