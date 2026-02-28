@@ -63,7 +63,7 @@ class MatchSetupScreen(Screen):
 
     def show_unit_selection(self):
         # แก้ไขจาก "Royal Guard" เป็น "Ayothaya"
-        units = ["Classic Knights", "Ayothaya", "Arcane Order", "Shadow Assassins"]
+        units = ["Medieval Knights", "Ayothaya", "Arcane Order", "Shadow Assassins"]
         items = [(u, u) for u in units]
         sec = SetupSection("🛡 Select Your Units", items, cols=2, group_name="unit", 
                            on_select_callback=self.on_select, height=250)
@@ -89,7 +89,7 @@ class MatchSetupScreen(Screen):
         # ✨ ปลดล็อก Board ให้กดได้ทุกอันแล้ว
         
         # ดักจับ Unit: อนุญาตแค่ Classic Knights
-        if category == 'unit' and value not in ["Classic Knights", "Ayothaya"]:
+        if category == 'unit' and value not in ["Medieval Knights", "Ayothaya"]:
             self.show_coming_soon_popup(value)
             return
 
