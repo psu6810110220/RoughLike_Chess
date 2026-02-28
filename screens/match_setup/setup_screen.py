@@ -112,7 +112,7 @@ class MatchSetupScreen(Screen):
     def go_back(self, instance):
         self.manager.current = 'menu'
 
-def start_battle(self, instance):
+    def start_battle(self, instance):
         final_board = self.selected_data['board']
         final_unit = self.selected_data['unit']
         
