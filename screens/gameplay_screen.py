@@ -50,7 +50,9 @@ class PromotionPopup(ModalView):
                 mapping = {'queen': 'chess ayothaya2.png', 'rook': 'chess ayothaya3.png', 'bishop': 'chess ayothaya5.png', 'knight': 'chess ayothaya4.png'}
                 path = f"assets/pieces/ayothaya/{color}/{mapping[n]}"
             else:
-                path = f"assets/pieces/classic/{color}/{n}.png"
+                # ✨ แก้ไขเป็นของ Medieval
+                mapping = {'queen': 'chess medieval2.png', 'rook': 'chess medieval3.png', 'bishop': 'chess medieval5.png', 'knight': 'chess medieval4.png'}
+                path = f"assets/pieces/medieval/{color}/{mapping[n]}"
                 
             btn = Button(background_normal=path)
             btn.bind(on_release=lambda b, c=cls: callback(c))
