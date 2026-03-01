@@ -41,7 +41,7 @@ def toss_coin_medieval():
     else:
         return 10, "หัวสีฟ้า"
 
-def toss_demon():
+def toss_coin_demon():
     """ทอยเหรียญของ Demon: ก้อย(-3), ส้ม(+4), ม่วง(+6)"""
     # ก้อย ต่อ หัว 40:60
     if random.random() < 0.40:
@@ -56,6 +56,14 @@ def toss_demon():
             return 6, "หัวสีส้ม"
     else:
         return 6, "หัวสีส้ม"
+
+def toss_coin_heaven():
+    """ทอยเหรียญของ Heaven: ก้อย(+0), เหลือง(+1)"""
+    # ก้อย ต่อ หัว 50:50
+    if random.random() < 0.50:
+        return 0, "ก้อย"
+    else:
+        return 1, "หัวสีเหลือง"
 
 def calculate_total_points(base_points, num_coins):
     """คำนวณแต้มรวมทั้งหมดจากการวนลูปทอยเหรียญ"""
