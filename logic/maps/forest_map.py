@@ -1,12 +1,25 @@
-from logic.board import ChessBoard # ดึงกฎหมากรุกคลาสสิกมาทั้งหมด
+# logic/maps/forest_map.py
+import random
+from logic.board import ChessBoard
+from logic.pieces import Obstacle
 
 class ForestMap(ChessBoard):
     def __init__(self):
         super().__init__()
-        # กำหนดรูปภาพประจำด่านนี้ไว้ที่นี่เลย UI จะได้ดึงไปใช้ง่ายๆ
-        self.bg_image = 'assets/boards/forest.png' 
+        self.bg_image = 'assets/pieces/event/event1.png'
 
     def apply_map_effects(self):
-        # ✨ ใส่โค้ดพิเศษเฉพาะด่านป่าตรงนี้
-        # เช่น สุ่มให้หมากสีเขียวได้เกราะป้องกัน
-        print("เอฟเฟกต์ป่าอาถรรพ์ทำงาน!")
+        # โอกาส 15% ที่จะเกิด Event หนาม
+        if random.random() < 0.15:
+            empty_squares = []
+            for r in range(8):
+                for c in range(8):
+                    if self.board[r][c] is None:
+                        empty_squares.append((r, c))
+
+            # สุ่มช่องว่าง 3 ถึง 6 ช่อง
+            if len(empty_squares) >= 3:
+                num_thorns = random.randint(3, min(6, len(empty_squares)))
+                chosen_squares = random.sample(empty_squares, num_thorns)
+                for (r, c) in chosen_squares:
+                    self.board[r][c] = Obstacle('Thorn', 5) # หนามอยู่ 5 เทิร์น

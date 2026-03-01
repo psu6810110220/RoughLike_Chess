@@ -1,10 +1,37 @@
 # logic/maps/desert_map.py
+import random
 from logic.board import ChessBoard
+from logic.pieces import Obstacle
 
 class DesertMap(ChessBoard):
     def __init__(self):
         super().__init__()
-        # ✨ ดึงรูปภาพทะเลทรายมาเป็นพื้นหลัง
-        self.bg_image = 'assets/boards/desert.png'
-        
-        # (เดี๋ยวเราค่อยมาเพิ่มกติกาพิเศษของด่านทะเลทรายตรงนี้ทีหลัง)
+        self.bg_image = 'assets/pieces/event/event2.png'
+
+    def apply_map_effects(self):
+        # โอกาส 15% ที่จะเกิดพายุทราย
+        if random.random() < 0.15:
+            # หาแถวแนวนอนที่ว่าง 100%
+            empty_rows = []
+            for r in range(8):
+                if all(self.board[r][c] is None for c in range(8)):
+                    empty_rows.append(r)
+            
+            # หาแถวแนวตั้งที่ว่าง 100%
+            empty_cols = []
+            for c in range(8):
+                if all(self.board[r][c] is None for r in range(8)):
+                    empty_cols.append(c)
+
+            # สุ่มวางพายุทราย 1 แถวแนวนอน และ 1 แถวแนวตั้ง (ถ้ามีแถวว่าง)
+            if empty_rows:
+                r = random.choice(empty_rows)
+                for c in range(8):
+                    self.board[r][c] = Obstacle('Sandstorm', 3) # พายุอยู่ 3 เทิร์น
+
+            if empty_cols:
+                c = random.choice(empty_cols)
+                for row in range(8):
+                    # กันไม่ให้ทับพายุแนวนอนที่เพิ่งวางไป
+                    if self.board[row][c] is None: 
+                        self.board[row][c] = Obstacle('Sandstorm', 3)
