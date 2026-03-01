@@ -586,6 +586,10 @@ class GameplayScreen(Screen):
     def execute_board_move(self, dt):
         start_pos = self.anim_state['start_pos']
         end_pos = self.anim_state['end_pos']
+        
+        # ✨ เพิ่มบรรทัดนี้: ดึงสถานะการตายออกมาจาก anim_state (ถ้าไม่มีค่าให้เป็น False)
+        attacker_died = self.anim_state.get('attacker_died', False) 
+        
         a_tot = self.anim_state['a_current_total']
         d_tot = self.anim_state['d_current_total']
 
@@ -596,11 +600,11 @@ class GameplayScreen(Screen):
 
         self.cancel_crash() # ปิดหน้าต่าง
 
-        # ✨ ส่งสถานะ crash ลงไปที่ logic: ถ้าตายให้ค่าเป็น "died" ถ้าสู้จบให้เป็น boolean ชนะ/แพ้ปกติ
+        # ส่งสถานะ crash ลงไปที่ logic: ถ้าตายให้ค่าเป็น "died" ถ้าสู้จบให้เป็น boolean ชนะ/แพ้ปกติ
         crash_status = "died" if attacker_died else is_attacker_won
-
+        
         # ดำเนินการลบหมากหรือเดินหมากจาก Logic กระดาน
-        res = self.game.move_piece(start_pos[0], start_pos[1], end_pos[0], end_pos[1], resolve_crash=True, crash_won=is_attacker_won)
+        res = self.game.move_piece(sr, sc, er, ec, resolve_crash=True, crash_won=crash_status)
 
         if res == "promote":
             def do_p(cls):
@@ -608,49 +612,25 @@ class GameplayScreen(Screen):
                 pop.dismiss()
                 self.init_board_ui()
                 self.check_ai_turn()
-            pop = PromotionPopup(self.game.board[end_pos[0]][end_pos[1]].color, do_p)
-            pop.open()
-        elif res == True:
-            self.selected = None
-            self.init_board_ui()
-            self.check_ai_turn()
-        else:
-            self.selected = None
-            self.refresh_ui()
-            self.check_ai_turn()
-        
-        # ตรวจสอบว่าฝ่ายบุกชนะหรือไม่
-        is_attacker_won = (a_tot > d_tot)
-
-        self.cancel_crash()
-        
-        # สั่งขยับหมากโดยส่งผลลัพธ์การ crash เข้าไปด้วย
-        res = self.game.move_piece(sr, sc, er, ec, resolve_crash=True, crash_won=is_attacker_won)
-        
-        if res == "promote":
-            def do_p(cls):
-                self.game.promote_pawn(end_pos[0], end_pos[1], cls)
-                pop.dismiss()
-                self.init_board_ui()
-                self.check_ai_turn()
-            # ✨ ส่ง theme เข้าไปใน Popup ด้วย
+            # ส่ง theme เข้าไปใน Popup ด้วย
             theme = getattr(App.get_running_app(), 'selected_unit', 'Classic Knights')
             pop = PromotionPopup(self.game.board[end_pos[0]][end_pos[1]].color, do_p, theme=theme)
             pop.open()
+            
         elif res == True:
             # เดินสำเร็จ (กินได้)
             self.selected = None
             self.init_board_ui()
             self.check_ai_turn()
-
+            
         elif res == "died":
-            # ✨ อัปเดต UI เมื่อหมากฝั่งบุกตาย
+            # อัปเดต UI เมื่อหมากฝั่งบุกตาย
             self.selected = None
             self.init_board_ui()
             self.check_ai_turn()
-
+            
         else:
-            # เดินไม่สำเร็จ (แพ้ หรือ เสมอ ให้เด้งกลับ)
+            # เดินไม่สำเร็จ (ถูกถอยกลับจากการโจมตี)
             self.selected = None
             self.refresh_ui()
             self.check_ai_turn()
