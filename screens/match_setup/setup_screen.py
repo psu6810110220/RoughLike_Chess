@@ -1,14 +1,10 @@
 # screens/match_setup/setup_screen.py
-import random
 from kivy.uix.screenmanager import Screen
 from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.scrollview import ScrollView
 from kivy.uix.button import Button
 from kivy.uix.label import Label
-from kivy.uix.scrollview import ScrollView
-from kivy.uix.popup import Popup
 from kivy.core.window import Window
-from kivy.app import App # ✨ นำเข้า App เพื่อบันทึกค่าด่าน
-
 from screens.match_setup.setup_section import SetupSection
 
 class MatchSetupScreen(Screen):
@@ -33,11 +29,53 @@ class MatchSetupScreen(Screen):
         self.scroll = ScrollView()
         self.content = BoxLayout(orientation='vertical', size_hint_y=None, spacing=30, padding=[0, 20])
         self.content.bind(minimum_height=self.content.setter('height'))
+        
+        # ==========================================
+        # ✨ ส่วนที่นำมาผนวก: ช่องเลือกเผ่าและกระดาน
+        # ==========================================
+        
+        # สร้าง BoxLayout แนวนอนสำหรับเก็บหมวดหมู่ต่างๆ (กำหนดความสูงคงที่เพื่อไม่ให้ถูกย่อจนมองไม่เห็นใน ScrollView)
+        sections_layout = BoxLayout(orientation='horizontal', spacing=15, size_hint_y=None, height=500)
+
+        # ✨ 1. ช่องเลือกเผ่าฝ่ายขาว
+        self.white_unit_section = SetupSection(
+            title="WHITE FACTION", 
+            options=['Medieval Knights', 'Ayothaya', 'Demon', 'Heaven'],
+            target_attr='selected_unit_white' # ส่งไปเก็บที่ตัวแปรสีขาว
+        )
+        
+        # ✨ 2. ช่องเลือกเผ่าฝ่ายดำ
+        self.black_unit_section = SetupSection(
+            title="BLACK FACTION", 
+            options=['Medieval Knights', 'Ayothaya', 'Demon', 'Heaven'],
+            target_attr='selected_unit_black' # ส่งไปเก็บที่ตัวแปรสีดำ
+        )
+        
+        # ✨ 3. ช่องเลือกกระดาน (เหมือนเดิม)
+        self.board_section = SetupSection(
+            title="MAP SELECTION", 
+            options=['Classic Board', 'Enchanted Forest', 'Desert Ruins', 'Frozen Tundra'],
+            target_attr='selected_board' 
+        )
+
+        # นำทั้ง 3 ช่องใส่ลงไปใน sections_layout
+        sections_layout.add_widget(self.white_unit_section)
+        sections_layout.add_widget(self.black_unit_section)
+        sections_layout.add_widget(self.board_section)
+        
+        # เพิ่มเข้าไปในกล่อง Content ของ ScrollView
+        self.content.add_widget(sections_layout)
+        
+        # ==========================================
+
         self.scroll.add_widget(self.content)
         self.root.add_widget(self.scroll)
 
         self.add_widget(self.root)
-        self.show_mode_selection()
+        
+        # ถ้าในโค้ดเดิมมีการเรียกใช้งานฟังก์ชันนี้เพื่อโชว์ปุ่ม Mode ให้คงไว้ได้เลย
+        if hasattr(self, 'show_mode_selection'):
+            self.show_mode_selection()
 
     def clear_steps_after(self, step_index):
         while len(self.content.children) > step_index:
