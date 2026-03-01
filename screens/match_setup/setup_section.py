@@ -1,7 +1,7 @@
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.label import Label
 from kivy.app import App
-from screens.match_setup.unit_card import UnitCard
+from components.unit_card import UnitCard
 from kivy.graphics import Color, Rectangle
 
 class SetupSection(BoxLayout):
