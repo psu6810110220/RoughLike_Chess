@@ -1,33 +1,23 @@
-# screens/match_setup/unit_card.py
+# ให้แน่ใจว่าใน /Users/rcastis/kivy_project/components/unit_card.py เป็นโค้ดนี้ และเซฟแล้ว
 from kivy.uix.button import Button
-from kivy.graphics import Color, RoundedRectangle, Line
 
-class CardButton(Button):
-    """ปุ่มสไตล์การ์ดที่มีขอบเรืองแสงเมื่อถูกเลือก"""
-    def __init__(self, text, **kwargs):
-        kwargs.pop('group', None) # ลบ parameter group ทิ้งเพื่อป้องกัน error
+class UnitCard(Button):
+    def __init__(self, text='', **kwargs):
         super().__init__(**kwargs)
         self.text = text
-        self.is_selected = False
         self.background_normal = ''
-        self.background_color = (0, 0, 0, 0)
-        self.markup = True
-        self.halign = 'center'
-        self.bind(pos=self.draw_card, size=self.draw_card)
+        self.background_color = (0.2, 0.2, 0.25, 1)  # สีพื้นหลังเริ่มต้น (เทาเข้ม)
+        self.color = (0.8, 0.8, 0.8, 1)              # สีตัวอักษรเริ่มต้น
+        self.font_size = '16sp'
+        self.bold = True
 
     def set_selected(self, selected):
-        """อัปเดตสถานะและวาด UI ใหม่"""
-        self.is_selected = selected
-        self.draw_card()
-
-    def draw_card(self, *args):
-        self.canvas.before.clear()
-        with self.canvas.before:
-            # สีพื้นหลังการ์ด
-            Color(0.1, 0.1, 0.15, 1)
-            RoundedRectangle(pos=self.pos, size=self.size, radius=[15,])
-            
-            # ถ้าถูกเลือก ให้วาดขอบเรืองแสงสี Cyan
-            if self.is_selected:
-                Color(0, 0.8, 1, 1) 
-                Line(rounded_rectangle=(self.x, self.y, self.width, self.height, 15), width=2)
+        """เปลี่ยนสีปุ่มเมื่อถูกเลือก หรือยกเลิกการเลือก"""
+        if selected:
+            # สีเมื่อถูกเลือก (สีน้ำเงินสว่าง)
+            self.background_color = (0.2, 0.5, 0.8, 1)
+            self.color = (1, 1, 1, 1)
+        else:
+            # กลับไปเป็นสีปกติเมื่อไม่ได้เลือก
+            self.background_color = (0.2, 0.2, 0.25, 1)
+            self.color = (0.8, 0.8, 0.8, 1)
