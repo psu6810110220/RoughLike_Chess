@@ -5,10 +5,11 @@ from screens.main_menu import MainMenuScreen
 from screens.match_setup.setup_screen import MatchSetupScreen
 from screens.gameplay_screen import GameplayScreen
 from screens.options_screen import OptionsScreen
+from kivy.properties import StringProperty
 
 class RogueChessApp(App):
     ai_difficulty = 'normal'  # ตั้งค่าความยากเริ่มต้นของ AI
-    
+
     selected_unit_white = StringProperty('Medieval Knights') 
     selected_unit_black = StringProperty('Demon')
     def build(self):
