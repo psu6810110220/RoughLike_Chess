@@ -41,6 +41,22 @@ def toss_coin_medieval():
     else:
         return 10, "หัวสีฟ้า"
 
+def toss_demon():
+    """ทอยเหรียญของ Demon: ก้อย(-3), ส้ม(+4), ม่วง(+6)"""
+    # ก้อย ต่อ หัว 40:60
+    if random.random() < 0.40:
+        return -3, "ก้อย"
+    
+    # ถ้าได้ฟ้า มีโอกาส 20% ที่จะสุ่มต่อไประดับ 2
+    if random.random() < 0.01:
+        # ระดับ 2: ม่วง (20%) vs ส้ม (80%)
+        if random.random() < 0.20:
+            return 4, "หัวสีม่วง"
+        else:
+            return 6, "หัวสีส้ม"
+    else:
+        return 6, "หัวสีส้ม"
+
 def calculate_total_points(base_points, num_coins):
     """คำนวณแต้มรวมทั้งหมดจากการวนลูปทอยเหรียญ"""
     total = base_points
