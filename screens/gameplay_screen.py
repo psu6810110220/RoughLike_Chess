@@ -423,8 +423,22 @@ class GameplayScreen(Screen):
 
         # สุ่มผลลัพธ์ล่วงหน้าเพื่อให้แอนิเมชันวิ่งไปหาคำตอบที่ถูกต้อง
         from logic.crash_logic import calculate_total_points
-        self.a_final_total, self.a_results = calculate_total_points(a_base, a_coins)
-        self.d_final_total, self.d_results = calculate_total_points(d_base, d_coins)
+        
+        # ✨ ดึงค่า Theme/Faction ของทั้งสองฝ่าย
+        app = App.get_running_app()
+        def get_faction_name(color):
+            theme = getattr(app, f'selected_unit_{color}', 'Medieval Knights')
+            if theme == "Ayothaya": return "ayothaya"
+            elif theme == "Demon": return "demon"
+            elif theme == "Heaven": return "heaven"
+            return "medieval"
+            
+        a_faction = get_faction_name(attacker.color)
+        d_faction = get_faction_name(defender.color)
+
+        # ✨ ส่ง a_faction และ d_faction เข้าไปด้วย
+        self.a_final_total, self.a_results = calculate_total_points(a_base, a_coins, a_faction)
+        self.d_final_total, self.d_results = calculate_total_points(d_base, d_coins, d_faction)
 
         # ✨ รีเซ็ตข้อความ UI เหรียญให้เป็นค่าเริ่มต้น เพื่อรองรับการทอยซ้ำหลายๆ รอบ
         self.atk_total_lbl.text = f"crash : {a_base}"
