@@ -101,8 +101,7 @@ class GameplayScreen(Screen):
         self.selected = None
         
         self.board_area = BoxLayout(orientation='vertical', size_hint_x=0.75)
-        self.info_label = Label(text="WHITE'S TURN", size_hint_y=0.1, color=(0.9, 0.8, 0.5, 1), bold=True, font_size='20sp')
-        self.board_area.add_widget(self.info_label)
+self.info_label = Label(text="WHITE'S TURN", size_hint_y=0.1, color=(0.9, 0.8, 0.5, 1), bold=True, font_size='20sp', markup=True)        self.board_area.add_widget(self.info_label)
         
         self.container = BoxLayout(orientation='horizontal')
         self.board_area.add_widget(self.container)
@@ -117,6 +116,10 @@ class GameplayScreen(Screen):
         app = App.get_running_app()
         p_color = piece.color
         p_name = piece.__class__.__name__.lower()
+
+        if p_name == 'obstacle':
+            obstacle_type = piece.name.lower() # 'thorn' หรือ 'sandstorm'
+            return f"assets/pieces/{obstacle_type}.png"
         
         # ✨ เช็คสีของหมาก เพื่อดึง Theme ให้ตรงกับฝ่ายนั้น
         if p_color == 'white':
@@ -216,6 +219,10 @@ class GameplayScreen(Screen):
             self.bg_rect.size = instance.size
 
     def refresh_ui(self, legal_moves=[]):
+        turn_text = f"{self.game.current_turn.upper()}'S TURN"
+        if hasattr(self.game, 'freeze_timer') and self.game.freeze_timer > 0:
+            turn_text += f" [color=00ffff](FROZEN: {self.game.freeze_timer})[/color]"
+            
         if self.game.game_result: self.info_label.text = self.game.game_result
         else: self.info_label.text = f"{self.game.current_turn.upper()}'S TURN"
         
