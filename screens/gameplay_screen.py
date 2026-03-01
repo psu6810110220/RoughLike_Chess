@@ -465,9 +465,6 @@ class GameplayScreen(Screen):
         self.a_pts_array = [get_pt(r, a_faction) for r in self.a_results]
         self.d_pts_array = [get_pt(r, d_faction) for r in self.d_results]
 
-        self.a_pts_array = [get_pt(r) for r in self.a_results]
-        self.d_pts_array = [get_pt(r) for r in self.d_results]
-
         # เก็บรอบของ Animation
         self.anim_state = {
             'side': 'atk',
