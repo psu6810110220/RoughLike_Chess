@@ -2,6 +2,8 @@
 import copy 
 from logic.pieces import Rook, Knight, Bishop, Queen, King, Pawn, Obstacle # ✨ เพิ่ม Obstacle ต่อท้าย
 from logic.history_logic import HistoryManager
+import random
+from logic.item_logic import ITEM_DATABASE
 
 class ChessBoard:
     def __init__(self):
@@ -108,12 +110,6 @@ class ChessBoard:
         # ---------------------------------------------------------
         # ✨ ระบบ CRASH (ส่งสัญญาณไปให้ UI เปิดหน้าต่างแทนที่จะทำเอง)
         # ---------------------------------------------------------
-        if is_capture and not resolve_crash:
-            captured_piece = target if not is_ep else self.board[sr][ec]
-            # คืนค่าบอก UI ว่าเกิดการ "crash" พร้อมหมากทั้ง 2 ฝ่าย
-            return ("crash", p, captured_piece)
-            
-        # ✨ ถ้ากลับมาจาก UI พร้อมผลลัพธ์แล้ว
         if is_capture and resolve_crash:
             if crash_won == "died":
                 # หมากฝั่งผู้โจมตีถูกทำลาย (Distortion 2 ครั้ง)
@@ -123,6 +119,11 @@ class ChessBoard:
             elif not crash_won:
                 # ยกเลิกการโจมตี หมากถอยกลับไปช่องเดิม
                 return False
+            
+        # ✨ เพิ่มเงื่อนไขตรงนี้: ถ้ามีการกินหมากสำเร็จ ให้สุ่มดรอปไอเทม
+        if is_capture:
+            captured_piece = target if not is_ep else self.board[sr][ec]
+            self.handle_item_drop(p, captured_piece)
         # ---------------------------------------------------------
         
         move_text = self.history.generate_move_text(p, sr, sc, er, ec, is_capture, is_castle)

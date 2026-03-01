@@ -256,6 +256,10 @@ class GameplayScreen(Screen):
             return
 
         r, c = instance.row, instance.col
+        piece = self.game.board[r][c]
+
+        # ✨ ดึง piece ขึ้นมาประกาศตรงนี้เลย จะได้ไม่ Error UnboundLocalError
+        piece = self.game.board[r][c] 
 
         if self.selected_item:
             if piece and piece.color == self.game.current_turn:
@@ -280,7 +284,7 @@ class GameplayScreen(Screen):
             return
             
         if self.selected is None:
-            piece = self.game.board[r][c]
+            # ✨ ลบ piece = self.game.board[r][c] ตรงนี้ทิ้ง เพราะเราดึงไว้ด้านบนแล้ว
             if piece and piece.color == self.game.current_turn:
                 self.selected = (r, c)
                 self.refresh_ui(self.game.get_legal_moves((r, c)))
