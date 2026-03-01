@@ -39,6 +39,9 @@ class Rook(Piece):
     def is_valid_move(self, start, end, board):
         if start[0] == end[0] or start[1] == end[1]: 
             return self.is_path_clear(start, end, board)
+        # ✨ Item 9: เดินทะลุ
+        if getattr(self, 'item', None) and self.item.id == 9:
+            return True # อนุญาตให้ทะลุตัวขวางได้เลยประหนึ่งว่าเป็นม้า
         return False
 
 class Knight(Piece):
@@ -60,6 +63,9 @@ class Bishop(Piece):
     def is_valid_move(self, start, end, board):
         if abs(start[0]-end[0]) == abs(start[1]-end[1]): 
             return self.is_path_clear(start, end, board)
+        # ✨ Item 9: เดินทะลุ
+        if getattr(self, 'item', None) and self.item.id == 9:
+            return True # อนุญาตให้ทะลุตัวขวางได้เลยประหนึ่งว่าเป็นม้า
         return False
 
 class Queen(Piece):
@@ -69,7 +75,11 @@ class Queen(Piece):
         self.coins = 4
         
     def is_valid_move(self, start, end, board):
+        # ✨ Item 9: เดินทะลุ
+        if getattr(self, 'item', None) and self.item.id == 9:
+            return True # อนุญาตให้ทะลุตัวขวางได้เลยประหนึ่งว่าเป็นม้า
         return Rook(self.color).is_valid_move(start, end, board) or Bishop(self.color).is_valid_move(start, end, board)
+
 
 class King(Piece):
     def __init__(self, color): 

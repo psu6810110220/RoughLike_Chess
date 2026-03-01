@@ -262,6 +262,13 @@ class GameplayScreen(Screen):
             if piece and piece.color == self.game.current_turn:
                 # ✨ ใส่ไอเทมลงในหมาก
                 piece.item = self.selected_item
+                # ✨ เพิ่มโค้ดส่วนนี้: สเตตัสเปลี่ยนทันทีเมื่อสวมใส่
+                if piece.item.id == 6: # Gambler's Coin
+                    piece.coins += 1
+                    piece.base_points = max(0, piece.base_points - 1)
+                elif piece.item.id == 10 and piece.__class__.__name__.lower() == 'pawn': # Crown of the Usurper
+                    piece.base_points = 5  # (สมมติให้ 50 เท่ากับ King)
+                    piece.coins = 3
                 
                 # ✨ ลบไอเทมออกจากกระเป๋า
                 inv = getattr(self.game, f'inventory_{self.game.current_turn}')
@@ -451,10 +458,30 @@ class GameplayScreen(Screen):
         attacker = self.game.board[sr][sc]
         defender = self.game.board[er][ec]
 
+        # ✨ Item 4: Mirage Shield (ปัดป้องการแครช)
+        if getattr(defender, 'item', None) and defender.item.id == 4:
+            defender.item = None # ไอเทมพัง
+            self.root_layout.remove_widget(self.crash_popup) # ปิดหน้าต่าง
+            self.crash_popup = None
+            self.game.complete_turn() # ข้ามเทิร์นคนตีไปเลย
+            self.refresh_ui()
+            return # ออกจากฟังก์ชัน ไม่ต้องทอยเหรียญ
+
         a_base = getattr(attacker, 'base_points', 5)
         a_coins = getattr(attacker, 'coins', 3)
         d_base = getattr(defender, 'base_points', 5)
         d_coins = getattr(defender, 'coins', 3)
+
+        # ✨ Item 8: Aura of Misfortune (ลดเหรียญศัตรู 1 เหรียญ)
+        if getattr(defender, 'item', None) and defender.item.id == 8:
+            a_coins = max(0, a_coins - 1)
+        if getattr(attacker, 'item', None) and attacker.item.id == 8:
+            d_coins = max(0, d_coins - 1)
+
+        # ✨ Item 2: Clutch Protection (ปิดการทอยศัตรูให้เหลือ 0)
+        if getattr(defender, 'item', None) and defender.item.id == 2:
+            a_coins = 0
+            defender.item = None # ไอเทมพัง
 
         # สุ่มผลลัพธ์ล่วงหน้าเพื่อให้แอนิเมชันวิ่งไปหาคำตอบที่ถูกต้อง
         from logic.crash_logic import calculate_total_points
@@ -650,6 +677,65 @@ class GameplayScreen(Screen):
         
         a_tot = self.anim_state['a_current_total']
         d_tot = self.anim_state['d_current_total']
+
+        # โหลดคลาส Pawn ล่วงหน้าสำหรับ Item 5
+        from logic.pieces import Pawn
+
+        if self.anim_state.get('attacker_died'):
+            # ---------------------------
+            # กรณีที่ 1: ฝ่ายรุกแพ้ (Attacker ตาย)
+            # ---------------------------
+            if attacker and defender:
+                self.game.handle_item_drop(defender, attacker)
+                # ✨ Item 3: Bloodlust Emblem
+                if getattr(defender, 'item', None) and defender.item.id == 3:
+                    defender.base_points += 5
+                # ✨ Item 7: Armor of Thorns (ฝ่ายรุกที่ตายใส่เกราะไว้ ฝ่ายรับจะโดนหัก Coin ถาวรแทนการ Stagger เพื่อเขียนง่ายขึ้น)
+                if getattr(attacker, 'item', None) and attacker.item.id == 7:
+                    defender.coins = max(0, defender.coins - 1)
+
+            # ✨ Item 1 & 5 ของฝ่ายรุก
+            if getattr(attacker, 'item', None) and attacker.item.id == 1:
+                attacker.item = None
+                attacker.base_points = 0 # รอดตายแต่ BP เหลือ 0
+            elif getattr(attacker, 'item', None) and attacker.item.id == 5:
+                attacker.item = None
+                self.game.board[sr][sc] = Pawn(attacker.color, 'Pawn') # เสก Pawn ตัวแทน
+            else:
+                self.game.board[sr][sc] = None # ตายปกติ
+
+        else:
+            # ---------------------------
+            # กรณีที่ 2: ฝ่ายรุกชนะ (Defender ตาย)
+            # ---------------------------
+            self.game.history.add_move((sr, sc), (er, ec), attacker, defender, is_capture=True)
+            if attacker and defender:
+                self.game.handle_item_drop(attacker, defender)
+                # ✨ Item 3: Bloodlust Emblem
+                if getattr(attacker, 'item', None) and attacker.item.id == 3:
+                    attacker.base_points += 5
+                # ✨ Item 7: Armor of Thorns
+                if getattr(defender, 'item', None) and defender.item.id == 7:
+                    attacker.coins = max(0, attacker.coins - 1)
+
+            # ✨ Item 1 & 5 ของฝ่ายรับ
+            if getattr(defender, 'item', None) and defender.item.id == 1:
+                defender.item = None
+                defender.base_points = 0
+                attacker.has_moved = True # ฝ่ายรุกเด้งกลับ (เพราะฝ่ายรับรอดตาย)
+            elif getattr(defender, 'item', None) and defender.item.id == 5:
+                defender.item = None
+                self.game.board[er][ec] = attacker # ฝ่ายรุกเข้ายึดช่อง
+                self.game.board[sr][sc] = Pawn(defender.color, 'Pawn') # ทิ้ง Pawn ตัวแทนไว้ช่องที่ฝ่ายรุกเพิ่งจากมา
+                attacker.has_moved = True
+            else:
+                self.game.board[er][ec] = attacker
+                self.game.board[sr][sc] = None
+                attacker.has_moved = True
+
+        self.game.en_passant_target = None 
+        self.game.complete_turn()
+        self.refresh_ui()
 
         sr, sc = start_pos
         er, ec = end_pos

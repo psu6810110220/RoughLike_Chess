@@ -30,7 +30,7 @@ class ChessBoard:
             # ถ้ากระเป๋ายังไม่เต็ม (ไม่เกิน 5 ชิ้น)
             if len(target_inv) < 5:
                 # โอกาส 40% ที่จะได้รับไอเทมจากการกิน
-                if random.random() < 0.40:
+                if random.random() < 1.00:
                     random_item_id = random.randint(1, 10)
                     item = ITEM_DATABASE[random_item_id]
                     target_inv.append(item)
@@ -106,12 +106,14 @@ class ChessBoard:
             
         target = self.board[er][ec]
         is_capture = (target is not None) or is_ep
+        
+        # ประกาศ captured_piece ไว้ตรงนี้ เพื่อให้เรียกใช้ดรอปไอเทมได้
+        captured_piece = target if not is_ep else self.board[sr][ec]
 
         # ---------------------------------------------------------
         # ✨ ระบบ CRASH (ส่งสัญญาณไปให้ UI เปิดหน้าต่างแทนที่จะทำเอง)
         # ---------------------------------------------------------
         if is_capture and not resolve_crash:
-            captured_piece = target if not is_ep else self.board[sr][ec]
             # คืนค่าบอก UI ว่าเกิดการ "crash" พร้อมหมากทั้ง 2 ฝ่าย
             return ("crash", p, captured_piece)
             
@@ -125,6 +127,9 @@ class ChessBoard:
             elif not crash_won:
                 # ยกเลิกการโจมตี หมากถอยกลับไปช่องเดิม
                 return False
+            else:
+                # ✨ โจมตีชนะ! เรียกฟังก์ชันสุ่มดรอปไอเทม
+                self.handle_item_drop(p, captured_piece)
         # ---------------------------------------------------------
         
         move_text = self.history.generate_move_text(p, sr, sc, er, ec, is_capture, is_castle)
