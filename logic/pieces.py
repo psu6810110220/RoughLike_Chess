@@ -1,5 +1,5 @@
 # logic/pieces.py
-
+import random
 class Piece:
     def __init__(self, color, name):
         self.color = color
