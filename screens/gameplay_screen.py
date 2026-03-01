@@ -270,10 +270,10 @@ class GameplayScreen(Screen):
                     pop.dismiss()
                     self.init_board_ui()
                     self.check_ai_turn()
-                # ✨ ส่ง theme เข้าไปใน Popup ด้วย
-                theme = getattr(App.get_running_app(), 'selected_unit', 'Classic Knights')
-                pop = PromotionPopup(self.game.board[r][c].color, do_p, theme=theme)
+                # ✨ ลบการดึง theme เพราะ PromotionPopup เช็คจากสีเองได้แล้ว
+                pop = PromotionPopup(self.game.board[r][c].color, do_p)
                 pop.open()
+
             elif res == True:
                 self.selected = None
                 self.hide_piece_status() #  ซ่อน Pop-up เมื่อเดินเสร็จ
@@ -606,9 +606,8 @@ class GameplayScreen(Screen):
                 pop.dismiss()
                 self.init_board_ui()
                 self.check_ai_turn()
-            # ส่ง theme เข้าไปใน Popup ด้วย
-            theme = getattr(App.get_running_app(), 'selected_unit', 'Classic Knights')
-            pop = PromotionPopup(self.game.board[end_pos[0]][end_pos[1]].color, do_p, theme=theme)
+            # ✨ ลบการดึง theme แบบเก่าออก
+            pop = PromotionPopup(self.game.board[end_pos[0]][end_pos[1]].color, do_p)
             pop.open()
             
         elif res == True:
