@@ -3,7 +3,7 @@ from kivy.uix.label import Label
 from kivy.app import App
 from kivy.graphics import Color, Rectangle
 
-from components.unit_card import UnitCard 
+from components.unit_card import CardButton
 
 class SetupSection(BoxLayout):
     def __init__(self, title, options, target_attr='selected_unit', **kwargs):
@@ -34,7 +34,7 @@ class SetupSection(BoxLayout):
                 val_to_save = opt
                 
             card = UnitCard(text=text_to_show)
-            card.bind(on_release=lambda c, val=val_to_save: self.select_option(c, val))
+            card.bind(on_release=lambda c, v=val_to_save: self.select_option(c, v))
             self.add_widget(card)
             self.cards.append(card)
             
