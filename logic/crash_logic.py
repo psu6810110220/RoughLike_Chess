@@ -83,11 +83,22 @@ def calculate_total_points(base_points, num_coins, faction):
         total += p
         results.append(color)
     return total, results
-
-def resolve_crash(p1_name, p1_base, p1_coins, p2_name, p2_base, p2_coins):
+    
+# เพิ่มพารามิเตอร์ faction ของทั้งสองฝ่าย
+def resolve_crash(p1_name, p1_faction, p1_base, p1_coins, p2_name, p2_faction, p2_base, p2_coins):
     """ฟังก์ชันหลักสำหรับตัดสินการ Crash"""
-    p1_total, p1_results = calculate_total_points(p1_base, p1_coins)
-    p2_total, p2_results = calculate_total_points(p2_base, p2_coins)
+    
+    # ใช้ while True เพื่อรองรับระบบพิเศษของ Demon ที่ต้องทอยใหม่
+    while True:
+        p1_total, p1_results = calculate_total_points(p1_base, p1_coins, p1_faction)
+        p2_total, p2_results = calculate_total_points(p2_base, p2_coins, p2_faction)
+        
+        # ระบบพิเศษ Demon: หากมีการใช้ Unit Demon และผลลัพธ์แต้มของใครคนใดคนหนึ่งเป็น 0 ให้ทอยใหม่
+        has_demon = (p1_faction == "demon" or p2_faction == "demon")
+        if has_demon and (p1_total == 0 or p2_total == 0):
+            continue  # วนลูปทอยใหม่ทั้งหมด
+            
+        break  # ถ้าแต้มไม่ใช่ 0 หรือไม่มี Demon ให้ออกจากลูป
     
     winner = None
     if p1_total > p2_total:
@@ -96,7 +107,7 @@ def resolve_crash(p1_name, p1_base, p1_coins, p2_name, p2_base, p2_coins):
         winner = p2_name
         
     return {
-        "p1": {"name": p1_name, "total": p1_total, "results": p1_results},
-        "p2": {"name": p2_name, "total": p2_total, "results": p2_results},
+        "p1": {"name": p1_name, "faction": p1_faction, "total": p1_total, "results": p1_results},
+        "p2": {"name": p2_name, "faction": p2_faction, "total": p2_total, "results": p2_results},
         "winner": winner
     }
