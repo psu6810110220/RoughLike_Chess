@@ -1,7 +1,7 @@
 # logic/board.py
 import copy 
-from logic.pieces import Rook, Knight, Bishop, Queen, King, Pawn
-from logic.history_logic import HistoryManager 
+from logic.pieces import Rook, Knight, Bishop, Queen, King, Pawn, Obstacle # ✨ เพิ่ม Obstacle ต่อท้าย
+from logic.history_logic import HistoryManager
 
 class ChessBoard:
     def __init__(self):
@@ -11,7 +11,8 @@ class ChessBoard:
         self.en_passant_target = None 
         self.game_result = None
         self.history = HistoryManager() 
-        self.bg_image = '' # ✨ ตัวแปรเก็บที่อยู่รูปภาพ (ด่านคลาสสิกจะไม่มีรูป)
+        self.bg_image = '' 
+        self.freeze_timer = 0  # ✨ เพิ่มตัวแปรเก็บจำนวนเทิร์นที่ถูกแช่แข็ง
 
     def create_initial_board(self):
         b = [[None for _ in range(8)] for _ in range(8)]
@@ -32,11 +33,19 @@ class ChessBoard:
         sr, sc = pos
         piece = self.board[sr][sc]
         if not piece: return []
+        
+        # ✨ ระบบแช่แข็ง: ถ้าติดแช่แข็งอยู่ หมากทุกตัวยกเว้น King จะเดินไม่ได้เลย
+        if self.freeze_timer > 0 and not isinstance(piece, King):
+            return []
+
         moves = []
         for r in range(8):
             for c in range(8):
-                if self.board[r][c] and self.board[r][c].color == piece.color: 
+                target = self.board[r][c]
+                # ✨ ห้ามทับหมากสีเดียวกัน และ ห้ามตีสิ่งกีดขวาง (Obstacle ที่มีสี neutral)
+                if target and (target.color == piece.color or target.color == 'neutral'): 
                     continue
+                
                 valid = piece.is_valid_move((sr, sc), (r, c), self.board, self.en_passant_target) if isinstance(piece, Pawn) else piece.is_valid_move((sr, sc), (r, c), self.board)
                 if valid and not self.simulate_move(sr, sc, r, c, piece.color):
                     moves.append((r, c))
@@ -162,6 +171,10 @@ class ChessBoard:
 
     def complete_turn(self):
         self.current_turn = 'black' if self.current_turn == 'white' else 'white'
+        
+        # ✨ อัปเดตอายุของ Event บนกระดาน (ลดลงทีละ 1 เทิร์น)
+        self.update_map_events()
+
         has_moves = False
         for r in range(8):
             for c in range(8):
@@ -186,6 +199,7 @@ class ChessBoard:
             self.history.add_suffix_to_last_move("+") 
             
         self.apply_map_effects()
+
 
     def apply_map_effects(self):
         pass
