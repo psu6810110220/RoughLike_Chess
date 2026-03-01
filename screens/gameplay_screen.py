@@ -678,6 +678,17 @@ class GameplayScreen(Screen):
         a_tot = self.anim_state['a_current_total']
         d_tot = self.anim_state['d_current_total']
 
+        sr, sc = start_pos
+        er, ec = end_pos
+
+
+        attacker = self.game.board[sr][sc]
+        defender = self.game.board[er][ec]
+
+        is_attacker_won = (a_tot > d_tot)
+
+        self.cancel_crash() # ปิดหน้าต่าง
+
         # โหลดคลาส Pawn ล่วงหน้าสำหรับ Item 5
         from logic.pieces import Pawn
 
@@ -735,13 +746,6 @@ class GameplayScreen(Screen):
         self.game.en_passant_target = None 
         self.game.complete_turn()
         self.refresh_ui()
-
-        sr, sc = start_pos
-        er, ec = end_pos
-
-        is_attacker_won = (a_tot > d_tot)
-
-        self.cancel_crash() # ปิดหน้าต่าง
 
         # ส่งสถานะ crash ลงไปที่ logic: ถ้าตายให้ค่าเป็น "died" ถ้าสู้จบให้เป็น boolean ชนะ/แพ้ปกติ
         crash_status = "died" if attacker_died else is_attacker_won
