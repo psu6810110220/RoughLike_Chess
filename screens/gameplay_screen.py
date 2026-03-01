@@ -596,6 +596,9 @@ class GameplayScreen(Screen):
 
         self.cancel_crash() # ปิดหน้าต่าง
 
+        # ✨ ส่งสถานะ crash ลงไปที่ logic: ถ้าตายให้ค่าเป็น "died" ถ้าสู้จบให้เป็น boolean ชนะ/แพ้ปกติ
+        crash_status = "died" if attacker_died else is_attacker_won
+
         # ดำเนินการลบหมากหรือเดินหมากจาก Logic กระดาน
         res = self.game.move_piece(start_pos[0], start_pos[1], end_pos[0], end_pos[1], resolve_crash=True, crash_won=is_attacker_won)
 
@@ -639,6 +642,13 @@ class GameplayScreen(Screen):
             self.selected = None
             self.init_board_ui()
             self.check_ai_turn()
+
+        elif res == "died":
+            # ✨ อัปเดต UI เมื่อหมากฝั่งบุกตาย
+            self.selected = None
+            self.init_board_ui()
+            self.check_ai_turn()
+            
         else:
             # เดินไม่สำเร็จ (แพ้ หรือ เสมอ ให้เด้งกลับ)
             self.selected = None
