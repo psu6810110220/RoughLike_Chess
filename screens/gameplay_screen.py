@@ -120,6 +120,25 @@ class GameplayScreen(Screen):
             }
             filename = mapping.get(p_name, 'chess ayothaya6.png')
             return f"assets/pieces/ayothaya/{p_color}/{filename}"
+        # ✨ เพิ่มเงื่อนไขสำหรับเผ่า Demon
+        elif theme == "Demon":
+            mapping = {
+                'king': 'chess demon1.png', 'queen': 'chess demon2.png',
+                'rook': 'chess demon3.png', 'knight': 'chess demon4.png',
+                'bishop': 'chess demon5.png', 'pawn': 'chess demon6.png'
+            }
+            filename = mapping.get(p_name, 'chess demon6.png')
+            return f"assets/pieces/demon/{p_color}/{filename}"
+            
+        # ✨ เพิ่มเงื่อนไขสำหรับเผ่า Heaven
+        elif theme == "Heaven":
+            mapping = {
+                'king': 'chess heaven1.png', 'queen': 'chess heaven2.png',
+                'rook': 'chess heaven3.png', 'knight': 'chess heaven4.png',
+                'bishop': 'chess heaven5.png', 'pawn': 'chess heaven6.png'
+            }
+            filename = mapping.get(p_name, 'chess heaven6.png')
+            return f"assets/pieces/heaven/{p_color}/{filename}"
         else:
             # ✨ แก้ไขเป็นของ Medieval
             mapping = {
