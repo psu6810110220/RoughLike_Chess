@@ -25,6 +25,22 @@ def toss_coin_ayothaya():
     else:
         return 1, "หัวสีเหลือง"
 
+def toss_coin_medieval():
+    """ทำการทอยเหรียญ Medieval (สำหรับ Medieval Knight): ก้อย(+0), ฟ้า(s+10), เขียว(+100)"""
+    # ระดับ 1: ก้อย (50%) vs ฟ้า (50%)
+    if random.random() < 0.50:
+        return 0, "ก้อย"
+
+    # ถ้าได้ฟ้า มีโอกาส 1% ที่จะสุ่มต่อไประดับ 2
+    if random.random() < 0.01:
+        # ระดับ 2: เขียว (1%) vs ฟ้า (99%)
+        if random.random() < 0.01:
+            return 100, "หัวสีเขียว"
+        else:
+            return 10, "หัวสีฟ้า"
+    else:
+        return 10, "หัวสีฟ้า"
+
 def calculate_total_points(base_points, num_coins):
     """คำนวณแต้มรวมทั้งหมดจากการวนลูปทอยเหรียญ"""
     total = base_points
