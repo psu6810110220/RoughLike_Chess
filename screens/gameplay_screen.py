@@ -432,6 +432,16 @@ class GameplayScreen(Screen):
         self.a_final_total, self.a_results = calculate_total_points(a_base, a_coins)
         self.d_final_total, self.d_results = calculate_total_points(d_base, d_coins)
 
+        # ✨ รีเซ็ตข้อความ UI เหรียญให้เป็นค่าเริ่มต้น เพื่อรองรับการทอยซ้ำหลายๆ รอบ
+        self.atk_total_lbl.text = f"crash : {a_base}"
+        self.def_total_lbl.text = f"crash : {d_base}"
+        for lbl in self.atk_coin_labels:
+            lbl.text = "0"
+            lbl.color = (0.5, 0.5, 0.5, 1)
+        for lbl in self.def_coin_labels:
+            lbl.text = "0"
+            lbl.color = (0.5, 0.5, 0.5, 1)
+
         # แปลงข้อความเป็นค่าตัวเลข เพื่อนำไปโชว์ในช่อง coin
         def get_pt(res_str):
             if "น้ำเงิน" in res_str: return 3
@@ -453,7 +463,8 @@ class GameplayScreen(Screen):
             'start_pos': start_pos,
             'end_pos': end_pos,
             'attacker': attacker,
-            'defender': defender
+            'defender': defender,
+            'attacker_died': False # ✨ บันทึกสถานะว่าโดนตาย (Distortion) หรือไม่
         }
 
         # เรียก Clock ให้หมุนเลขทุกๆ 0.05 วินาที
