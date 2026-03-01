@@ -66,11 +66,19 @@ def toss_coin_heaven():
         return 1, "หัวสีเหลือง"
 
 def calculate_total_points(base_points, num_coins):
-    """คำนวณแต้มรวมทั้งหมดจากการวนลูปทอยเหรียญ"""
+    """คำนวณแต้มรวมทั้งหมดจากการวนลูปทอยเหรียญโดยอิงตามเผ่า"""
     total = base_points
     results = []
     for _ in range(num_coins):
-        p, color = toss_coin()
+        if faction == "medieval":
+            p, color = toss_coin_medieval()
+        elif faction == "demon":
+            p, color = toss_coin_demon()
+        elif faction == "heaven":
+            p, color = toss_coin_heaven()
+        else:
+            p, color = toss_coin_ayothaya()
+            
         total += p
         results.append(color)
     return total, results
