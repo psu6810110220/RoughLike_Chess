@@ -451,11 +451,19 @@ class GameplayScreen(Screen):
             lbl.color = (0.5, 0.5, 0.5, 1)
 
         # แปลงข้อความเป็นค่าตัวเลข เพื่อนำไปโชว์ในช่อง coin
-        def get_pt(res_str):
+        def get_pt(res_str, faction):
+            if "เขียว" in res_str: return 100
+            if "ฟ้า" in res_str: return 10
+            if "ม่วง" in res_str: return 6
+            if "ส้ม" in res_str: return 4
             if "น้ำเงิน" in res_str: return 3
             if "แดง" in res_str: return 2
             if "เหลือง" in res_str: return 1
+            if "ก้อย" in res_str and faction == "demon": return -3
             return 0
+
+        self.a_pts_array = [get_pt(r, a_faction) for r in self.a_results]
+        self.d_pts_array = [get_pt(r, d_faction) for r in self.d_results]
 
         self.a_pts_array = [get_pt(r) for r in self.a_results]
         self.d_pts_array = [get_pt(r) for r in self.d_results]
@@ -505,32 +513,42 @@ class GameplayScreen(Screen):
         lbl = labels[idx]
 
         if state['ticks'] < state['max_ticks']:
-            # หมุนเลขหลอกๆ ให้ดูมีความพยายาม
-            if target_val <= 1:
-                lbl.text = str(random.choice([0, 1]))
-                lbl.color = (1, 1, 1, 1)
-            elif target_val == 2:
-                lbl.text = str(random.choice([1, 2]))
-                lbl.color = (1, 0.6, 0.6, 1) # แดงจางๆ
-            elif target_val == 3:
-                lbl.text = str(random.choice([2, 3]))
-                lbl.color = (0.6, 0.6, 1, 1) # ฟ้าจางๆ
+            # หมุนเลขหลอกๆ ให้ดูมีความพยายามตามเผ่า
+            choices = [0, 1]
+            if target_val in [2, 3]: choices = [1, 2, 3]
+            elif target_val in [10, 100]: choices = [0, 10, 100]
+            elif target_val in [-3, 4, 6]: choices = [-3, 4, 6]
+            
+            lbl.text = str(random.choice(choices))
+            lbl.color = (1, 1, 1, 1)
             state['ticks'] += 1
         else:
             # จบรอบเหรียญ ยึดค่าจริง!
             lbl.text = str(target_val)
             
             # เอฟเฟกต์สีและการเด้งเมื่อติดคริติคอล
-            if target_val == 0:
-                lbl.color = (0.5, 0.5, 0.5, 1) # เทา
+            if target_val <= 0:
+                lbl.color = (0.5, 0.5, 0.5, 1) # เทา (0 หรือ -3)
             elif target_val == 1:
                 lbl.color = (1, 1, 0.2, 1) # เหลือง
             elif target_val == 2:
-                lbl.color = (1, 0.2, 0.2, 1) # แดง (มีโอกาสสุ่มต่อ)
+                lbl.color = (1, 0.2, 0.2, 1) # แดง
                 anim = Animation(font_size=24, duration=0.1) + Animation(font_size=16, duration=0.1)
                 anim.start(lbl)
             elif target_val == 3:
                 lbl.color = (0.2, 0.5, 1, 1) # น้ำเงิน
+                anim = Animation(font_size=24, duration=0.1) + Animation(font_size=16, duration=0.1)
+                anim.start(lbl)
+            elif target_val == 4:
+                lbl.color = (1, 0.6, 0.2, 1) # ส้ม
+            elif target_val == 6:
+                lbl.color = (0.6, 0.2, 1, 1) # ม่วง
+                anim = Animation(font_size=24, duration=0.1) + Animation(font_size=16, duration=0.1)
+                anim.start(lbl)
+            elif target_val == 10:
+                lbl.color = (0.4, 0.8, 1, 1) # ฟ้า
+            elif target_val == 100:
+                lbl.color = (0.2, 1, 0.2, 1) # เขียว
                 anim = Animation(font_size=24, duration=0.1) + Animation(font_size=16, duration=0.1)
                 anim.start(lbl)
 
