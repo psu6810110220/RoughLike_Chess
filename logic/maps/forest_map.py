@@ -6,7 +6,7 @@ from logic.pieces import Obstacle
 class ForestMap(ChessBoard):
     def __init__(self):
         super().__init__()
-        self.bg_image = 'assets/pieces/event/event1.png'
+        self.bg_image = 'assets/boards/forest.png'
 
     def apply_map_effects(self):
         # โอกาส 15% ที่จะเกิด Event หนาม

@@ -6,7 +6,7 @@ from logic.pieces import Obstacle
 class DesertMap(ChessBoard):
     def __init__(self):
         super().__init__()
-        self.bg_image = 'assets/pieces/event/event2.png'
+        self.bg_image = 'assets/boards/desert.png'
 
     def apply_map_effects(self):
         # โอกาส 15% ที่จะเกิดพายุทราย

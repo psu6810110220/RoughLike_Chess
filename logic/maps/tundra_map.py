@@ -5,7 +5,7 @@ from logic.board import ChessBoard
 class TundraMap(ChessBoard):
     def __init__(self):
         super().__init__()
-        self.bg_image = 'assets/pieces/event/event3.png'
+        self.bg_image = 'assets/boards/tundra.png'
 
     def apply_map_effects(self):
         # โอกาส 15% และต้องไม่โดนแช่แข็งซ้อนทับกันอยู่
