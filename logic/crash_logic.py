@@ -82,8 +82,16 @@ def calculate_total_points(base_points, num_coins, faction):
             
         total += p
         results.append(color)
+
+    # ระบบพิเศษของ Heaven (Milestone Bonus)
+    if faction == "heaven":
+        if heads_count >= 3:
+            total += 3  # ทอยได้หัว 3 ครั้งขึ้นไป ได้โบนัส +3
+        if heads_count >= 6:
+            total += 3  # ทอยได้หัว 6 ครั้งขึ้นไป ได้โบนัสเพิ่มอีก +3 (รวมเป็น +6)
+            
     return total, results
-    
+
 # เพิ่มพารามิเตอร์ faction ของทั้งสองฝ่าย
 def resolve_crash(p1_name, p1_faction, p1_base, p1_coins, p2_name, p2_faction, p2_base, p2_coins):
     """ฟังก์ชันหลักสำหรับตัดสินการ Crash"""
