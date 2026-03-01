@@ -85,9 +85,16 @@ class ChessBoard:
             # คืนค่าบอก UI ว่าเกิดการ "crash" พร้อมหมากทั้ง 2 ฝ่าย
             return ("crash", p, captured_piece)
             
-        # ถ้ากลับมาจาก UI แล้วปรากฏว่าทอยเหรียญ "แพ้" ให้คืนค่า False ยกเลิกการเดิน
-        if is_capture and resolve_crash and not crash_won:
-            return False
+        # ✨ ถ้ากลับมาจาก UI พร้อมผลลัพธ์แล้ว
+        if is_capture and resolve_crash:
+            if crash_won == "died":
+                # หมากฝั่งผู้โจมตีถูกทำลาย (Distortion 2 ครั้ง)
+                self.board[sr][sc] = None
+                self.complete_turn()
+                return "died"
+            elif not crash_won:
+                # ยกเลิกการโจมตี หมากถอยกลับไปช่องเดิม
+                return False
         # ---------------------------------------------------------
         
         move_text = self.history.generate_move_text(p, sr, sc, er, ec, is_capture, is_castle)
