@@ -1,14 +1,17 @@
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.label import Label
 from kivy.app import App
-from components.unit_card import UnitCard
 from kivy.graphics import Color, Rectangle
 
+from components.unit_card import UnitCard 
+
 class SetupSection(BoxLayout):
-    # ✨ แก้ไข __init__ ให้รับ target_attr เพิ่มเข้ามา
     def __init__(self, title, options, target_attr='selected_unit', **kwargs):
+        kwargs.pop('cols', None)
+        kwargs.pop('group_name', None)
+        
         super().__init__(orientation='vertical', spacing=10, **kwargs)
-        self.target_attr = target_attr # บันทึกว่า section นี้ปรับค่าตัวแปรไหน
+        self.target_attr = target_attr 
         
         with self.canvas.before:
             Color(0.15, 0.15, 0.15, 1)
@@ -19,16 +22,28 @@ class SetupSection(BoxLayout):
         
         self.cards = []
         for opt in options:
-            card = UnitCard(text=opt)
-            card.bind(on_release=lambda c, val=opt: self.select_option(c, val))
+            # ✨ เช็คว่าข้อมูลตัวเลือกเป็น Dictionary หรือ String ปกติ
+            if isinstance(opt, dict):
+                text_to_show = str(opt.get('text', opt))
+                val_to_save = opt.get('value', opt)
+            elif isinstance(opt, tuple) or isinstance(opt, list):
+                text_to_show = str(opt[0])
+                val_to_save = opt[1] if len(opt) > 1 else opt[0]
+            else:
+                text_to_show = str(opt)
+                val_to_save = opt
+                
+            card = UnitCard(text=text_to_show)
+            card.bind(on_release=lambda c, val=val_to_save: self.select_option(c, val))
             self.add_widget(card)
             self.cards.append(card)
             
-        # ✨ ดึงค่าเริ่มต้นตาม target_attr (แยกระหว่างขาว/ดำ)
         app = App.get_running_app()
-        default_val = getattr(app, self.target_attr, options[0])
+        default_val = getattr(app, self.target_attr, val_to_save) # ใช้ค่าสุดท้ายเป็นค่าตั้งต้นชั่วคราว
+        
         for card in self.cards:
-            if card.text == default_val:
+            # เทียบชื่อปุ่มกับค่า default
+            if card.text == str(default_val):
                 card.set_selected(True)
             else:
                 card.set_selected(False)
@@ -41,6 +56,5 @@ class SetupSection(BoxLayout):
         for card in self.cards:
             card.set_selected(card == selectedCard)
             
-        # ✨ บันทึกค่าลงตัวแปรใน App ตาม target_attr ที่ตั้งไว้
         app = App.get_running_app()
         setattr(app, self.target_attr, value)
