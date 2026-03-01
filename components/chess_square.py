@@ -61,11 +61,22 @@ class ChessSquare(Button):
             self.piece_img.source = path
             self.piece_img.opacity = 1
             
-            # ถ้าติดแช่แข็งให้ใส่ฟิลเตอร์สีฟ้า ถ้าไม่ติดให้เป็นสีปกติ
+            # ✨ ถ้าติดแช่แข็งให้ปรับสีตัวหมากให้เข้มขึ้น และใส่สีพื้นหลังช่อง
             if is_frozen:
-                self.piece_img.color = (0.5, 0.8, 1, 1)
+                # เปลี่ยนตัวหมากให้เป็นสีน้ำเงินเข้ม/ฟ้าเข้ม 
+                self.piece_img.color = (0.2, 0.6, 1, 1)  
+                
+                # ซ้อนสีพื้นหลังช่องให้เป็นสีฟ้าโปร่งแสง เพื่อให้สังเกตง่ายขึ้น
+                if self.background_color == [0, 0, 0, 0]: # ถ้าช่องปกติ (ไม่ได้ถูกเลือกหรือโดนรุก)
+                    self.background_color = (0, 0.5, 1, 0.4) 
             else:
-                self.piece_img.color = (1, 1, 1, 1)
+                self.piece_img.color = (1, 1, 1, 1) # หมากสีปกติ
+                # คืนค่าพื้นหลังช่องกลับเป็นโปร่งใส (ถ้าไม่ได้ติด highlight หรือ check)
+                if self.background_color == [0, 0.5, 1, 0.4]: 
+                    self.background_color = (0, 0, 0, 0)
         else: 
             self.piece_img.opacity = 0
-            self.piece_img.color = (1, 1, 1, 1) # รีเซ็ตสีเพื่อกันบัคภาพค้าง
+            self.piece_img.color = (1, 1, 1, 1)
+            # รีเซ็ตสีพื้นหลังกรณีหมากตาย/หายไปจากช่อง
+            if self.background_color == [0, 0.5, 1, 0.4]: 
+                self.background_color = (0, 0, 0, 0)
