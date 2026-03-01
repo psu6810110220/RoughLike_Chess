@@ -36,32 +36,32 @@ except ImportError:
     TundraMap = None
 
 class PromotionPopup(ModalView):
-# ✨ เพิ่ม parameter theme เข้ามาเพื่อเช็คตอนโหลดรูป
-    def __init__(self, color, callback, theme="Classic Knights", **kwargs):
+    # ✨ ลบ parameter theme ออก เพราะเราจะให้ Popup ดึงค่าเองตามสี (color)
+    def __init__(self, color, callback, **kwargs):
         super().__init__(size_hint=(0.6, 0.2), auto_dismiss=False, **kwargs)
         layout = GridLayout(cols=4, padding=10, spacing=10)
         from logic.pieces import Queen, Rook, Bishop, Knight
         ops = [Queen, Rook, Bishop, Knight]
         names = ['queen', 'rook', 'bishop', 'knight']
         
+        # ✨ ดึง Theme ตามสีที่ได้โปรโมท
+        app = App.get_running_app()
+        if color == 'white':
+            theme = getattr(app, 'selected_unit_white', 'Medieval Knights')
+        else:
+            theme = getattr(app, 'selected_unit_black', 'Demon')
+        
         for cls, n in zip(ops, names):
-            # ✨ เช็ค Theme และชี้ path ให้ถูกต้อง
             if theme == "Ayothaya":
                 mapping = {'queen': 'chess ayothaya2.png', 'rook': 'chess ayothaya3.png', 'bishop': 'chess ayothaya5.png', 'knight': 'chess ayothaya4.png'}
                 path = f"assets/pieces/ayothaya/{color}/{mapping[n]}"
-
-            # ✨ เพิ่มเงื่อนไขสำหรับเผ่า Demon
             elif theme == "Demon":
                 mapping = {'queen': 'chess demon2.png', 'rook': 'chess demon3.png', 'bishop': 'chess demon5.png', 'knight': 'chess demon4.png'}
                 path = f"assets/pieces/demon/{color}/{mapping[n]}"
-                
-            # ✨ เพิ่มเงื่อนไขสำหรับเผ่า Heaven
             elif theme == "Heaven":
                 mapping = {'queen': 'chess heaven2.png', 'rook': 'chess heaven3.png', 'bishop': 'chess heaven5.png', 'knight': 'chess heaven4.png'}
                 path = f"assets/pieces/heaven/{color}/{mapping[n]}"
-
             else:
-                # ✨ แก้ไขเป็นของ Medieval
                 mapping = {'queen': 'chess medieval2.png', 'rook': 'chess medieval3.png', 'bishop': 'chess medieval5.png', 'knight': 'chess medieval4.png'}
                 path = f"assets/pieces/medieval/{color}/{mapping[n]}"
 
