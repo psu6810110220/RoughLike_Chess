@@ -8,7 +8,9 @@ from screens.options_screen import OptionsScreen
 
 class RogueChessApp(App):
     ai_difficulty = 'normal'  # ตั้งค่าความยากเริ่มต้นของ AI
-
+    
+    selected_unit_white = StringProperty('Medieval Knights') 
+    selected_unit_black = StringProperty('Demon')
     def build(self):
         # สร้าง ScreenManager พร้อมเอฟเฟกต์เฟดตอนเปลี่ยนหน้า
         sm = ScreenManager(transition=FadeTransition())
