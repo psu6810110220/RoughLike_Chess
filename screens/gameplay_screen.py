@@ -542,19 +542,46 @@ class GameplayScreen(Screen):
         a_tot = self.anim_state['a_current_total']
         d_tot = self.anim_state['d_current_total']
 
-        # ✅ แก้ไขตรงนี้: เงื่อนไขการแสดงผลลัพธ์การปะทะ
         if a_tot > d_tot:
-            result_text = "[color=00ff00]BREAKING[/color]" # สีเขียว (ชนะ)
+            # ✨ โจมตีสำเร็จ
+            result_text = "[color=00ff00]BREAKING[/color]"
+            self.vs_lbl.text = result_text
+            self.vs_lbl.font_size = '20sp'
+            self.vs_lbl.markup = True
+            Clock.schedule_once(self.execute_board_move, 1.5)
+            
         elif a_tot == d_tot:
-            result_text = "[color=ffff00]DRAW[/color]" # สีเหลือง (เสมอ)
+            # ✨ 1. เสมอ (Draw): วนลูปการทอยใหม่โดยอัตโนมัติ
+            result_text = "[color=ffff00]DRAW[/color]"
+            self.vs_lbl.text = result_text
+            self.vs_lbl.font_size = '20sp'
+            self.vs_lbl.markup = True
+            
+            # รันการต่อสู้ใหม่อีกครั้งหลังจากแสดงผล 1.5 วิ
+            Clock.schedule_once(lambda dt: self.start_crash_animation(self.anim_state['start_pos'], self.anim_state['end_pos']), 1.5)
+            
         else:
-            result_text = "[color=ff0000]DISTORTION[/color]" # สีแดง (แพ้)
-
-        self.vs_lbl.text = result_text
-        self.vs_lbl.font_size = '20sp'
-        self.vs_lbl.markup = True
-
-        Clock.schedule_once(self.execute_board_move, 1.5)
+            # ✨ 2. โจมตีพลาด (a_tot < d_tot) 
+            self.crash_stagger_count += 1
+            if self.crash_stagger_count < 2:
+                # พลาดครั้งแรก ให้ติดสถานะ STAGGER และทำการทอยสู้ต่อ
+                result_text = "[color=ff8800]STAGGER[/color]" 
+                self.vs_lbl.text = result_text
+                self.vs_lbl.font_size = '20sp'
+                self.vs_lbl.markup = True
+                
+                # รันการต่อสู้ใหม่อีกครั้ง
+                Clock.schedule_once(lambda dt: self.start_crash_animation(self.anim_state['start_pos'], self.anim_state['end_pos']), 1.5)
+            else:
+                # พลาดครั้งที่สอง ติดสถานะ DISTORTION (หมากตาย)
+                result_text = "[color=ff0000]DISTORTION[/color]" 
+                self.vs_lbl.text = result_text
+                self.vs_lbl.font_size = '20sp'
+                self.vs_lbl.markup = True
+                
+                # ทำเครื่องหมายให้ตัวโจมตีตายและส่งผลให้กระดานทำงานต่อ
+                self.anim_state['attacker_died'] = True 
+                Clock.schedule_once(self.execute_board_move, 1.5)
 
     def execute_board_move(self, dt):
         start_pos = self.anim_state['start_pos']
