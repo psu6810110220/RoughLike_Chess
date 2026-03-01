@@ -104,3 +104,15 @@ class Pawn(Piece):
             return True
             
         return False
+
+class Obstacle(Piece):
+    def __init__(self, name, lifespan):
+        # ให้สีเป็น 'neutral' (เป็นกลาง) เพื่อไม่ให้ถูกมองว่าเป็นหมากของฝ่ายใดฝ่ายหนึ่ง
+        super().__init__('neutral', name)
+        self.lifespan = lifespan # อายุของสิ่งกีดขวาง (จำนวนเทิร์น)
+        self.base_points = 0
+        self.coins = 0
+
+    def is_valid_move(self, start, end, board):
+        # สิ่งกีดขวางไม่สามารถเดินได้
+        return False
