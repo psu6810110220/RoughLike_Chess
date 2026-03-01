@@ -13,7 +13,7 @@ class ChessSquare(Button):
         self.background_down = ''
         
         # เตรียมตัวแสดงรูปหมาก
-        self.piece_img = Image(allow_stretch=True, keep_ratio=True, opacity=0)
+        self.piece_img = Image(fit_mode='contain', opacity=0)
         self.add_widget(self.piece_img)
         
         self.is_last_move = False

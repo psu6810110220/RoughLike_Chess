@@ -172,9 +172,13 @@ class ChessBoard:
     def complete_turn(self):
         self.current_turn = 'black' if self.current_turn == 'white' else 'white'
         
-        # ✨ อัปเดตอายุของ Event บนกระดาน (ลดลงทีละ 1 เทิร์น)
+        # 1. ลดเวลาสถานะแช่แข็งและสิ่งกีดขวาง
         self.update_map_events()
+        
+        # 2. ✨ ย้าย apply_map_effects มารันตรงนี้ เพื่อให้เช็คผลกระทบทันที
+        self.apply_map_effects()
 
+        # 3. เช็คว่าฝ่ายที่กำลังจะเล่น มีตาเดินหรือไม่
         has_moves = False
         for r in range(8):
             for c in range(8):
@@ -186,8 +190,15 @@ class ChessBoard:
             if has_moves: break
             
         is_check = self.is_in_check(self.current_turn)
+        
+        # 4. จัดการกรณีที่ไม่มีตาเดิน
         if not has_moves:
-            if is_check:
+            if self.freeze_timer > 0:
+                # ✨ ป้องกันบัค Soft-lock: ถ้าโดนแช่แข็งและ King ขยับไม่ได้ ให้ข้ามเทิร์นอัตโนมัติ
+                # ฟังก์ชันจะรันตัวเองซ้ำ(Recursive) เพื่อลดเวลาแช่แข็งไปเรื่อยๆ จนกว่าจะมีคนเดินได้
+                self.complete_turn()
+                return
+            elif is_check:
                 winner = 'black' if self.current_turn == 'white' else 'white'
                 self.game_result = f"CHECKMATE! {winner.upper()} WINS"
                 self.history.add_suffix_to_last_move("#") 
@@ -196,10 +207,8 @@ class ChessBoard:
         elif self.check_insufficient_material(): 
             self.game_result = "DRAW - INSUFFICIENT MATERIAL"
         elif is_check: 
-            self.history.add_suffix_to_last_move("+") 
-            
-        self.apply_map_effects()
-        
+            self.history.add_suffix_to_last_move("+")
+
     # ✨ ฟังก์ชันใหม่สำหรับจัดการเวลาของ Event
     def update_map_events(self):
         # 1. ลดเวลาแช่แข็งของ Tundra
