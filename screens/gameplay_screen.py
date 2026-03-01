@@ -728,10 +728,22 @@ class GameplayScreen(Screen):
                 is_attacker_won = False
                 attacker_died = False
                 
+                # ✨ ดึงค่า Faction สำหรับ AI (เหมือนกับจุดที่ 1)
+                app = App.get_running_app()
+                def get_faction_name(color):
+                    theme = getattr(app, f'selected_unit_{color}', 'Medieval Knights')
+                    if theme == "Ayothaya": return "ayothaya"
+                    elif theme == "Demon": return "demon"
+                    elif theme == "Heaven": return "heaven"
+                    return "medieval"
+                
+                a_faction = get_faction_name(attacker.color)
+                d_faction = get_faction_name(defender.color)
+
                 # ✨ ลูปวนหาผลลัพธ์ของ AI (จำลองการ Draw และ Stagger)
                 while True:
-                    a_tot, _ = calculate_total_points(a_base, a_coins)
-                    d_tot, _ = calculate_total_points(d_base, d_coins)
+                    a_tot, _ = calculate_total_points(a_base, a_coins, a_faction)
+                    d_tot, _ = calculate_total_points(d_base, d_coins, d_faction)
                     
                     if a_tot > d_tot:
                         is_attacker_won = True
