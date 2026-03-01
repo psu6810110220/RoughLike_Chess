@@ -648,7 +648,7 @@ class GameplayScreen(Screen):
             self.selected = None
             self.init_board_ui()
             self.check_ai_turn()
-            
+
         else:
             # เดินไม่สำเร็จ (แพ้ หรือ เสมอ ให้เด้งกลับ)
             self.selected = None
@@ -735,14 +735,31 @@ class GameplayScreen(Screen):
                 d_base = getattr(defender, 'base_points', 5)
                 d_coins = getattr(defender, 'coins', 3)
                 
-                from logic.crash_logic import resolve_crash
-                crash_result = resolve_crash(
-                    attacker.name, a_base, a_coins,
-                    defender.name, d_base, d_coins
-                )
+                from logic.crash_logic import calculate_total_points
                 
-                is_attacker_won = (crash_result["winner"] == attacker.name)
-                res = self.game.move_piece(sr, sc, er, ec, resolve_crash=True, crash_won=is_attacker_won)
+                stagger_count = 0
+                is_attacker_won = False
+                attacker_died = False
+                
+                # ✨ ลูปวนหาผลลัพธ์ของ AI (จำลองการ Draw และ Stagger)
+                while True:
+                    a_tot, _ = calculate_total_points(a_base, a_coins)
+                    d_tot, _ = calculate_total_points(d_base, d_coins)
+                    
+                    if a_tot > d_tot:
+                        is_attacker_won = True
+                        break
+                    elif a_tot == d_tot:
+                        continue # Draw: รันวงจรใหม่
+                    else:
+                        stagger_count += 1
+                        if stagger_count >= 2:
+                            attacker_died = True
+                            break # Stagger ครบ 2 ครั้ง ตาย(Distortion)
+                
+                # ✨ ส่งผลลัพธ์ลงไป
+                crash_status = "died" if attacker_died else is_attacker_won
+                res = self.game.move_piece(sr, sc, er, ec, resolve_crash=True, crash_won=crash_status)
             
             if res == "promote":
                 from logic.pieces import Queen
