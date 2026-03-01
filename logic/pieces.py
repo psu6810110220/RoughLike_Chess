@@ -64,8 +64,8 @@ class Bishop(Piece):
 class Queen(Piece):
     def __init__(self, color): 
         super().__init__(color, 'Q' if color == 'white' else 'q')
-        self.base_points = 1
-        self.coins = 7
+        self.base_points = 4
+        self.coins = 4
         
     def is_valid_move(self, start, end, board):
         return Rook(self.color).is_valid_move(start, end, board) or Bishop(self.color).is_valid_move(start, end, board)
