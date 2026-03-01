@@ -59,7 +59,7 @@ class PromotionPopup(ModalView):
             elif theme == "Heaven":
                 mapping = {'queen': 'chess heaven2.png', 'rook': 'chess heaven3.png', 'bishop': 'chess heaven5.png', 'knight': 'chess heaven4.png'}
                 path = f"assets/pieces/heaven/{color}/{mapping[n]}"
-                
+
             else:
                 # ✨ แก้ไขเป็นของ Medieval
                 mapping = {'queen': 'chess medieval2.png', 'rook': 'chess medieval3.png', 'bishop': 'chess medieval5.png', 'knight': 'chess medieval4.png'}
@@ -294,6 +294,8 @@ class GameplayScreen(Screen):
     def show_crash_popup(self, attacker, defender, start_pos, end_pos):
         self.hide_piece_status()
         self.cancel_crash()
+        # ✨ เพิ่มบรรทัดนี้: รีเซ็ตจำนวนครั้งการติด Stagger เมื่อเริ่ม Crash ครั้งแรก
+        self.crash_stagger_count = 0
         
         # ไฮไลท์ช่องบนกระดาน
         self.refresh_ui()
