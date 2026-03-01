@@ -227,8 +227,6 @@ class GameplayScreen(Screen):
 
     def refresh_ui(self, legal_moves=[]):
         turn_text = f"{self.game.current_turn.upper()}'S TURN"
-        if hasattr(self.game, 'freeze_timer') and self.game.freeze_timer > 0:
-            turn_text += f" [color=00ffff](FROZEN: {self.game.freeze_timer})[/color]"
 
         if self.game.game_result: self.info_label.text = self.game.game_result
         else: self.info_label.text = f"{self.game.current_turn.upper()}'S TURN"
@@ -238,11 +236,13 @@ class GameplayScreen(Screen):
             is_last = (r, c) in self.game.last_move if self.game.last_move else False
             sq.update_square_style(highlight=(self.selected == (r, c)), is_legal=((r,c) in legal_moves), is_check=((r,c) == check_pos), is_last=is_last)
             p = self.game.board[r][c]
-            
-            # ✨ แก้ไขบรรทัดดึง path รูปภาพโดยเรียกใช้ฟังก์ชันใหม่
             path = self.get_piece_image_path(p) if p else None
             
-            sq.set_piece_icon(path)
+            # ✨ เช็คว่าหมากตัวนี้ติดสถานะแช่แข็งอยู่หรือไม่ (ถ้าไม่มีหมากหรือไม่มีสถานะจะเป็น False)
+            is_frozen = getattr(p, 'freeze_timer', 0) > 0 if p else False
+            
+            # ✨ ส่งค่า is_frozen ไปให้ ChessSquare เพื่อเปลี่ยนสี
+            sq.set_piece_icon(path, is_frozen=is_frozen)
         self.sidebar.update_history_text(self.game.history.move_text_history)
 
     def on_undo_click(self):

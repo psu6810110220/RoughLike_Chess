@@ -54,10 +54,16 @@ class ChessSquare(Button):
             
         self.sync_layout()
 
-    def set_piece_icon(self, path):
-        """แสดงรูปภาพหมากตาม Path ที่ส่งมา"""
+def set_piece_icon(self, path, is_frozen=False):
+        """แสดงรูปภาพหมากตาม Path ที่ส่งมา และปรับเป็นสีฟ้าถ้าโดนแช่แข็ง"""
         if path:
             self.piece_img.source = path
             self.piece_img.opacity = 1
+            
+            # ✨ ถ้าติดแช่แข็งให้ใส่ฟิลเตอร์สีฟ้า ถ้าไม่ติดให้เป็นสีปกติ
+            if is_frozen:
+                self.piece_img.color = (0.5, 0.8, 1, 1)  # สีฟ้าอ่อน
+            else:
+                self.piece_img.color = (1, 1, 1, 1)      # สีปกติ
         else: 
             self.piece_img.opacity = 0

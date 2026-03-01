@@ -34,16 +34,15 @@ class ChessBoard:
         piece = self.board[sr][sc]
         if not piece: return []
         
-        # ✨ ระบบแช่แข็ง: ถ้าติดแช่แข็งอยู่ หมากทุกตัวยกเว้น King จะเดินไม่ได้เลย
-        if self.freeze_timer > 0 and not isinstance(piece, King):
+        # ✨ เช็คสถานะแช่แข็งที่ระดับตัวหมาก (ถ้าหมากตัวนี้โดนแช่แข็งอยู่ จะขยับไม่ได้)
+        if getattr(piece, 'freeze_timer', 0) > 0:
             return []
 
         moves = []
         for r in range(8):
             for c in range(8):
                 target = self.board[r][c]
-                # ✨ ห้ามทับหมากสีเดียวกัน และ ห้ามตีสิ่งกีดขวาง (Obstacle ที่มีสี neutral)
-                if target and (target.color == piece.color or target.color == 'neutral'): 
+                if target and (target.color == piece.color or getattr(target, 'color', '') == 'neutral'): 
                     continue
                 
                 valid = piece.is_valid_move((sr, sc), (r, c), self.board, self.en_passant_target) if isinstance(piece, Pawn) else piece.is_valid_move((sr, sc), (r, c), self.board)
@@ -172,13 +171,9 @@ class ChessBoard:
     def complete_turn(self):
         self.current_turn = 'black' if self.current_turn == 'white' else 'white'
         
-        # 1. ลดเวลาสถานะแช่แข็งและสิ่งกีดขวาง
         self.update_map_events()
-        
-        # 2. ✨ ย้าย apply_map_effects มารันตรงนี้ เพื่อให้เช็คผลกระทบทันที
         self.apply_map_effects()
 
-        # 3. เช็คว่าฝ่ายที่กำลังจะเล่น มีตาเดินหรือไม่
         has_moves = False
         for r in range(8):
             for c in range(8):
@@ -191,11 +186,12 @@ class ChessBoard:
             
         is_check = self.is_in_check(self.current_turn)
         
-        # 4. จัดการกรณีที่ไม่มีตาเดิน
         if not has_moves:
-            if self.freeze_timer > 0:
-                # ✨ ป้องกันบัค Soft-lock: ถ้าโดนแช่แข็งและ King ขยับไม่ได้ ให้ข้ามเทิร์นอัตโนมัติ
-                # ฟังก์ชันจะรันตัวเองซ้ำ(Recursive) เพื่อลดเวลาแช่แข็งไปเรื่อยๆ จนกว่าจะมีคนเดินได้
+            # ✨ เช็คว่าเดินไม่ได้เพราะหมากโดนแช่แข็งหรือเปล่า
+            is_frozen_locked = any(getattr(p, 'freeze_timer', 0) > 0 for row in self.board for p in row if p and getattr(p, 'color', '') == self.current_turn)
+            
+            if is_frozen_locked and not is_check:
+                # ถ้าเดินไม่ได้เลยเพราะติดแช่แข็ง (และไม่ได้โดนรุก) ให้ข้ามเทิร์นเพื่อลดเวลา
                 self.complete_turn()
                 return
             elif is_check:
@@ -211,18 +207,20 @@ class ChessBoard:
 
     # ✨ ฟังก์ชันใหม่สำหรับจัดการเวลาของ Event
     def update_map_events(self):
-        # 1. ลดเวลาแช่แข็งของ Tundra
-        if self.freeze_timer > 0:
-            self.freeze_timer -= 1
-            
-        # 2. ลดอายุของสิ่งกีดขวางทั้งหมดบนกระดาน (หนามป่า, พายุทะเลทราย)
+        # ✨ ลดอายุของ Event บนตัวหมากและสิ่งกีดขวาง
         for r in range(8):
             for c in range(8):
                 p = self.board[r][c]
-                if p and getattr(p, 'color', '') == 'neutral':
-                    p.lifespan -= 1
-                    if p.lifespan <= 0:
-                        self.board[r][c] = None # ลบสิ่งกีดขวางที่หมดอายุออกไปจากกระดาน
+                if p:
+                    # 1. ลดเวลาสิ่งกีดขวาง
+                    if getattr(p, 'color', '') == 'neutral':
+                        p.lifespan -= 1
+                        if p.lifespan <= 0:
+                            self.board[r][c] = None 
+                    
+                    # 2. ลดเวลาแช่แข็งของหมากแต่ละตัว
+                    if getattr(p, 'freeze_timer', 0) > 0:
+                        p.freeze_timer -= 1
 
     def apply_map_effects(self):
         pass
