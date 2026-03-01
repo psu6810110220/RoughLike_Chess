@@ -48,7 +48,7 @@ def toss_coin_demon():
         return -3, "ก้อย"
     
     # ถ้าได้ฟ้า มีโอกาส 20% ที่จะสุ่มต่อไประดับ 2
-    if random.random() < 0.01:
+    if random.random() < 0.20:
         # ระดับ 2: ม่วง (20%) vs ส้ม (80%)
         if random.random() < 0.20:
             return 4, "หัวสีม่วง"
@@ -65,7 +65,8 @@ def toss_coin_heaven():
     else:
         return 1, "หัวสีเหลือง"
 
-def calculate_total_points(base_points, num_coins):
+# เพิ่มพารามิเตอร์ faction เข้ามาเพื่อให้โค้ดทำงานได้
+def calculate_total_points(base_points, num_coins, faction):
     """คำนวณแต้มรวมทั้งหมดจากการวนลูปทอยเหรียญโดยอิงตามเผ่า"""
     total = base_points
     results = []
