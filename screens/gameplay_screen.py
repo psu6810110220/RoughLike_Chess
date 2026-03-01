@@ -49,6 +49,17 @@ class PromotionPopup(ModalView):
             if theme == "Ayothaya":
                 mapping = {'queen': 'chess ayothaya2.png', 'rook': 'chess ayothaya3.png', 'bishop': 'chess ayothaya5.png', 'knight': 'chess ayothaya4.png'}
                 path = f"assets/pieces/ayothaya/{color}/{mapping[n]}"
+
+            # ✨ เพิ่มเงื่อนไขสำหรับเผ่า Demon
+            elif theme == "Demon":
+                mapping = {'queen': 'chess demon2.png', 'rook': 'chess demon3.png', 'bishop': 'chess demon5.png', 'knight': 'chess demon4.png'}
+                path = f"assets/pieces/demon/{color}/{mapping[n]}"
+                
+            # ✨ เพิ่มเงื่อนไขสำหรับเผ่า Heaven
+            elif theme == "Heaven":
+                mapping = {'queen': 'chess heaven2.png', 'rook': 'chess heaven3.png', 'bishop': 'chess heaven5.png', 'knight': 'chess heaven4.png'}
+                path = f"assets/pieces/heaven/{color}/{mapping[n]}"
+                
             else:
                 # ✨ แก้ไขเป็นของ Medieval
                 mapping = {'queen': 'chess medieval2.png', 'rook': 'chess medieval3.png', 'bishop': 'chess medieval5.png', 'knight': 'chess medieval4.png'}
