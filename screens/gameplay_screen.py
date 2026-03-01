@@ -134,38 +134,30 @@ class GameplayScreen(Screen):
         else:
             theme = getattr(app, 'selected_unit_black', 'Demon')
         
+        # จัดการชื่อ folder ของแต่ละเผ่า
         if theme == "Ayothaya":
-            mapping = {
-                'king': 'chess ayothaya1.png', 'queen': 'chess ayothaya2.png',
-                'rook': 'chess ayothaya3.png', 'knight': 'chess ayothaya4.png',
-                'bishop': 'chess ayothaya5.png', 'pawn': 'chess ayothaya6.png'
-            }
-            filename = mapping.get(p_name, 'chess ayothaya6.png')
-            return f"assets/pieces/ayothaya/{p_color}/{filename}"
+            theme_folder = "ayothaya"
         elif theme == "Demon":
-            mapping = {
-                'king': 'chess demon1.png', 'queen': 'chess demon2.png',
-                'rook': 'chess demon3.png', 'knight': 'chess demon4.png',
-                'bishop': 'chess demon5.png', 'pawn': 'chess demon6.png'
-            }
-            filename = mapping.get(p_name, 'chess demon6.png')
-            return f"assets/pieces/demon/{p_color}/{filename}"
+            theme_folder = "demon"
         elif theme == "Heaven":
-            mapping = {
-                'king': 'chess heaven1.png', 'queen': 'chess heaven2.png',
-                'rook': 'chess heaven3.png', 'knight': 'chess heaven4.png',
-                'bishop': 'chess heaven5.png', 'pawn': 'chess heaven6.png'
-            }
-            filename = mapping.get(p_name, 'chess heaven6.png')
-            return f"assets/pieces/heaven/{p_color}/{filename}"
+            theme_folder = "heaven"
         else:
-            mapping = {
-                'king': 'chess medieval1.png', 'queen': 'chess medieval2.png',
-                'rook': 'chess medieval3.png', 'knight': 'chess medieval4.png',
-                'bishop': 'chess medieval5.png', 'pawn': 'chess medieval6.png'
+            theme_folder = "medieval"
+
+        # ✨ แยกการเช็คเบี้ย (Pawn) ออกมา เพื่อดึงเลขที่สุ่มไว้ (6-9)
+        if p_name == 'pawn':
+            # ดึงตัวเลข 6-9 ที่สุ่มเก็บไว้ในตัวหมาก (ถ้าหาไม่เจอให้ใช้ 6 เป็นค่าเริ่มต้น)
+            num = getattr(piece, 'variant', 6)
+        else:
+            # แมปชื่อหมากตัวอื่นๆ เป็นตัวเลข
+            piece_map = {
+                'king': 1, 'queen': 2, 'rook': 3,
+                'knight': 4, 'bishop': 5
             }
-            filename = mapping.get(p_name, 'chess medieval6.png')
-            return f"assets/pieces/medieval/{p_color}/{filename}"
+            num = piece_map.get(p_name, 1)
+
+        # คืนค่า Path เต็มของรูปภาพ
+        return f"assets/pieces/{theme_folder}/{p_color}/chess {theme_folder}{num}.png"
 
     def on_quit(self):
         self.manager.current = 'setup'

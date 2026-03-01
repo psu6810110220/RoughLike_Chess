@@ -84,6 +84,8 @@ class Pawn(Piece):
         super().__init__(color, 'P' if color == 'white' else 'p')
         self.base_points = 2
         self.coins = 2
+
+        self.variant = random.randint(6, 9)
         
     def is_valid_move(self, start, end, board, ep_target=None):
         sr, sc, er, ec = start[0], start[1], end[0], end[1]
