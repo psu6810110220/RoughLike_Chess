@@ -199,7 +199,21 @@ class ChessBoard:
             self.history.add_suffix_to_last_move("+") 
             
         self.apply_map_effects()
-
+        
+    # ✨ ฟังก์ชันใหม่สำหรับจัดการเวลาของ Event
+    def update_map_events(self):
+        # 1. ลดเวลาแช่แข็งของ Tundra
+        if self.freeze_timer > 0:
+            self.freeze_timer -= 1
+            
+        # 2. ลดอายุของสิ่งกีดขวางทั้งหมดบนกระดาน (หนามป่า, พายุทะเลทราย)
+        for r in range(8):
+            for c in range(8):
+                p = self.board[r][c]
+                if p and getattr(p, 'color', '') == 'neutral':
+                    p.lifespan -= 1
+                    if p.lifespan <= 0:
+                        self.board[r][c] = None # ลบสิ่งกีดขวางที่หมดอายุออกไปจากกระดาน
 
     def apply_map_effects(self):
         pass
