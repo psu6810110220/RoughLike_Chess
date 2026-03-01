@@ -4,6 +4,7 @@ class Piece:
     def __init__(self, color, name):
         self.color = color
         self.name = name
+        self.item = None
 
         # --- เพิ่ม 2 บรรทัดนี้สำหรับระบบ Crash ---
         self.base_points = 5  # ค่าพลังตั้งต้นชั่วคราว (แก้ได้ตามใจชอบ)

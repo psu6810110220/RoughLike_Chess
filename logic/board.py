@@ -13,6 +13,26 @@ class ChessBoard:
         self.history = HistoryManager() 
         self.bg_image = '' 
         self.freeze_timer = 0  # ✨ เพิ่มตัวแปรเก็บจำนวนเทิร์นที่ถูกแช่แข็ง
+        self.inventory_white = [] # ✨ กระเป๋าฝั่งขาว (สูงสุด 5)
+        self.inventory_black = [] # ✨ กระเป๋าฝั่งดำ (สูงสุด 5)
+
+    def handle_item_drop(self, attacker, defender):
+        """จัดการการได้รับไอเทมเมื่อมีการกินหมาก"""
+        # เงื่อนไข: ต้องเป็น Rook, Bishop หรือ Knight เท่านั้นที่กิน
+        valid_harvesters = ['rook', 'bishop', 'knight']
+        attacker_type = attacker.__class__.__name__.lower()
+        
+        if attacker_type in valid_harvesters:
+            target_inv = self.inventory_white if attacker.color == 'white' else self.inventory_black
+            
+            # ถ้ากระเป๋ายังไม่เต็ม (ไม่เกิน 5 ชิ้น)
+            if len(target_inv) < 5:
+                # โอกาส 40% ที่จะได้รับไอเทมจากการกิน
+                if random.random() < 0.40:
+                    random_item_id = random.randint(1, 10)
+                    item = ITEM_DATABASE[random_item_id]
+                    target_inv.append(item)
+                    print(f"{attacker.color} received {item.name}!")
 
     def create_initial_board(self):
         b = [[None for _ in range(8)] for _ in range(8)]
