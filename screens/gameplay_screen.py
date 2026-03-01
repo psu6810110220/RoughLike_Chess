@@ -708,7 +708,6 @@ class GameplayScreen(Screen):
             # ---------------------------
             # กรณีที่ 2: ฝ่ายรุกชนะ (Defender ตาย)
             # ---------------------------
-            self.game.history.add_move((sr, sc), (er, ec), attacker, defender, is_capture=True)
             if attacker and defender:
                 self.game.handle_item_drop(attacker, defender)
                 # ✨ Item 3: Bloodlust Emblem

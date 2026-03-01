@@ -30,7 +30,7 @@ class ChessBoard:
             # ถ้ากระเป๋ายังไม่เต็ม (ไม่เกิน 5 ชิ้น)
             if len(target_inv) < 5:
                 # โอกาส 40% ที่จะได้รับไอเทมจากการกิน
-                if random.random() < 1.00:
+                if random.random() < 0.40:
                     random_item_id = random.randint(1, 10)
                     item = ITEM_DATABASE[random_item_id]
                     target_inv.append(item)
