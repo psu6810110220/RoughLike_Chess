@@ -79,6 +79,8 @@ class GameplayScreen(Screen):
         self.add_widget(self.root_layout)
         self.status_popup = None
         self.crash_popup = None # ✨ เปลี่ยนตัวแปรจาก clash เป็น crash
+        self.item_tooltip = None
+        self.selected_item = None
 
     def setup_game(self, mode):
         self.main_layout.clear_widgets()
@@ -106,6 +108,8 @@ class GameplayScreen(Screen):
         
         self.container = BoxLayout(orientation='horizontal')
         self.board_area.add_widget(self.container)
+        self.inventory_layout = BoxLayout(orientation='horizontal', size_hint_y=0.15, padding=[10, 5, 10, 5], spacing=10)
+        self.board_area.add_widget(self.inventory_layout)
         self.main_layout.add_widget(self.board_area)
 
         self.sidebar = SidebarUI(on_undo_callback=self.on_undo_click, on_quit_callback=self.on_quit)
@@ -220,6 +224,8 @@ class GameplayScreen(Screen):
     def refresh_ui(self, legal_moves=[]):
         turn_text = f"{self.game.current_turn.upper()}'S TURN"
 
+        self.update_inventory_ui()
+
         if self.game.game_result: self.info_label.text = self.game.game_result
         else: self.info_label.text = f"{self.game.current_turn.upper()}'S TURN"
         
@@ -250,7 +256,29 @@ class GameplayScreen(Screen):
             return
 
         r, c = instance.row, instance.col
-        
+
+        if self.selected_item:
+            if piece and piece.color == self.game.current_turn:
+                # ✨ ใส่ไอเทมลงในหมาก
+                piece.item = self.selected_item
+                
+                # ✨ ลบไอเทมออกจากกระเป๋า
+                inv = getattr(self.game, f'inventory_{self.game.current_turn}')
+                if self.selected_item in inv:
+                    inv.remove(self.selected_item)
+                
+                # เคลียร์สถานะการเลือกไอเทม
+                self.selected_item = None
+                self.hide_item_tooltip()
+                self.refresh_ui()
+                self.show_piece_status(piece) # โชว์สถานะอัปเดตทันที
+            else:
+                # ยกเลิกการเลือกไอเทมหากไปคลิกช่องว่างหรือฝั่งศัตรู
+                self.selected_item = None
+                self.hide_item_tooltip()
+                self.refresh_ui()
+            return
+            
         if self.selected is None:
             piece = self.game.board[r][c]
             if piece and piece.color == self.game.current_turn:
@@ -704,6 +732,12 @@ class GameplayScreen(Screen):
         coins_lbl.bind(size=coins_lbl.setter('text_size'))
         text_layout.add_widget(coins_lbl)
         
+        p_item = getattr(piece, 'item', None)
+        item_text = p_item.name if p_item else "No Item"
+        item_lbl = Label(text=f"Eqp: {item_text}", font_size='12sp', color=(0.4, 1, 0.4, 1), halign='left')
+        item_lbl.bind(size=item_lbl.setter('text_size'))
+        text_layout.add_widget(item_lbl)
+
         self.status_popup.add_widget(text_layout)
         self.root_layout.add_widget(self.status_popup)
         
@@ -724,6 +758,75 @@ class GameplayScreen(Screen):
         if self.status_popup:
             self.root_layout.remove_widget(self.status_popup)
             self.status_popup = None
+
+    # ==========================================
+    # ✨ ระบบ INVENTORY & ITEM UI
+    # ==========================================
+    def update_inventory_ui(self):
+        """อัปเดตการแสดงผลไอเทมในกระเป๋าของคนที่กำลังเล่นอยู่"""
+        self.inventory_layout.clear_widgets()
+        
+        # ป้ายบอกกระเป๋าของใคร
+        inv_label = Label(text=f"INVENTORY\n({self.game.current_turn.upper()})", size_hint_x=0.2, bold=True, color=(0.8, 0.8, 0.8, 1), halign="center")
+        self.inventory_layout.add_widget(inv_label)
+
+        # ดึงลิสต์ไอเทมจาก Logic
+        inv = getattr(self.game, f'inventory_{self.game.current_turn}', [])
+
+        # สร้างช่องเก็บของ 5 ช่อง
+        for i in range(5):
+            if i < len(inv):
+                item = inv[i]
+                # ปุ่มไอเทม
+                btn = Button(background_normal=item.image_path)
+                # ใส่สีเขียวอ่อนเพื่อไฮไลท์เวลาถูกคลิกเลือก
+                if self.selected_item == item:
+                    btn.background_color = (0.5, 1, 0.5, 1) 
+                
+                btn.bind(on_release=lambda instance, it=item: self.on_item_click(it))
+                self.inventory_layout.add_widget(btn)
+            else:
+                # ช่องว่าง
+                empty_btn = Button(background_normal='', background_color=(0.2, 0.2, 0.2, 1), text="Empty slot", color=(0.5, 0.5, 0.5, 1))
+                self.inventory_layout.add_widget(empty_btn)
+
+    def on_item_click(self, item):
+        """เมื่อกดที่ไอเทมในกระเป๋า"""
+        # ถ้ากดซ้ำที่เดิม ให้ยกเลิกการเลือก
+        if self.selected_item == item:
+            self.selected_item = None
+            self.hide_item_tooltip()
+        else:
+            self.selected_item = item
+            self.show_item_tooltip(item)
+            
+        self.update_inventory_ui() # รีเฟรชสีกรอบไอเทม
+
+    def show_item_tooltip(self, item):
+        """แสดงคำอธิบายไอเทมเมื่อถูกคลิก"""
+        self.hide_item_tooltip()
+        self.item_tooltip = BoxLayout(
+            orientation='vertical', size_hint=(None, None), size=(300, 100),
+            pos_hint={'center_x': 0.5, 'y': 0.16}, # โผล่มาเหนือกระเป๋า
+            padding=10, spacing=5
+        )
+        with self.item_tooltip.canvas.before:
+            Color(0.1, 0.1, 0.2, 0.95)
+            self.item_tooltip.bg_rect = Rectangle(pos=self.item_tooltip.pos, size=self.item_tooltip.size)
+        self.item_tooltip.bind(pos=lambda inst, val: setattr(instance.bg_rect, 'pos', instance.pos) if hasattr(inst, 'bg_rect') else None)
+        
+        name_lbl = Label(text=f"[color=ffff00]{item.name}[/color]", markup=True, bold=True, font_size='18sp', size_hint_y=0.4)
+        desc_lbl = Label(text=item.description, font_size='14sp', halign="center", valign="middle")
+        desc_lbl.bind(size=desc_lbl.setter('text_size'))
+        
+        self.item_tooltip.add_widget(name_lbl)
+        self.item_tooltip.add_widget(desc_lbl)
+        self.root_layout.add_widget(self.item_tooltip)
+
+    def hide_item_tooltip(self):
+        if self.item_tooltip:
+            self.root_layout.remove_widget(self.item_tooltip)
+            self.item_tooltip = None
 
     def check_ai_turn(self):
         if getattr(self, 'game_mode', 'PVP') == 'PVE' and self.game.current_turn == 'black' and not self.game.game_result:
