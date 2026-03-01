@@ -113,25 +113,25 @@ class GameplayScreen(Screen):
         self.init_board_ui()
 
     def get_piece_image_path(self, piece):
-        """✨ ฟังก์ชันสำหรับดึง Path รูปภาพหมากตามเผ่า (Theme) ที่ผู้เล่นเลือก"""
+        """✨ ฟังก์ชันสำหรับดึง Path รูปภาพหมากตามเผ่า (Theme) แบบแยกสี White/Black"""
         app = App.get_running_app()
-        theme = getattr(app, 'selected_unit', 'Medieval Knights')
-        
         p_color = piece.color
         p_name = piece.__class__.__name__.lower()
         
+        # ✨ เช็คสีของหมาก เพื่อดึง Theme ให้ตรงกับฝ่ายนั้น
+        if p_color == 'white':
+            theme = getattr(app, 'selected_unit_white', 'Medieval Knights')
+        else:
+            theme = getattr(app, 'selected_unit_black', 'Demon')
+        
         if theme == "Ayothaya":
             mapping = {
-                'king': 'chess ayothaya1.png',
-                'queen': 'chess ayothaya2.png',
-                'rook': 'chess ayothaya3.png',
-                'knight': 'chess ayothaya4.png',
-                'bishop': 'chess ayothaya5.png',
-                'pawn': 'chess ayothaya6.png'
+                'king': 'chess ayothaya1.png', 'queen': 'chess ayothaya2.png',
+                'rook': 'chess ayothaya3.png', 'knight': 'chess ayothaya4.png',
+                'bishop': 'chess ayothaya5.png', 'pawn': 'chess ayothaya6.png'
             }
             filename = mapping.get(p_name, 'chess ayothaya6.png')
             return f"assets/pieces/ayothaya/{p_color}/{filename}"
-        # ✨ เพิ่มเงื่อนไขสำหรับเผ่า Demon
         elif theme == "Demon":
             mapping = {
                 'king': 'chess demon1.png', 'queen': 'chess demon2.png',
@@ -140,8 +140,6 @@ class GameplayScreen(Screen):
             }
             filename = mapping.get(p_name, 'chess demon6.png')
             return f"assets/pieces/demon/{p_color}/{filename}"
-            
-        # ✨ เพิ่มเงื่อนไขสำหรับเผ่า Heaven
         elif theme == "Heaven":
             mapping = {
                 'king': 'chess heaven1.png', 'queen': 'chess heaven2.png',
@@ -151,14 +149,10 @@ class GameplayScreen(Screen):
             filename = mapping.get(p_name, 'chess heaven6.png')
             return f"assets/pieces/heaven/{p_color}/{filename}"
         else:
-            # ✨ แก้ไขเป็นของ Medieval
             mapping = {
-                'king': 'chess medieval1.png',
-                'queen': 'chess medieval2.png',
-                'rook': 'chess medieval3.png',
-                'knight': 'chess medieval4.png',
-                'bishop': 'chess medieval5.png',
-                'pawn': 'chess medieval6.png'
+                'king': 'chess medieval1.png', 'queen': 'chess medieval2.png',
+                'rook': 'chess medieval3.png', 'knight': 'chess medieval4.png',
+                'bishop': 'chess medieval5.png', 'pawn': 'chess medieval6.png'
             }
             filename = mapping.get(p_name, 'chess medieval6.png')
             return f"assets/pieces/medieval/{p_color}/{filename}"
