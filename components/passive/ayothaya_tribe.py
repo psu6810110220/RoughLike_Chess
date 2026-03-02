@@ -23,8 +23,12 @@ class AyothayaTribe:
                 "coin_tosses": 1
             },
             "queen": {
+                "starting_points": 1,
+                "coin_tosses": 7
+            },
+            "king": {
                 "starting_points": 3,
-                "coin_tosses": 1
+                "coin_tosses": 2
             }
         }
     
