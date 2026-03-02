@@ -437,7 +437,7 @@ class GameplayScreen(Screen):
             self.selected = None
             self.refresh_ui()
 
-    # ✨ ชุดฟังก์ชันใหม่สำหรับจัดการ Animation หมุนตัวเลข
+# ✨ ฟังก์ชันเตรียมแอนิเมชัน
     def start_crash_animation(self, start_pos, end_pos):
         self.crash_btn.disabled = True
         self.cancel_btn.disabled = True
@@ -455,28 +455,27 @@ class GameplayScreen(Screen):
             
             attacker.has_moved = True # 🚨 FIX: ตั้งค่าว่าหมากตัวนี้เดินแล้ว
             self.game.history.save_state(self.game, "Mirage Shield Blocked!")
-            self.game.complete_turn() # 🚨 FIX: ลบการเรียก complete_turn ที่ซ้ำซ้อนออกให้เหลืออันเดียว
+            self.game.complete_turn() 
             self.refresh_ui()
             self.check_ai_turn() 
-            return # ออกจากฟังก์ชัน ไม่ต้องทอยเหรียญ
+            return 
 
         a_base = getattr(attacker, 'base_points', 5)
         a_coins = getattr(attacker, 'coins', 3)
         d_base = getattr(defender, 'base_points', 5)
         d_coins = getattr(defender, 'coins', 3)
 
-        # ✨ Item 8: Aura of Misfortune (ลดเหรียญศัตรู 1 เหรียญ)
+        # ✨ Item 8: Aura of Misfortune 
         if getattr(defender, 'item', None) and defender.item.id == 8:
             a_coins = max(0, a_coins - 1)
         if getattr(attacker, 'item', None) and attacker.item.id == 8:
             d_coins = max(0, d_coins - 1)
 
-        # ✨ Item 2: Clutch Protection (ปิดการทอยศัตรูให้เหลือ 0)
+        # ✨ Item 2: Clutch Protection 
         if getattr(defender, 'item', None) and defender.item.id == 2:
             a_coins = 0
-            defender.item = None # ไอเทมพัง
+            defender.item = None 
 
-        # สุ่มผลลัพธ์ล่วงหน้าเพื่อให้แอนิเมชันวิ่งไปหาคำตอบที่ถูกต้อง
         from logic.crash_logic import calculate_total_points
         
         # ✨ ดึงค่า Theme/Faction ของทั้งสองฝ่าย
@@ -491,21 +490,30 @@ class GameplayScreen(Screen):
         a_faction = get_faction_name(attacker.color)
         d_faction = get_faction_name(defender.color)
 
-        # ✨ ส่ง a_faction และ d_faction เข้าไปด้วย
         self.a_final_total, self.a_results = calculate_total_points(a_base, a_coins, a_faction)
         self.d_final_total, self.d_results = calculate_total_points(d_base, d_coins, d_faction)
 
-        # ✨ รีเซ็ตข้อความ UI เหรียญให้เป็นค่าเริ่มต้น เพื่อรองรับการทอยซ้ำหลายๆ รอบ
-        self.atk_total_lbl.text = f"crash : {a_base}"
-        self.def_total_lbl.text = f"crash : {d_base}"
-        for lbl in self.atk_coin_labels:
-            lbl.text = "0"
-            lbl.color = (0.5, 0.5, 0.5, 1)
-        for lbl in self.def_coin_labels:
-            lbl.text = "0"
-            lbl.color = (0.5, 0.5, 0.5, 1)
+        # 🚨 FIX: อัปเดตข้อความแต้มรวมเริ่มต้น
+        self.a_val_lbl.text = f"crash : {a_base}"
+        self.d_val_lbl.text = f"crash : {d_base}"
 
-        # แปลงข้อความเป็นค่าตัวเลข เพื่อนำไปโชว์ในช่อง coin
+        # 🚨 FIX: ล้างกระดานเหรียญเก่าและเสกรูปเหรียญเปล่า (coin10.png)
+        self.a_coins_layout.clear_widgets()
+        self.d_coins_layout.clear_widgets()
+        self.a_coin_widgets = []
+        self.d_coin_widgets = []
+
+        for _ in range(a_coins):
+            img = Image(source='assets/coin/coin10.png', size_hint=(None, None), size=(32, 32))
+            self.a_coin_widgets.append(img)
+            self.a_coins_layout.add_widget(img)
+
+        for _ in range(d_coins):
+            img = Image(source='assets/coin/coin10.png', size_hint=(None, None), size=(32, 32))
+            self.d_coin_widgets.append(img)
+            self.d_coins_layout.add_widget(img)
+
+        # แปลงข้อความเป็นค่าตัวเลข เพื่อนำไปโชว์ตอนบวกแต้ม
         def get_pt(res_str, faction):
             if "Green" in res_str: return 100
             if "Cyan" in res_str: return 10
@@ -525,94 +533,74 @@ class GameplayScreen(Screen):
             'side': 'atk',
             'coin_idx': 0,
             'ticks': 0,
-            'max_ticks': 15, # ความยาวของการหมุนต่อ 1 เหรียญ
+            'max_ticks': 10, # ความยาวของการกระพริบต่อ 1 เหรียญ
             'a_current_total': a_base,
             'd_current_total': d_base,
             'start_pos': start_pos,
             'end_pos': end_pos,
             'attacker': attacker,
             'defender': defender,
-            'attacker_died': False # ✨ บันทึกสถานะว่าโดนตาย (Distortion) หรือไม่
+            'attacker_died': False,
+            'a_faction': a_faction,
+            'd_faction': d_faction
         }
 
         # เรียก Clock ให้หมุนเลขทุกๆ 0.05 วินาที
         self.spin_event = Clock.schedule_interval(self.animate_coin_step, 0.05)
 
+
+    # ✨ ฟังก์ชันรันแอนิเมชันทีละเฟรม
     def animate_coin_step(self, dt):
-        import random
         state = self.anim_state
         side = state['side']
         idx = state['coin_idx']
-
-        # เช็คว่ากำลังแอนิเมทฝั่งไหน
+        
+        # เลือกตัวแปรของฝั่งที่กำลังทอยเหรียญ
         if side == 'atk':
-            labels = self.atk_coin_labels
-            final_pts = self.a_pts_array
-            if idx >= len(final_pts):
-                state['side'] = 'def' # สลับไปฝั่งกัน
-                state['coin_idx'] = 0
-                return
+            pts_array = self.a_pts_array
+            results = self.a_results
+            faction = state['a_faction']
+            coin_widgets = self.a_coin_widgets
+            lbl_total = self.a_val_lbl
+            current_total_key = 'a_current_total'
         else:
-            labels = self.def_coin_labels
-            final_pts = self.d_pts_array
-            if idx >= len(final_pts):
-                # จบแอนิเมชัน
-                self.spin_event.cancel()
-                self.finish_crash_animation()
-                return
+            pts_array = self.d_pts_array
+            results = self.d_results
+            faction = state['d_faction']
+            coin_widgets = self.d_coin_widgets
+            lbl_total = self.d_val_lbl
+            current_total_key = 'd_current_total'
 
-        target_val = final_pts[idx]
-        lbl = labels[idx]
-
-        if state['ticks'] < state['max_ticks']:
-            # หมุนเลขหลอกๆ ให้ดูมีความพยายามตามเผ่า
-            choices = [0, 1]
-            if target_val in [2, 3]: choices = [1, 2, 3]
-            elif target_val in [10, 100]: choices = [0, 10, 100]
-            elif target_val in [-3, 4, 6]: choices = [-3, 4, 6]
-            
-            lbl.text = str(random.choice(choices))
-            lbl.color = (1, 1, 1, 1)
-            state['ticks'] += 1
-        else:
-            # จบรอบเหรียญ ยึดค่าจริง!
-            lbl.text = str(target_val)
-            
-            # เอฟเฟกต์สีและการเด้งเมื่อติดคริติคอล
-            if target_val <= 0:
-                lbl.color = (0.5, 0.5, 0.5, 1) # เทา (0 หรือ -3)
-            elif target_val == 1:
-                lbl.color = (1, 1, 0.2, 1) # เหลือง
-            elif target_val == 2:
-                lbl.color = (1, 0.2, 0.2, 1) # แดง
-                anim = Animation(font_size=24, duration=0.1) + Animation(font_size=16, duration=0.1)
-                anim.start(lbl)
-            elif target_val == 3:
-                lbl.color = (0.2, 0.5, 1, 1) # น้ำเงิน
-                anim = Animation(font_size=24, duration=0.1) + Animation(font_size=16, duration=0.1)
-                anim.start(lbl)
-            elif target_val == 4:
-                lbl.color = (1, 0.6, 0.2, 1) # ส้ม
-            elif target_val == 6:
-                lbl.color = (0.6, 0.2, 1, 1) # ม่วง
-                anim = Animation(font_size=24, duration=0.1) + Animation(font_size=16, duration=0.1)
-                anim.start(lbl)
-            elif target_val == 10:
-                lbl.color = (0.4, 0.8, 1, 1) # ฟ้า
-            elif target_val == 100:
-                lbl.color = (0.2, 1, 0.2, 1) # เขียว
-                anim = Animation(font_size=24, duration=0.1) + Animation(font_size=16, duration=0.1)
-                anim.start(lbl)
-
-            # บวกเลขลงช่อง crashรวม
+        # ถ้าทอยเหรียญฝั่งนี้ครบแล้ว ให้สลับฝั่ง หรือจบแอนิเมชัน
+        if idx >= len(pts_array):
             if side == 'atk':
-                state['a_current_total'] += target_val
-                self.atk_total_lbl.text = f"crash : {state['a_current_total']}"
+                state['side'] = 'def'
+                state['coin_idx'] = 0
+                state['ticks'] = 0
+                return
             else:
-                state['d_current_total'] += target_val
-                self.def_total_lbl.text = f"crash : {state['d_current_total']}"
+                # 🚨 จบแอนิเมชันทั้ง 2 ฝั่ง ให้ไปรันคำสั่งประมวลผลผลลัพธ์ของระบบคุณต่อ
+                self.spin_event.cancel()
+                self.execute_board_move(0) # หรือฟังก์ชันจบแอนิเมชันตามโค้ดของคุณ
+                return
 
-            # เตรียมเหรียญต่อไป
+        # --- อนิเมชันกระพริบเหรียญ ---
+        state['ticks'] += 1
+        img_widget = coin_widgets[idx]
+        
+        # 🚨 FIX: สลับความทึบให้เหรียญเปล่าดูเหมือนกำลังทอย
+        img_widget.opacity = 1.0 if (state['ticks'] % 4) < 2 else 0.3
+        
+        if state['ticks'] >= state['max_ticks']:
+            # 🚨 FIX: หงายเหรียญจริง และเลิกกระพริบ
+            img_widget.opacity = 1.0
+            img_widget.source = self._get_coin_img(results[idx], faction)
+            
+            # บวกแต้ม
+            state[current_total_key] += pts_array[idx]
+            lbl_total.text = f"crash : {state[current_total_key]}"
+            
+            # ขยับไปเหรียญถัดไป
             state['coin_idx'] += 1
             state['ticks'] = 0
 
