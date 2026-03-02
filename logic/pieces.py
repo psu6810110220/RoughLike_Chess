@@ -37,11 +37,13 @@ class Rook(Piece):
         self.coins = 3
         
     def is_valid_move(self, start, end, board):
+        # ✨ Item 9: Pegasus Boots (เพิ่มระยะการเดินของม้า)
+        if getattr(self, 'item', None) and self.item.id == 9:
+            rd, cd = abs(start[0]-end[0]), abs(start[1]-end[1])
+            if (rd == 2 and cd == 1) or (rd == 1 and cd == 2): return True
+
         if start[0] == end[0] or start[1] == end[1]: 
             return self.is_path_clear(start, end, board)
-        # ✨ Item 9: เดินทะลุ
-        if getattr(self, 'item', None) and self.item.id == 9:
-            return True # อนุญาตให้ทะลุตัวขวางได้เลยประหนึ่งว่าเป็นม้า
         return False
 
 class Knight(Piece):
@@ -61,11 +63,12 @@ class Bishop(Piece):
         self.coins = 2
         
     def is_valid_move(self, start, end, board):
+        # ✨ Item 9: Pegasus Boots
+        if getattr(self, 'item', None) and self.item.id == 9:
+            rd, cd = abs(start[0]-end[0]), abs(start[1]-end[1])
+            if (rd == 2 and cd == 1) or (rd == 1 and cd == 2): return True
         if abs(start[0]-end[0]) == abs(start[1]-end[1]): 
             return self.is_path_clear(start, end, board)
-        # ✨ Item 9: เดินทะลุ
-        if getattr(self, 'item', None) and self.item.id == 9:
-            return True # อนุญาตให้ทะลุตัวขวางได้เลยประหนึ่งว่าเป็นม้า
         return False
 
 class Queen(Piece):
@@ -88,6 +91,10 @@ class King(Piece):
         self.coins = 2
         
     def is_valid_move(self, start, end, board):
+        # ✨ Item 9: Pegasus Boots
+        if getattr(self, 'item', None) and self.item.id == 9:
+            rd, cd = abs(start[0]-end[0]), abs(start[1]-end[1])
+            if (rd == 2 and cd == 1) or (rd == 1 and cd == 2): return True
         return max(abs(start[0]-end[0]), abs(start[1]-end[1])) == 1
 
 class Pawn(Piece):
@@ -99,6 +106,9 @@ class Pawn(Piece):
         self.variant = random.randint(6, 9)
         
     def is_valid_move(self, start, end, board, ep_target=None):
+        if getattr(self, 'item', None) and self.item.id == 9:
+            rd, cd = abs(start[0]-end[0]), abs(start[1]-end[1])
+            if (rd == 2 and cd == 1) or (rd == 1 and cd == 2): return True
         sr, sc, er, ec = start[0], start[1], end[0], end[1]
         dir = -1 if self.color == 'white' else 1
         target = board[er][ec]
