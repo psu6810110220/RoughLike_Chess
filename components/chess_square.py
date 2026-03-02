@@ -124,7 +124,7 @@ class ChessSquare(Button):
             return
         
         # กำหนดสีและข้อความตามประเภท passive
-        if 'buff' in passive_info['type']:
+        if passive_info['type'].startswith('buff'):
             self.passive_indicator.color = (0.1, 0.9, 0.1, 1)  # เขียวเข้มสำหรับ buff
             if passive_info['type'] == 'buff1':
                 self.passive_indicator.text = '+C'  # Coin buff
