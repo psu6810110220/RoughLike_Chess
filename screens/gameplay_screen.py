@@ -717,7 +717,7 @@ class GameplayScreen(Screen):
         self.status_popup = BoxLayout(
             orientation='horizontal',
             size_hint=(None, None),
-            size=(220, 100),
+            size=(420, 300),
             pos_hint={'right': 0.95, 'center_y': 0.5},
             padding=10,
             spacing=10
@@ -750,11 +750,44 @@ class GameplayScreen(Screen):
         coins_lbl.bind(size=coins_lbl.setter('text_size'))
         text_layout.add_widget(coins_lbl)
         
+        # 🚨 [ส่วนที่แก้ไข] เพิ่มการแสดงผลรูปภาพไอเทมขนาด 48x48
         p_item = getattr(piece, 'item', None)
-        item_text = p_item.name if p_item else "No Item"
-        item_lbl = Label(text=f"Eqp: {item_text}", font_size='12sp', color=(0.4, 1, 0.4, 1), halign='left')
-        item_lbl.bind(size=item_lbl.setter('text_size'))
-        text_layout.add_widget(item_lbl)
+        item_container = BoxLayout(orientation='horizontal', size_hint_y=0.4, spacing=10)
+        
+        if p_item:
+            # มี Item: แสดงรูป 48x48 และชื่อ Item
+            item_img = Image(
+                source=p_item.image_path,
+                size_hint=(None, None),
+                size=(48, 48), # ล็อคขนาดภาพไม่ให้แตก
+                keep_ratio=True,
+                allow_stretch=True
+            )
+            item_lbl = Label(
+                text=f"Eqp: {p_item.name}", 
+                font_size='14sp', 
+                color=(0.4, 1, 0.4, 1), 
+                halign='left',
+                valign='middle'
+            )
+            item_lbl.bind(size=item_lbl.setter('text_size'))
+            
+            item_container.add_widget(item_img)
+            item_container.add_widget(item_lbl)
+        else:
+            # ไม่มี Item
+            item_lbl = Label(
+                text="Eqp: No Item", 
+                font_size='14sp', 
+                color=(0.5, 0.5, 0.5, 1), 
+                halign='left',
+                valign='middle'
+            )
+            item_lbl.bind(size=item_lbl.setter('text_size'))
+            item_container.add_widget(item_lbl)
+
+        text_layout.add_widget(item_container)
+        # 🚨 [จบส่วนที่แก้ไข]
 
         self.status_popup.add_widget(text_layout)
         self.root_layout.add_widget(self.status_popup)

@@ -53,7 +53,7 @@ def toss_coin_demon():
         if random.random() < 0.20:
             return 4, "Purple Heads"
         else:
-            return 6, "Orange Heads
+            return 6, "Orange Heads"
     else:
         return 6, "Orange Heads"
 
@@ -70,6 +70,7 @@ def calculate_total_points(base_points, num_coins, faction):
     """คำนวณแต้มรวมทั้งหมดจากการวนลูปทอยเหรียญโดยอิงตามเผ่า"""
     total = base_points
     results = []
+    heads_count = 0
     for _ in range(num_coins):
         if faction == "medieval":
             p, color = toss_coin_medieval()
@@ -82,6 +83,7 @@ def calculate_total_points(base_points, num_coins, faction):
             
         total += p
         results.append(color)
+        if "Heads" in color: heads_count += 1
 
     # ระบบพิเศษของ Heaven (Milestone Bonus)
     if faction == "heaven":
