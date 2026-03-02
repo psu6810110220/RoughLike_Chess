@@ -262,6 +262,16 @@ class ChessBoard:
         return False
 
     def complete_turn(self):
+        # 🚨 FIX: เช็คว่า King ของฝั่งไหนถูกทำลายไปแล้ว (ตายจากการ Crash) ก่อนที่จะเริ่มคำนวณเทิร์นถัดไป
+        if not self.find_king('white'):
+            self.game_result = "BLACK WINS! (WHITE KING DESTROYED)"
+            self.history.save_state(self, "White King was destroyed.")
+            return
+            
+        if not self.find_king('black'):
+            self.game_result = "WHITE WINS! (BLACK KING DESTROYED)"
+            self.history.save_state(self, "Black King was destroyed.")
+            return
         self.current_turn = 'black' if self.current_turn == 'white' else 'white'
         
         self.update_map_events()
