@@ -5,65 +5,65 @@ def toss_coin_ayothaya():
     """ทำการทอยเหรียญ 1 ครั้ง ตามกติกา Crash: ก้อย(+0), เหลือง(+1), แดง(+2), น้ำเงิน(+3)"""
     # ระดับ 1: ก้อย (30%) vs เหลือง (70%)
     if random.random() < 0.30:
-        return 0, "ก้อย"
+        return 0, "Tails"
     
     # ถ้าได้เหลือง มีโอกาส 60% ที่จะสุ่มต่อไประดับ 2
     if random.random() < 0.60:
         # ระดับ 2: เหลือง (60%) vs แดง (40%)
         if random.random() < 0.60:
-            return 1, "หัวสีเหลือง"
+            return 1, "Yellow Heads"
         else:
             # ถ้าได้แดง มีโอกาส 30% ที่จะสุ่มต่อไประดับ 3
             if random.random() < 0.30:
                 # ระดับ 3: แดง (70%) vs น้ำเงิน (30%)
                 if random.random() < 0.70:
-                    return 2, "หัวสีแดง"
+                    return 2, "Red Heads"
                 else:
-                    return 3, "หัวสีน้ำเงิน"
+                    return 3, "Blue Heads"
             else:
-                return 2, "หัวสีแดง"
+                return 2, "Red Heads"
     else:
-        return 1, "หัวสีเหลือง"
+        return 1, "Yellow Heads"
 
 def toss_coin_medieval():
     """ทำการทอยเหรียญ Medieval (สำหรับ Medieval Knight): ก้อย(+0), ฟ้า(s+10), เขียว(+100)"""
     # ระดับ 1: ก้อย (50%) vs ฟ้า (50%)
     if random.random() < 0.50:
-        return 0, "ก้อย"
+        return 0, "Tails"
 
     # ถ้าได้ฟ้า มีโอกาส 1% ที่จะสุ่มต่อไประดับ 2
     if random.random() < 0.01:
         # ระดับ 2: เขียว (1%) vs ฟ้า (99%)
         if random.random() < 0.01:
-            return 100, "หัวสีเขียว"
+            return 100, "Green Heads"
         else:
-            return 10, "หัวสีฟ้า"
+            return 10, "Cyan Heads"
     else:
-        return 10, "หัวสีฟ้า"
+        return 10, "Cyan Heads"
 
 def toss_coin_demon():
     """ทอยเหรียญของ Demon: ก้อย(-3), ส้ม(+4), ม่วง(+6)"""
     # ก้อย ต่อ หัว 40:60
     if random.random() < 0.40:
-        return -3, "ก้อย"
+        return -3, "Tails"
     
     # ถ้าได้ฟ้า มีโอกาส 20% ที่จะสุ่มต่อไประดับ 2
     if random.random() < 0.20:
         # ระดับ 2: ม่วง (20%) vs ส้ม (80%)
         if random.random() < 0.20:
-            return 4, "หัวสีม่วง"
+            return 4, "Purple Heads"
         else:
-            return 6, "หัวสีส้ม"
+            return 6, "Orange Heads
     else:
-        return 6, "หัวสีส้ม"
+        return 6, "Orange Heads"
 
 def toss_coin_heaven():
     """ทอยเหรียญของ Heaven: ก้อย(+0), เหลือง(+1)"""
     # ก้อย ต่อ หัว 50:50
     if random.random() < 0.50:
-        return 0, "ก้อย"
+        return 0, "Tails"
     else:
-        return 1, "หัวสีเหลือง"
+        return 1, "Yellow Heads"
 
 # เพิ่มพารามิเตอร์ faction เข้ามาเพื่อให้โค้ดทำงานได้
 def calculate_total_points(base_points, num_coins, faction):
