@@ -9,6 +9,10 @@ class AyothayaTribe:
             "pawn": {
                 "starting_points": 2,
                 "coin_tosses": 2
+            },
+            "knight": {
+                "starting_points": 2,
+                "coin_tosses": 1
             }
         }
     
