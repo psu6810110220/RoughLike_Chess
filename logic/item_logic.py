@@ -14,8 +14,8 @@ ITEM_DATABASE = {
     4: Item(4, "Mirage Shield", "Block and cancel an incoming attack completely. (Consumable)", "assets/item/item4.png"),
     5: Item(5, "Scythe of the Substitute", "Spawns a friendly Pawn on this tile upon death.", "assets/item/item5.png"),
     6: Item(6, "Gambler's Coin", "+1 Coin but permanently lose 1 Base Point.", "assets/item/item6.png"),
-    7: Item(7, "Armor of Thorns", "If killed, the attacker is instantly Staggered.", "assets/item/item7.png"),
+    7: Item(7, "Armor of Thorns", "If killed, the attacker permanently loses 1 Coin.", "assets/item/item7.png"),
     8: Item(8, "Aura of Misfortune", "Reduces the attacker's coins by 1 during a Crash.", "assets/item/item8.png"),
     9: Item(9, "Pegasus Boots", "Can leap over other pieces like a Knight.", "assets/item/item9.png"),
-    10: Item(10, "Crown of the Usurper", "Pawn only: Base Points and Coins become equal to a King.", "assets/item/item10.png"),
+    10: Item(10, "Crown of the Usurper", "Pawn only: Base Points become 5 and Coins become 3.", "assets/item/item10.png"),
 }
