@@ -255,8 +255,8 @@ class GameplayScreen(Screen):
             # ✨ เช็คว่าหมากตัวนี้ติดสถานะแช่แข็งอยู่หรือไม่ (ถ้าไม่มีหมากหรือไม่มีสถานะจะเป็น False)
             is_frozen = getattr(p, 'freeze_timer', 0) > 0 if p else False
             
-            # ✨ ส่งค่า is_frozen ไปให้ ChessSquare เพื่อเปลี่ยนสี
-            sq.set_piece_icon(path, is_frozen=is_frozen)
+            # ✨ ส่งค่า is_frozen และ piece object ไปให้ ChessSquare เพื่อเปลี่ยนสีและแสดง passive
+            sq.set_piece_icon(path, is_frozen=is_frozen, piece=p)
         self.sidebar.update_history_text(self.game.history.move_text_history)
 
     def on_undo_click(self):
