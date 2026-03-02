@@ -26,20 +26,39 @@ class Piece:
         while (cr, cc) != (er, ec):
             if board[cr][cc] is not None: 
                 return False
-            # 🚨 ตรงนี้คือจุดที่แก้บั๊กเกมค้างครับ สั่งให้มันขยับช่องถัดไปเรื่อยๆ!
+            # 
             cr += step_r
             cc += step_c
             
         return True
 
 class Rook(Piece):
-    def __init__(self, color): 
+    def __init__(self, color, tribe='medieval'): 
         super().__init__(color, 'R' if color == 'white' else 'r')
-        self.base_points = 3
-        self.coins = 3
+        self.tribe = tribe
+        
+        # ใช้ PassiveManager จัดการ passive abilities
+        passive = PassiveManager.get_passive_handler('rook', tribe)
+        if passive:
+            stats = passive['get_piece_stats']()
+            self.base_points = stats['dice']
+            self.coins = stats['coins']
+            self.max_stats = 12  # ค่าคงที่สำหรับ Rook
+            self.passive_handler = passive['get_valid_moves']
+        else:
+            # ค่าเริ่มต้นสำหรับเผ่าที่ยังไม่ implement
+            default_stats = PassiveManager.get_default_stats('rook', tribe)
+            if default_stats:
+                self.base_points = default_stats['dice']
+                self.coins = default_stats['coins']
+            else:
+                # ถ้าไม่มีการ implement เลย ให้ใช้ค่าเริ่มต้นของ Piece class
+                pass  # ค่าจะเป็นตามที่กำหนดใน Piece.__init__
+            self.max_stats = 12
+            self.passive_handler = None
         
     def is_valid_move(self, start, end, board):
-        # ✨ Item 9: Pegasus Boots (เพิ่มระยะการเดินของม้า)
+        #  9: Pegasus Boots
         if getattr(self, 'item', None) and self.item.id == 9:
             rd, cd = abs(start[0]-end[0]), abs(start[1]-end[1])
             if (rd == 2 and cd == 1) or (rd == 1 and cd == 2): return True

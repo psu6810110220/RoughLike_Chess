@@ -15,6 +15,10 @@ class MedievalTribe:
             "bishop": {
                 "starting_points": 2,
                 "coin_tosses": 1
+            },
+            "rook": {
+                "starting_points": 2,
+                "coin_tosses": 1
             }
         }
     
