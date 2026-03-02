@@ -13,7 +13,7 @@ class ChessSquare(Button):
         self.background_down = ''
         
         # เตรียมตัวแสดงรูปหมาก
-        self.piece_img = Image(allow_stretch=True, keep_ratio=True, opacity=0)
+        self.piece_img = Image(fit_mode='contain', opacity=0)
         self.add_widget(self.piece_img)
         
         self.is_last_move = False
@@ -43,7 +43,7 @@ class ChessSquare(Button):
         self.is_last_move = is_last
         self.is_legal = is_legal
         
-        # ✨ จุดสำคัญ: เปลี่ยนสีพื้นหลังปกติให้เป็น "สีใส" (Alpha = 0)
+        # ✨ เปลี่ยนสีพื้นหลังปกติให้เป็น "สีใส" (Alpha = 0)
         if is_check: 
             self.background_color = (1, 0.2, 0.2, 0.8) # ราชาโดนรุก (แดงโปร่งแสง)
         elif highlight: 
@@ -54,10 +54,29 @@ class ChessSquare(Button):
             
         self.sync_layout()
 
-    def set_piece_icon(self, path):
-        """แสดงรูปภาพหมากตาม Path ที่ส่งมา"""
+    # ✨ ฟังก์ชันนี้คือจุดที่มีปัญหา แก้ไขให้รับค่า is_frozen แล้ว
+    def set_piece_icon(self, path, is_frozen=False):
+        """แสดงรูปภาพหมากตาม Path ที่ส่งมา และปรับเป็นสีฟ้าถ้าโดนแช่แข็ง"""
         if path:
             self.piece_img.source = path
             self.piece_img.opacity = 1
+            
+            # ✨ ถ้าติดแช่แข็งให้ปรับสีตัวหมากให้เข้มขึ้น และใส่สีพื้นหลังช่อง
+            if is_frozen:
+                # เปลี่ยนตัวหมากให้เป็นสีน้ำเงินเข้ม/ฟ้าเข้ม 
+                self.piece_img.color = (0.2, 0.6, 1, 1)  
+                
+                # ซ้อนสีพื้นหลังช่องให้เป็นสีฟ้าโปร่งแสง เพื่อให้สังเกตง่ายขึ้น
+                if self.background_color == [0, 0, 0, 0]: # ถ้าช่องปกติ (ไม่ได้ถูกเลือกหรือโดนรุก)
+                    self.background_color = (0, 0.5, 1, 0.4) 
+            else:
+                self.piece_img.color = (1, 1, 1, 1) # หมากสีปกติ
+                # คืนค่าพื้นหลังช่องกลับเป็นโปร่งใส (ถ้าไม่ได้ติด highlight หรือ check)
+                if self.background_color == [0, 0.5, 1, 0.4]: 
+                    self.background_color = (0, 0, 0, 0)
         else: 
             self.piece_img.opacity = 0
+            self.piece_img.color = (1, 1, 1, 1)
+            # รีเซ็ตสีพื้นหลังกรณีหมากตาย/หายไปจากช่อง
+            if self.background_color == [0, 0.5, 1, 0.4]: 
+                self.background_color = (0, 0, 0, 0)

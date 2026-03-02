@@ -1,23 +1,19 @@
 # screens/match_setup/setup_screen.py
+# screens/match_setup/setup_screen.py
 import random
 from kivy.uix.screenmanager import Screen
 from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.scrollview import ScrollView
 from kivy.uix.button import Button
 from kivy.uix.label import Label
-from kivy.uix.scrollview import ScrollView
 from kivy.uix.popup import Popup
 from kivy.core.window import Window
-from kivy.app import App # ✨ นำเข้า App เพื่อบันทึกค่าด่าน
-
+from kivy.app import App
 from screens.match_setup.setup_section import SetupSection
 
 class MatchSetupScreen(Screen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.selected_data = {'mode': None, 'board': None, 'unit': None}
-        self.step = 1 
-        self.sections = {} 
-
         self.root = BoxLayout(orientation='vertical', padding=20, spacing=10)
         Window.clearcolor = (0.02, 0.02, 0.05, 1)
 
@@ -33,11 +29,90 @@ class MatchSetupScreen(Screen):
         self.scroll = ScrollView()
         self.content = BoxLayout(orientation='vertical', size_hint_y=None, spacing=30, padding=[0, 20])
         self.content.bind(minimum_height=self.content.setter('height'))
+        
+        # --- Section 1: Game Mode ---
+        mode_items = [
+            ("[b]PVE Mode[/b]\nPlay against AI", "PVE"),
+            ("[b]PVP Mode[/b]\nLocal 2 Players", "PVP")
+        ]
+        self.mode_section = SetupSection(
+            title="⚔ Select Game Mode", 
+            options=mode_items, 
+            target_attr='selected_mode', 
+            size_hint_y=None, 
+            height=200
+        )
+        self.content.add_widget(self.mode_section)
+
+        # --- Section 2: Faction & Board Container ---
+        sections_layout = BoxLayout(orientation='horizontal', spacing=15, size_hint_y=None, height=450)
+
+        # เผ่าฝ่ายขาว
+        self.white_unit_section = SetupSection(
+            title="WHITE FACTION", 
+            options=['Medieval Knights', 'Ayothaya', 'Demon', 'Heaven'],
+            target_attr='selected_unit_white'
+        )
+        
+        # เผ่าฝ่ายดำ
+        self.black_unit_section = SetupSection(
+            title="BLACK FACTION", 
+            options=['Medieval Knights', 'Ayothaya', 'Demon', 'Heaven'],
+            target_attr='selected_unit_black'
+        )
+        
+        # กระดาน
+        self.board_section = SetupSection(
+            title="MAP SELECTION", 
+            options=['Classic Board', 'Enchanted Forest', 'Desert Ruins', 'Frozen Tundra', 'Random Board'],
+            target_attr='selected_board' 
+        )
+
+        sections_layout.add_widget(self.white_unit_section)
+        sections_layout.add_widget(self.black_unit_section)
+        sections_layout.add_widget(self.board_section)
+        
+        self.content.add_widget(sections_layout)
+        
+        # --- Section 3: Start Button ---
+        start_btn = Button(text="START BATTLE", size_hint_y=None, height=80, 
+                          background_color=(0, 0.8, 0.4, 1), bold=True, font_size='22sp')
+        start_btn.bind(on_release=self.start_battle)
+        self.content.add_widget(start_btn)
+
         self.scroll.add_widget(self.content)
         self.root.add_widget(self.scroll)
 
         self.add_widget(self.root)
-        self.show_mode_selection()
+
+    def go_back(self, instance):
+        self.manager.current = 'menu'
+
+    def start_battle(self, instance):
+        app = App.get_running_app()
+        
+        # ดึงค่าปัจจุบันที่ถูกเลือกไว้
+        final_board = getattr(app, 'selected_board', 'Classic Board')
+        final_mode = getattr(app, 'selected_mode', 'PVE')
+        
+        if final_board == "Random Board":
+            playable_boards = ["Classic Board", "Enchanted Forest", "Desert Ruins", "Frozen Tundra"] 
+            final_board = random.choice(playable_boards)
+            app.selected_board = final_board # อัปเดตกลับไปที่ App เผื่อต้องดึงไปใช้หน้าอื่น
+            print(f"System randomized board to: {final_board}") 
+
+        # ตรวจสอบค่าที่จะถูกส่งไปหน้าเกม (คุณสามารถนำค่าเหล่านี้ไปใช้รันโมเดลหมากได้เลย)
+        print(f"Starting Match: Mode={final_mode}, Board={final_board}")
+        print(f"White Faction: {getattr(app, 'selected_unit_white', 'Medieval Knights')}")
+        print(f"Black Faction: {getattr(app, 'selected_unit_black', 'Medieval Knights')}")
+
+        game_screen = self.manager.get_screen('game')
+        
+        # ส่ง Mode ไปตั้งค่าให้เกมรับรู้ (ถ้าเมธอดใน GameScreen รองรับ)
+        if hasattr(game_screen, 'setup_game'):
+            game_screen.setup_game(final_mode) 
+            
+        self.manager.current = 'game'
 
     def clear_steps_after(self, step_index):
         while len(self.content.children) > step_index:
@@ -62,7 +137,8 @@ class MatchSetupScreen(Screen):
         self.content.add_widget(sec)
 
     def show_unit_selection(self):
-        units = ["Classic Knights", "Royal Guard", "Arcane Order", "Shadow Assassins"]
+        # แก้ไขจาก "Royal Guard" เป็น "Ayothaya"
+        units = ["Medieval Knights", "Ayothaya", "Demon", "Heaven"]
         items = [(u, u) for u in units]
         sec = SetupSection("🛡 Select Your Units", items, cols=2, group_name="unit", 
                            on_select_callback=self.on_select, height=250)
@@ -88,7 +164,7 @@ class MatchSetupScreen(Screen):
         # ✨ ปลดล็อก Board ให้กดได้ทุกอันแล้ว
         
         # ดักจับ Unit: อนุญาตแค่ Classic Knights
-        if category == 'unit' and value != "Classic Knights":
+        if category == 'unit' and value not in ["Medieval Knights", "Ayothaya", "Demon", "Heaven"]:
             self.show_coming_soon_popup(value)
             return
 
@@ -108,22 +184,3 @@ class MatchSetupScreen(Screen):
             self.step = 4
             self.show_start_button()
 
-    def go_back(self, instance):
-        self.manager.current = 'menu'
-
-    def start_battle(self, instance):
-        final_board = self.selected_data['board']
-        final_unit = self.selected_data['unit']
-        
-        if final_board == "Random Board":
-            playable_boards = ["Classic Board", "Enchanted Forest", "Desert Ruins", "Frozen Tundra"] 
-            final_board = random.choice(playable_boards)
-            print(f"System randomized board to: {final_board}") 
-
-        # ✨ บันทึกชื่อด่านลงในตัวแปร App เพื่อให้หน้า GamePlay ดึงไปใช้
-        app = App.get_running_app()
-        app.selected_board = final_board
-
-        game_screen = self.manager.get_screen('game')
-        game_screen.setup_game(self.selected_data['mode']) 
-        self.manager.current = 'game'
