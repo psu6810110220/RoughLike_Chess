@@ -1,7 +1,7 @@
 # logic/maps/tundra_map.py
 import random
 from logic.board import ChessBoard
-from logic.pieces import King
+from logic.pieces import King, Obstacle # ✨ เพิ่มการ import Obstacle
 
 class TundraMap(ChessBoard):
     def __init__(self):
@@ -10,7 +10,7 @@ class TundraMap(ChessBoard):
         self.tundra_turn_count = 0  # ตัวนับเทิร์นของด่าน Tundra
 
     def apply_map_effects(self):
-        # นับเทิร์นเมื่อสลับมาเป็นตาของสีขาว (ความหมายคือ เพิ่งจบเทิร์นของสีดำ = จบ 1 รอบ/เทิร์นเต็ม)
+        # --- 1. Event แช่แข็งหมากทุกๆ 3 เทิร์น (ของเดิม) ---
         if self.current_turn == 'white':
             self.tundra_turn_count += 1
             
@@ -41,3 +41,19 @@ class TundraMap(ChessBoard):
                     num_to_freeze = min(2, len(black_pieces))
                     for p in random.sample(black_pieces, num_to_freeze):
                         p.freeze_timer = 6
+
+        # --- 2. ✨ Event ก้อนน้ำแข็ง (Ice) กีดขวางทาง ---
+        # โอกาส 15% ที่จะเกิดก้อนน้ำแข็งขวางทาง (ใช้ logic เดียวกับป่า)
+        if random.random() < 0.15:
+            empty_squares = []
+            for r in range(8):
+                for c in range(8):
+                    if self.board[r][c] is None:
+                        empty_squares.append((r, c))
+
+            # สุ่มช่องว่าง 3 ถึง 6 ช่อง
+            if len(empty_squares) >= 3:
+                num_ice = random.randint(3, min(6, len(empty_squares)))
+                chosen_squares = random.sample(empty_squares, num_ice)
+                for (r, c) in chosen_squares:
+                    self.board[r][c] = Obstacle('Ice', 5) # น้ำแข็งอยู่ 5 เทิร์น
