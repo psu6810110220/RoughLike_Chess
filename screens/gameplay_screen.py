@@ -950,6 +950,7 @@ class GameplayScreen(Screen):
                 # 🚨 FIX: ให้ AI รู้จักโดนเอฟเฟกต์ไอเทมก่อนทอยเหรียญเหมือนผู้เล่นด้วย!
                 if getattr(defender, 'item', None) and defender.item.id == 4:
                     defender.item = None
+                    attacker.has_moved = True # 🚨 FIX: ตั้งค่าว่า AI เดินแล้ว
                     self.game.history.save_state(self.game, "Mirage Shield Blocked!")
                     self.game.complete_turn()
                     self.init_board_ui()
