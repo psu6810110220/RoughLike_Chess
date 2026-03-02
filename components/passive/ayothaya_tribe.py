@@ -17,6 +17,10 @@ class AyothayaTribe:
             "bishop": {
                 "starting_points": 3,
                 "coin_tosses": 2
+            },
+            "rook": {
+                "starting_points": 2,
+                "coin_tosses": 1
             }
         }
     
