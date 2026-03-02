@@ -1,6 +1,7 @@
 from .medieval_tribe import MedievalTribe
 from .demon_tribe import DemonTribe
 from .heaven_tribe import HeavenTribe
+from .ayothaya_tribe import AyothayaTribe
 
 class PassiveManager:
     """Manager for handling passive abilities of different tribes"""
@@ -9,7 +10,8 @@ class PassiveManager:
         self.tribes = {
             'medieval': MedievalTribe(),
             'demon': DemonTribe(),
-            'heaven': HeavenTribe()
+            'heaven': HeavenTribe(),
+            'ayothaya': AyothayaTribe()
         }
     
     @classmethod
