@@ -824,12 +824,12 @@ class GameplayScreen(Screen):
         """แสดงคำอธิบายไอเทมเมื่อถูกคลิก"""
         self.hide_item_tooltip()
         self.item_tooltip = BoxLayout(
-            orientation='vertical', size_hint=(None, None), size=(300, 100),
+            orientation='vertical', size_hint=(None, None), size=(320, 110),
             pos_hint={'center_x': 0.5, 'y': 0.16}, # โผล่มาเหนือกระเป๋า
             padding=10, spacing=5
         )
         with self.item_tooltip.canvas.before:
-            Color(0.1, 0.1, 0.2, 0.95)
+            Color(0.05, 0.05, 0.1, 0.98) # มืดทึบกว่าเดิม
             self.item_tooltip.bg_rect = Rectangle(pos=self.item_tooltip.pos, size=self.item_tooltip.size)
         self.item_tooltip.bind(pos=lambda inst, val: setattr(inst.bg_rect, 'pos', inst.pos) if hasattr(inst, 'bg_rect') else None)
         
