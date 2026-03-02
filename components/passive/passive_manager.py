@@ -1,33 +1,32 @@
-# Passive Manager - จัดการ passive abilities ของทุกเผ่า
-from components.passive.medieval_tribe import medieval_knight_passive
+from .medieval_tribe import MedievalTribe
 
 class PassiveManager:
-    """จัดการ passive abilities ของแต่ละเผ่า"""
+    """Manager for handling passive abilities of different tribes"""
     
-    @staticmethod
-    def get_passive_handler(piece_type, tribe):
-        """คืนค่า passive handler สำหรับ piece และ tribe ที่กำหนด"""
-        passive_map = {
-            ('knight', 'medieval'): medieval_knight_passive
+    def __init__(self):
+        self.tribes = {
+            'medieval': MedievalTribe()
         }
-        
-        key = (piece_type.lower(), tribe.lower())
-        passive_func = passive_map.get(key)
-        
-        if passive_func:
-            return passive_func()
-        else:
-            return None
     
-    @staticmethod
-    def get_default_stats(piece_type, tribe):
-        """คืนค่าสถานะเริ่มต้นสำหรับ piece และ tribe ที่กำหนด"""
-        passive = PassiveManager.get_passive_handler(piece_type, tribe)
-        if passive:
-            return passive['get_piece_stats']()
-        else:
-            # ค่าเริ่มต้นสำหรับ piece ทั่วไป
-            return {
-                'dice': 2,
-                'coins': 2
-            }
+    @classmethod
+    def get_passive_handler(cls, piece_type, tribe):
+        """Get passive handler for specific piece and tribe"""
+        instance = cls()
+        tribe_handler = instance.tribes.get(tribe.lower())
+        
+        if not tribe_handler:
+            return None
+            
+        return {
+            'get_piece_stats': lambda: {
+                'dice': tribe_handler.get_starting_points(piece_type),
+                'coins': tribe_handler.get_coin_tosses(piece_type)
+            },
+            'get_valid_moves': None  # สำหรับ future implementation
+        }
+    
+    @classmethod
+    def get_default_stats(cls, piece_type, tribe):
+        """Get default stats when tribe is not implemented yet"""
+        # ยังไม่มีการ implement เผ่าอื่นๆ ให้คืนค่า None
+        return None

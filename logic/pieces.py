@@ -65,19 +65,35 @@ class Knight(Piece):
         else:
             # ค่าเริ่มต้นสำหรับเผ่าที่ยังไม่ implement
             default_stats = PassiveManager.get_default_stats('knight', tribe)
-            self.base_points = default_stats['dice']
-            self.coins = default_stats['coins']
+            if default_stats:
+                self.base_points = default_stats['dice']
+                self.coins = default_stats['coins']
+            else:
+                # ถ้าไม่มีการ implement เลย ให้ใช้ค่าเริ่มต้นของ Piece class
+                pass  # ค่าจะเป็นตามที่กำหนดใน Piece.__init__
             self.max_stats = 12
             self.passive_handler = None
         
     def is_valid_move(self, start, end, board):
-        # ถ้ามี passive handler ให้ใช้การเดินแบบ passive
-        if self.passive_handler:
-            return self.passive_handler(start, end, board)
+        # Knight มาตรฐาน: เดินแบบ L-shape (ไม่ใช้ passive)
+        sr, sc, er, ec = start[0], start[1], end[0], end[1]
+        
+        # คำนวณระยะทาง
+        row_diff = abs(sr - er)
+        col_diff = abs(sc - ec)
+        
+        # ตรวจสอบการเดินแบบ L-shape: 2 ช่องในแนวหนึ่ง + 1 ช่องในอีกแนวหนึ่ง
+        is_l_shape = (row_diff == 2 and col_diff == 1) or (row_diff == 1 and col_diff == 2)
+        
+        if not is_l_shape:
+            return False
             
-        # การเดินแบบปกติ (สำหรับเผ่าอื่นๆ ที่ยังไม่ implement)
-        rd, cd = abs(start[0]-end[0]), abs(start[1]-end[1])
-        return (rd == 2 and cd == 1) or (rd == 1 and cd == 2)
+        # ตรวจสอบว่าช่องเป้าหมายไม่มีหมากฝ่ายเดียวกัน
+        target = board[er][ec]
+        if target and target.color == self.color:
+            return False
+            
+        return True
 
 class Bishop(Piece):
     def __init__(self, color): 
@@ -136,15 +152,26 @@ class Pawn(Piece):
         else:
             # ค่าเริ่มต้นสำหรับเผ่าที่ยังไม่ implement
             default_stats = PassiveManager.get_default_stats('pawn', tribe)
-            self.base_points = default_stats['dice']
-            self.coins = default_stats['coins']
+            if default_stats:
+                self.base_points = default_stats['dice']
+                self.coins = default_stats['coins']
+            else:
+                # ถ้าไม่มีการ implement เลย ให้ใช้ค่าเริ่มต้นของ Piece class
+                pass  # ค่าจะเป็นตามที่กำหนดใน Piece.__init__
             self.max_stats = 12
             self.passive_handler = None
-
+        
         self.variant = random.randint(6, 9)
         
     def is_valid_move(self, start, end, board, ep_target=None):
-        # Pawn มาตรฐาน: ครั้งแรกเดิน 2 ช่อง, หลังนั้น 1 ช่อง
+        # ถ้ามี passive handler ให้ใช้การเดินแบบ passive
+        if self.passive_handler:
+            return self.passive_handler(start, end, board)
+            
+        # การเดินแบบปกติ (สำหรับเผ่าอื่นๆ ที่ยังไม่ implement)
+        if getattr(self, 'item', None) and self.item.id == 9:
+            rd, cd = abs(start[0]-end[0]), abs(start[1]-end[1])
+            if (rd == 2 and cd == 1) or (rd == 1 and cd == 2): return True
         sr, sc, er, ec = start[0], start[1], end[0], end[1]
         dir = -1 if self.color == 'white' else 1
         target = board[er][ec]
