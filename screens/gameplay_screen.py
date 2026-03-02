@@ -465,6 +465,11 @@ class GameplayScreen(Screen):
             self.crash_popup = None
             self.game.complete_turn() # ข้ามเทิร์นคนตีไปเลย
             self.refresh_ui()
+            # 🚨 FIX: เซฟประวัติและกระตุ้น AI ให้ทำงานต่อ ไม่งั้นเกมจะค้างเมื่อบอทตีโดนโล่
+            self.game.history.save_state(self.game, "Mirage Shield Blocked!")
+            self.game.complete_turn() # ข้ามเทิร์นคนตีไปเลย
+            self.refresh_ui()
+            self.check_ai_turn() 
             return # ออกจากฟังก์ชัน ไม่ต้องทอยเหรียญ
 
         a_base = getattr(attacker, 'base_points', 5)
@@ -827,7 +832,7 @@ class GameplayScreen(Screen):
         with self.item_tooltip.canvas.before:
             Color(0.1, 0.1, 0.2, 0.95)
             self.item_tooltip.bg_rect = Rectangle(pos=self.item_tooltip.pos, size=self.item_tooltip.size)
-        self.item_tooltip.bind(pos=lambda inst, val: setattr(instance.bg_rect, 'pos', instance.pos) if hasattr(inst, 'bg_rect') else None)
+        self.item_tooltip.bind(pos=lambda inst, val: setattr(inst.bg_rect, 'pos', inst.pos) if hasattr(inst, 'bg_rect') else None)
         
         name_lbl = Label(text=f"[color=ffff00]{item.name}[/color]", markup=True, bold=True, font_size='18sp', size_hint_y=0.4)
         desc_lbl = Label(text=item.description, font_size='14sp', halign="center", valign="middle")
@@ -877,6 +882,20 @@ class GameplayScreen(Screen):
                 
                 a_faction = get_faction_name(attacker.color)
                 d_faction = get_faction_name(defender.color)
+
+                # 🚨 FIX: ให้ AI รู้จักโดนเอฟเฟกต์ไอเทมก่อนทอยเหรียญเหมือนผู้เล่นด้วย!
+                if getattr(defender, 'item', None) and defender.item.id == 4:
+                    defender.item = None
+                    self.game.history.save_state(self.game, "Mirage Shield Blocked!")
+                    self.game.complete_turn()
+                    self.init_board_ui()
+                    return # จบเทิร์นบอททันทีเพราะโดนโล่ปัด
+                    
+                if getattr(defender, 'item', None) and defender.item.id == 8: a_coins = max(0, a_coins - 1)
+                if getattr(attacker, 'item', None) and attacker.item.id == 8: d_coins = max(0, d_coins - 1)
+                if getattr(defender, 'item', None) and defender.item.id == 2:
+                    a_coins = 0
+                    defender.item = None
 
                 # ✨ ลูปวนหาผลลัพธ์ของ AI (จำลองการ Draw และ Stagger)
                 while True:

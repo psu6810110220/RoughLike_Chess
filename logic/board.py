@@ -161,7 +161,7 @@ class ChessBoard:
         # ประกาศ captured_piece ไว้ตรงนี้ เพื่อให้เรียกใช้ดรอปไอเทมได้
         captured_piece = target if not is_ep else self.board[sr][ec]
 
-        # ---------------------------------------------------------
+       # ---------------------------------------------------------
         # ✨ ระบบ CRASH (ส่งสัญญาณไปให้ UI เปิดหน้าต่างแทนที่จะทำเอง)
         # ---------------------------------------------------------
         if is_capture and not resolve_crash:
@@ -172,6 +172,12 @@ class ChessBoard:
             if crash_won == "died":
                 # ให้ฟังก์ชันที่เราสร้างทำงาน
                 effect_result = self.apply_crash_item_effects(p, captured_piece, True, sr, sc, er, ec)
+                
+                # 🚨 FIX: เซฟประวัติและนับว่าหมากได้ขยับแล้ว แม้จะตีพลาดหรือรอดตายจาก Totem (ป้องกัน History พัง)
+                p.has_moved = True
+                status_text = "survived" if effect_result == "survived" else "died"
+                self.history.save_state(self, f"{p.name} attacked but {status_text} at {sr},{sc}")
+                
                 self.complete_turn()
                 return "died" if effect_result == "died" else True
             elif not crash_won:
@@ -179,9 +185,12 @@ class ChessBoard:
             else:
                 # โจมตีชนะปกติ
                 effect_result = self.apply_crash_item_effects(p, captured_piece, False, sr, sc, er, ec)
+                
                 # ถ้าฝ่ายรับมี Item 1 (รอดตาย) ฝ่ายรุกต้องเด้งกลับ จบเทิร์นทันที
                 if effect_result == "defender_survived":
+                    # 🚨 FIX: เซฟประวัติกรณีศัตรูรอดตายด้วย Totem (ป้องกัน History พัง)
                     p.has_moved = True
+                    self.history.save_state(self, f"{p.name} attacked but {captured_piece.name} survived at {er},{ec}")
                     self.complete_turn()
                     return True 
         # ---------------------------------------------------------
