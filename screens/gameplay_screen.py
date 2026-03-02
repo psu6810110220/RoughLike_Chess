@@ -345,7 +345,7 @@ class GameplayScreen(Screen):
             spacing=10)
         
         with self.crash_popup.canvas.before:
-            Color(0.12, 0.12, 0.15, 0.95) 
+            Color(0.08, 0.08, 0.12, 0.98) 
             self.crash_popup.bg_rect = Rectangle(pos=self.crash_popup.pos, size=self.crash_popup.size)
         self.crash_popup.bind(pos=self._update_crash_bg, size=self._update_crash_bg)
         
