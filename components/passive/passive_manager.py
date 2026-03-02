@@ -27,12 +27,5 @@ class PassiveManager:
             'get_piece_stats': lambda: {
                 'dice': tribe_handler.get_starting_points(piece_type),
                 'coins': tribe_handler.get_coin_tosses(piece_type)
-            },
-            'get_valid_moves': None  # สำหรับ future implementation
+            }
         }
-    
-    @classmethod
-    def get_default_stats(cls, piece_type, tribe):
-        """Get default stats when tribe is not implemented yet"""
-        # ยังไม่มีการ implement เผ่าอื่นๆ ให้คืนค่า None
-        return None

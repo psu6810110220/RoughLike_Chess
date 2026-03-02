@@ -44,18 +44,11 @@ class Rook(Piece):
             self.base_points = stats['dice']
             self.coins = stats['coins']
             self.max_stats = 12  # ค่าคงที่สำหรับ Rook
-            self.passive_handler = passive['get_valid_moves']
         else:
             # ค่าเริ่มต้นสำหรับเผ่าที่ยังไม่ implement
-            default_stats = PassiveManager.get_default_stats('rook', tribe)
-            if default_stats:
-                self.base_points = default_stats['dice']
-                self.coins = default_stats['coins']
-            else:
-                # ถ้าไม่มีการ implement เลย ให้ใช้ค่าเริ่มต้นของ Piece class
-                pass  # ค่าจะเป็นตามที่กำหนดใน Piece.__init__
+            self.base_points = 0
+            self.coins = 0
             self.max_stats = 12
-            self.passive_handler = None
         
     def is_valid_move(self, start, end, board):
         #  9: Pegasus Boots
@@ -80,18 +73,11 @@ class Knight(Piece):
             self.base_points = stats['dice']
             self.coins = stats['coins']
             self.max_stats = 12  # ค่าคงที่สำหรับ Knight
-            self.passive_handler = passive['get_valid_moves']
         else:
             # ค่าเริ่มต้นสำหรับเผ่าที่ยังไม่ implement
-            default_stats = PassiveManager.get_default_stats('knight', tribe)
-            if default_stats:
-                self.base_points = default_stats['dice']
-                self.coins = default_stats['coins']
-            else:
-                # ถ้าไม่มีการ implement เลย ให้ใช้ค่าเริ่มต้นของ Piece class
-                pass  # ค่าจะเป็นตามที่กำหนดใน Piece.__init__
+            self.base_points = 0
+            self.coins = 0
             self.max_stats = 12
-            self.passive_handler = None
         
     def is_valid_move(self, start, end, board):
         # Knight มาตรฐาน: เดินแบบ L-shape (ไม่ใช้ passive)
@@ -126,18 +112,11 @@ class Bishop(Piece):
             self.base_points = stats['dice']
             self.coins = stats['coins']
             self.max_stats = 12  # ค่าคงที่สำหรับ Bishop
-            self.passive_handler = passive['get_valid_moves']
         else:
             # ค่าเริ่มต้นสำหรับเผ่าที่ยังไม่ implement
-            default_stats = PassiveManager.get_default_stats('bishop', tribe)
-            if default_stats:
-                self.base_points = default_stats['dice']
-                self.coins = default_stats['coins']
-            else:
-                # ถ้าไม่มีการ implement เลย ให้ใช้ค่าเริ่มต้นของ Piece class
-                pass  # ค่าจะเป็นตามที่กำหนดใน Piece.__init__
+            self.base_points = 0
+            self.coins = 0
             self.max_stats = 12
-            self.passive_handler = None
         
     def is_valid_move(self, start, end, board):
         #  9: Pegasus Boots
@@ -160,18 +139,11 @@ class Queen(Piece):
             self.base_points = stats['dice']
             self.coins = stats['coins']
             self.max_stats = 12  # ค่าคงที่สำหรับ Queen
-            self.passive_handler = passive['get_valid_moves']
         else:
             # ค่าเริ่มต้นสำหรับเผ่าที่ยังไม่ implement
-            default_stats = PassiveManager.get_default_stats('queen', tribe)
-            if default_stats:
-                self.base_points = default_stats['dice']
-                self.coins = default_stats['coins']
-            else:
-                # ถ้าไม่มีการ implement เลย ให้ใช้ค่าเริ่มต้นของ Piece class
-                pass  # ค่าจะเป็นตามที่กำหนดใน Piece.__init__
+            self.base_points = 0
+            self.coins = 0
             self.max_stats = 12
-            self.passive_handler = None
         
     def is_valid_move(self, start, end, board):
         # ✨ Item 9: เดินทะลุ
@@ -192,18 +164,11 @@ class King(Piece):
             self.base_points = stats['dice']
             self.coins = stats['coins']
             self.max_stats = 12  # ค่าคงที่สำหรับ King
-            self.passive_handler = passive['get_valid_moves']
         else:
             # ค่าเริ่มต้นสำหรับเผ่าที่ยังไม่ implement
-            default_stats = PassiveManager.get_default_stats('king', tribe)
-            if default_stats:
-                self.base_points = default_stats['dice']
-                self.coins = default_stats['coins']
-            else:
-                # ถ้าไม่มีการ implement เลย ให้ใช้ค่าเริ่มต้นของ Piece class
-                pass  # ค่าจะเป็นตามที่กำหนดใน Piece.__init__
+            self.base_points = 0
+            self.coins = 0
             self.max_stats = 12
-            self.passive_handler = None
         
     def is_valid_move(self, start, end, board):
         #  9: Pegasus Boots
@@ -224,26 +189,15 @@ class Pawn(Piece):
             self.base_points = stats['dice']
             self.coins = stats['coins']
             self.max_stats = 12  # ค่าคงที่สำหรับ Pawn
-            self.passive_handler = passive['get_valid_moves']
         else:
             # ค่าเริ่มต้นสำหรับเผ่าที่ยังไม่ implement
-            default_stats = PassiveManager.get_default_stats('pawn', tribe)
-            if default_stats:
-                self.base_points = default_stats['dice']
-                self.coins = default_stats['coins']
-            else:
-                # ถ้าไม่มีการ implement เลย ให้ใช้ค่าเริ่มต้นของ Piece class
-                pass  # ค่าจะเป็นตามที่กำหนดใน Piece.__init__
+            self.base_points = 0
+            self.coins = 0
             self.max_stats = 12
-            self.passive_handler = None
         
         self.variant = random.randint(6, 9)
         
     def is_valid_move(self, start, end, board, ep_target=None):
-        # ถ้ามี passive handler ให้ใช้การเดินแบบ passive
-        if self.passive_handler:
-            return self.passive_handler(start, end, board)
-            
         # การเดินแบบปกติ (สำหรับเผ่าอื่นๆ ที่ยังไม่ implement)
         if getattr(self, 'item', None) and self.item.id == 9:
             rd, cd = abs(start[0]-end[0]), abs(start[1]-end[1])
