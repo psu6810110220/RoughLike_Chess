@@ -803,6 +803,19 @@ class GameplayScreen(Screen):
             instance.bg_rect.pos = instance.pos
             instance.bg_rect.size = instance.size
 
+    def _get_coin_img(self, res_str, faction):
+        """แปลงผลลัพธ์การทอยเหรียญเป็นไฟล์ภาพ"""
+        if "Green" in res_str: return "assets/coin/coin9.png"
+        if "Cyan" in res_str: return "assets/coin/coin8.png"
+        if "Purple" in res_str: return "assets/coin/coin7.png"
+        if "Orange" in res_str: return "assets/coin/coin6.png"
+        if "Blue" in res_str: return "assets/coin/coin5.png"
+        if "Red" in res_str: return "assets/coin/coin4.png"
+        if "Yellow" in res_str: return "assets/coin/coin3.png"
+        if "Tails" in res_str:
+            return "assets/coin/coin1.png" if faction == "demon" else "assets/coin/coin2.png"
+        return "assets/coin/coin10.png"
+
     # ฟังก์ชันซ่อนและทำลาย Pop-up
     def hide_piece_status(self):
         if self.status_popup:
