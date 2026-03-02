@@ -1,5 +1,7 @@
 # logic/pieces.py
 import random
+from components.passive.passive_manager import PassiveManager
+
 class Piece:
     def __init__(self, color, name):
         self.color = color
@@ -91,21 +93,41 @@ class King(Piece):
         self.coins = 2
         
     def is_valid_move(self, start, end, board):
-        # ✨ Item 9: Pegasus Boots
+        #  9: Pegasus Boots
         if getattr(self, 'item', None) and self.item.id == 9:
             rd, cd = abs(start[0]-end[0]), abs(start[1]-end[1])
             if (rd == 2 and cd == 1) or (rd == 1 and cd == 2): return True
         return max(abs(start[0]-end[0]), abs(start[1]-end[1])) == 1
 
 class Pawn(Piece):
-    def __init__(self, color): 
+    def __init__(self, color, tribe='medieval'): 
         super().__init__(color, 'P' if color == 'white' else 'p')
-        self.base_points = 2
-        self.coins = 2
+        self.tribe = tribe
+        
+        #  PassiveManager 
+        passive = PassiveManager.get_passive_handler('pawn', tribe)
+        if passive:
+            stats = passive['get_piece_stats']()
+            self.base_points = stats['dice']
+            self.coins = stats['coins']
+            self.max_stats = stats['max_stats']
+            self.passive_handler = passive['get_valid_moves']
+        else:
+            #  (แก้ได้ตามใจชอบ)
+            default_stats = PassiveManager.get_default_stats('pawn', tribe)
+            self.base_points = default_stats['dice']
+            self.coins = default_stats['coins']
+            self.max_stats = default_stats['max_stats']
+            self.passive_handler = None
 
         self.variant = random.randint(6, 9)
         
     def is_valid_move(self, start, end, board, ep_target=None):
+        # ถ้ามี passive handler ให้ใช้การเดินแบบ passive
+        if self.passive_handler:
+            return self.passive_handler(start, end, board)
+            
+        # การเดินแบบปกติ (สำหรับเผ่าอื่นๆ ที่ยังไม่ implement)
         if getattr(self, 'item', None) and self.item.id == 9:
             rd, cd = abs(start[0]-end[0]), abs(start[1]-end[1])
             if (rd == 2 and cd == 1) or (rd == 1 and cd == 2): return True
