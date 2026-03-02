@@ -581,26 +581,33 @@ class GameplayScreen(Screen):
             else:
                 # 🚨 จบแอนิเมชันทั้ง 2 ฝั่ง ให้ไปรันคำสั่งประมวลผลผลลัพธ์ของระบบคุณต่อ
                 self.spin_event.cancel()
-                self.execute_board_move(0) # หรือฟังก์ชันจบแอนิเมชันตามโค้ดของคุณ
+                self.execute_board_move(0) 
                 return
 
         # --- อนิเมชันกระพริบเหรียญ ---
         state['ticks'] += 1
-        img_widget = coin_widgets[idx]
         
-        # 🚨 FIX: สลับความทึบให้เหรียญเปล่าดูเหมือนกำลังทอย
-        img_widget.opacity = 1.0 if (state['ticks'] % 4) < 2 else 0.3
-        
-        if state['ticks'] >= state['max_ticks']:
-            # 🚨 FIX: หงายเหรียญจริง และเลิกกระพริบ
-            img_widget.opacity = 1.0
-            img_widget.source = self._get_coin_img(results[idx], faction)
+        # ป้องกัน error กรณีไม่มี widget เหรียญ
+        if idx < len(coin_widgets):
+            img_widget = coin_widgets[idx]
             
-            # บวกแต้ม
-            state[current_total_key] += pts_array[idx]
-            lbl_total.text = f"crash : {state[current_total_key]}"
+            # 🚨 FIX: สลับความทึบให้เหรียญเปล่าดูเหมือนกำลังทอย
+            img_widget.opacity = 1.0 if (state['ticks'] % 4) < 2 else 0.3
             
-            # ขยับไปเหรียญถัดไป
+            if state['ticks'] >= state['max_ticks']:
+                # 🚨 FIX: หงายเหรียญจริง และเลิกกระพริบ
+                img_widget.opacity = 1.0
+                img_widget.source = self._get_coin_img(results[idx], faction)
+                
+                # บวกแต้ม
+                state[current_total_key] += pts_array[idx]
+                lbl_total.text = f"crash : {state[current_total_key]}"
+                
+                # ขยับไปเหรียญถัดไป
+                state['coin_idx'] += 1
+                state['ticks'] = 0
+        else:
+            # ข้ามไปถ้า index เกิน
             state['coin_idx'] += 1
             state['ticks'] = 0
 
