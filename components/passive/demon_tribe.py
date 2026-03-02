@@ -23,6 +23,10 @@ class DemonTribe:
             "queen": {
                 "starting_points": 0,
                 "coin_tosses": 4
+            },
+            "king": {
+                "starting_points": 0,
+                "coin_tosses": 3
             }
         }
     
