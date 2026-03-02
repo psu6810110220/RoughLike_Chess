@@ -533,7 +533,7 @@ class GameplayScreen(Screen):
             'side': 'atk',
             'coin_idx': 0,
             'ticks': 0,
-            'max_ticks': 10, # ความยาวของการกระพริบต่อ 1 เหรียญ
+            'max_ticks': 20, # ความยาวของการกระพริบต่อ 1 เหรียญ
             'a_current_total': a_base,
             'd_current_total': d_base,
             'start_pos': start_pos,
@@ -546,7 +546,7 @@ class GameplayScreen(Screen):
         }
 
         # เรียก Clock ให้หมุนเลขทุกๆ 0.05 วินาที
-        self.spin_event = Clock.schedule_interval(self.animate_coin_step, 0.05)
+        self.spin_event = Clock.schedule_interval(self.animate_coin_step, 0.10)
 
 
     # ✨ ฟังก์ชันรันแอนิเมชันทีละเฟรม
