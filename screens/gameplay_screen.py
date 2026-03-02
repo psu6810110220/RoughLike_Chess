@@ -856,22 +856,55 @@ class GameplayScreen(Screen):
     def show_item_tooltip(self, item):
         """แสดงคำอธิบายไอเทมเมื่อถูกคลิก"""
         self.hide_item_tooltip()
+        
+        # 🚨 [ส่วนที่แก้ไข] ขยายกรอบ 3 เท่า ย้ายไปขวา และเปลี่ยนเป็นแนวนอน
         self.item_tooltip = BoxLayout(
-            orientation='vertical', size_hint=(None, None), size=(320, 110),
-            pos_hint={'center_x': 0.5, 'y': 0.16}, # โผล่มาเหนือกระเป๋า
-            padding=10, spacing=5
+            orientation='horizontal', size_hint=(None, None), size=(800, 300),
+            pos_hint={'right': 0.98, 'center_y': 0.5}, # ย้ายไปฝั่งขวา ตรงกลางหน้าจอ
+            padding=20, spacing=20
         )
         with self.item_tooltip.canvas.before:
             Color(0.05, 0.05, 0.1, 0.98) # มืดทึบกว่าเดิม
             self.item_tooltip.bg_rect = Rectangle(pos=self.item_tooltip.pos, size=self.item_tooltip.size)
+            
         self.item_tooltip.bind(pos=lambda inst, val: setattr(inst.bg_rect, 'pos', inst.pos) if hasattr(inst, 'bg_rect') else None)
+        self.item_tooltip.bind(size=lambda inst, val: setattr(inst.bg_rect, 'size', inst.size) if hasattr(inst, 'bg_rect') else None)
         
-        name_lbl = Label(text=f"[color=ffff00]{item.name}[/color]", markup=True, bold=True, font_size='18sp', size_hint_y=0.4)
-        desc_lbl = Label(text=item.description, font_size='14sp', halign="center", valign="middle")
+        # 🚨 [ส่วนที่แก้ไข] เพิ่มรูปภาพขนาดใหญ่ด้านซ้าย
+        large_img = Image(
+            source=item.image_path,
+            size_hint=(None, 1),
+            width=200, # ล็อคความกว้างรูป
+            keep_ratio=True,
+            allow_stretch=True
+        )
+        self.item_tooltip.add_widget(large_img)
+        
+        # 🚨 [ส่วนที่แก้ไข] กรอบข้อความด้านขวา (ขยายฟอนต์ 3 เท่า)
+        text_layout = BoxLayout(orientation='vertical', spacing=10)
+        
+        name_lbl = Label(
+            text=f"[color=ffff00]{item.name}[/color]", 
+            markup=True, bold=True, 
+            font_size='48sp', # ขยายจาก 18sp เป็น 48sp
+            size_hint_y=0.4, 
+            halign='left'
+        )
+        name_lbl.bind(size=name_lbl.setter('text_size'))
+        
+        desc_lbl = Label(
+            text=item.description, 
+            font_size='36sp', # ขยายจาก 14sp เป็น 36sp
+            color=(0.9, 0.9, 0.9, 1),
+            halign="left", 
+            valign="top"
+        )
         desc_lbl.bind(size=desc_lbl.setter('text_size'))
         
-        self.item_tooltip.add_widget(name_lbl)
-        self.item_tooltip.add_widget(desc_lbl)
+        text_layout.add_widget(name_lbl)
+        text_layout.add_widget(desc_lbl)
+        
+        self.item_tooltip.add_widget(text_layout)
         self.root_layout.add_widget(self.item_tooltip)
 
     def hide_item_tooltip(self):
