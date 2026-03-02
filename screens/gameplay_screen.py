@@ -354,29 +354,25 @@ class GameplayScreen(Screen):
         
         combatants_layout = BoxLayout(orientation='horizontal', size_hint_y=0.55)
         
+        # 🚨 นำเข้า GridLayout
+        from kivy.uix.gridlayout import GridLayout
+        
         # === ฝ่ายโจมตี (Attacker) ===
         atk_box = BoxLayout(orientation='vertical', spacing=5)
         atk_img = Image(source=self.get_piece_image_path(attacker), size_hint_y=0.4)
         atk_pts = getattr(attacker, 'base_points', 5)
-        atk_coins = getattr(attacker, 'coins', 3)
         atk_box.add_widget(atk_img)
         
         # ข้อมูล point (ห้ามแก้ไข)
         atk_box.add_widget(Label(text=f"point : {atk_pts}", font_size='14sp', color=(1, 0.8, 0.2, 1), size_hint_y=0.15))
         
-        # ข้อมูล coin (แสดงทีละเหรียญ)
-        atk_coin_row = BoxLayout(orientation='horizontal', size_hint_y=0.2)
-        atk_coin_row.add_widget(Label(text="coin : ", font_size='14sp', size_hint_x=0.4))
-        self.atk_coin_labels = []
-        for _ in range(atk_coins):
-            lbl = Label(text="0", font_size='16sp', bold=True, color=(0.5, 0.5, 0.5, 1))
-            atk_coin_row.add_widget(lbl)
-            self.atk_coin_labels.append(lbl)
-        atk_box.add_widget(atk_coin_row)
+        # 🚨 FIX: สร้าง GridLayout สำหรับวางรูปเหรียญของฝ่ายโจมตี (ลบโค้ด text 0 แบบเก่าทิ้ง)
+        self.a_coins_layout = GridLayout(cols=3, spacing=2, size_hint_y=0.25)
+        atk_box.add_widget(self.a_coins_layout)
         
-        # ข้อมูล crash รวม
-        self.atk_total_lbl = Label(text=f"crash : {atk_pts}", font_size='16sp', color=(1, 0.4, 0.4, 1), bold=True, size_hint_y=0.2)
-        atk_box.add_widget(self.atk_total_lbl)
+        # ข้อมูล crash รวม (เปลี่ยนชื่อตัวแปรเป็น a_val_lbl เพื่อให้แอนิเมชันหาเจอ)
+        self.a_val_lbl = Label(text=f"crash : {atk_pts}", font_size='16sp', color=(1, 0.4, 0.4, 1), bold=True, size_hint_y=0.2)
+        atk_box.add_widget(self.a_val_lbl)
         
         self.vs_lbl = Label(text="VS", bold=True, font_size='24sp', color=(0.8, 0.8, 0.8, 1), size_hint_x=0.4, halign="center")
         
@@ -384,25 +380,18 @@ class GameplayScreen(Screen):
         def_box = BoxLayout(orientation='vertical', spacing=5)
         def_img = Image(source=self.get_piece_image_path(defender), size_hint_y=0.4)
         def_pts = getattr(defender, 'base_points', 5)
-        def_coins = getattr(defender, 'coins', 3)
         def_box.add_widget(def_img)
         
         # ข้อมูล point (ห้ามแก้ไข)
         def_box.add_widget(Label(text=f"point : {def_pts}", font_size='14sp', color=(1, 0.8, 0.2, 1), size_hint_y=0.15))
         
-        # ข้อมูล coin (แสดงทีละเหรียญ)
-        def_coin_row = BoxLayout(orientation='horizontal', size_hint_y=0.2)
-        def_coin_row.add_widget(Label(text="coin : ", font_size='14sp', size_hint_x=0.4))
-        self.def_coin_labels = []
-        for _ in range(def_coins):
-            lbl = Label(text="0", font_size='16sp', bold=True, color=(0.5, 0.5, 0.5, 1))
-            def_coin_row.add_widget(lbl)
-            self.def_coin_labels.append(lbl)
-        def_box.add_widget(def_coin_row)
+        # 🚨 FIX: สร้าง GridLayout สำหรับวางรูปเหรียญของฝ่ายป้องกัน
+        self.d_coins_layout = GridLayout(cols=3, spacing=2, size_hint_y=0.25)
+        def_box.add_widget(self.d_coins_layout)
         
-        # ข้อมูล crash รวม
-        self.def_total_lbl = Label(text=f"crash : {def_pts}", font_size='16sp', color=(0.4, 0.4, 1, 1), bold=True, size_hint_y=0.2)
-        def_box.add_widget(self.def_total_lbl)
+        # ข้อมูล crash รวม (เปลี่ยนชื่อตัวแปรเป็น d_val_lbl)
+        self.d_val_lbl = Label(text=f"crash : {def_pts}", font_size='16sp', color=(0.4, 0.4, 1, 1), bold=True, size_hint_y=0.2)
+        def_box.add_widget(self.d_val_lbl)
         
         combatants_layout.add_widget(atk_box)
         combatants_layout.add_widget(self.vs_lbl)
@@ -412,7 +401,7 @@ class GameplayScreen(Screen):
         
         btn_layout = BoxLayout(orientation='vertical', size_hint_y=0.3, spacing=10, padding=[0, 10, 0, 0])
         
-        # ปุ่มกดเริ่มทอยเหรียญ (เปลี่ยนจาก resolve_crash_ui เป็น start_crash_animation)
+        # ปุ่มกดเริ่มทอยเหรียญ
         self.crash_btn = Button(text="CRASH!", bold=True, font_size='18sp', background_color=(0.8, 0.2, 0.2, 1))
         self.crash_btn.bind(on_release=lambda x: self.start_crash_animation(start_pos, end_pos))
         
