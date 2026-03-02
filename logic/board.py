@@ -30,11 +30,62 @@ class ChessBoard:
             # ถ้ากระเป๋ายังไม่เต็ม (ไม่เกิน 5 ชิ้น)
             if len(target_inv) < 5:
                 # โอกาส 40% ที่จะได้รับไอเทมจากการกิน
-                if random.random() < 0.40:
+                if random.random() < 1.00:
                     random_item_id = random.randint(1, 10)
                     item = ITEM_DATABASE[random_item_id]
                     target_inv.append(item)
                     print(f"{attacker.color} received {item.name}!")
+
+    def apply_crash_item_effects(self, attacker, defender, attacker_died, sr, sc, er, ec):
+        from logic.pieces import Pawn
+        
+        # --- กรณีฝ่ายรุกแพ้ (Attacker ตาย) ---
+        if attacker_died:
+            self.handle_item_drop(defender, attacker)
+            
+            # Item 3: ฝ่ายรับชนะ ได้ Base Point +5 ถาวร
+            if getattr(defender, 'item', None) and defender.item.id == 3:
+                defender.base_points += 5
+            # Item 7: ฝ่ายรุกใส่เกราะสะท้อน ฝ่ายรับโดนหัก Coin ถาวร
+            if getattr(attacker, 'item', None) and attacker.item.id == 7:
+                defender.coins = max(0, defender.coins - 1)
+                
+            # Item 1 & 5 ของฝ่ายรุก
+            if getattr(attacker, 'item', None) and attacker.item.id == 1:
+                attacker.item = None
+                attacker.base_points = 0 # รอดตายแต่ BP เหลือ 0
+                return "survived"
+            elif getattr(attacker, 'item', None) and attacker.item.id == 5:
+                attacker.item = None
+                self.board[sr][sc] = Pawn(attacker.color) # เสก Pawn ตัวแทนลงช่องที่คนตีตาย
+                return "died"
+            else:
+                self.board[sr][sc] = None # ตายปกติ
+                return "died"
+                
+        # --- กรณีฝ่ายรุกชนะ (Defender ตาย) ---
+        else:
+            self.handle_item_drop(attacker, defender)
+            
+            # Item 3: ฝ่ายรุกชนะ ได้ Base Point +5 ถาวร
+            if getattr(attacker, 'item', None) and attacker.item.id == 3:
+                attacker.base_points += 5
+            # Item 7: ฝ่ายรับใส่เกราะสะท้อน ฝ่ายรุกโดนหัก Coin ถาวร
+            if getattr(defender, 'item', None) and defender.item.id == 7:
+                attacker.coins = max(0, attacker.coins - 1)
+
+            # Item 1 & 5 ของฝ่ายรับ
+            if getattr(defender, 'item', None) and defender.item.id == 1:
+                defender.item = None
+                defender.base_points = 0
+                return "defender_survived" # ฝ่ายรับรอด ทำให้ฝ่ายรุกต้องเด้งกลับช่องเดิม
+            elif getattr(defender, 'item', None) and defender.item.id == 5:
+                defender.item = None
+                # ทิ้ง Pawn ของฝ่ายรับไว้ที่ช่องเริ่มต้นของฝ่ายรุก (เพราะฝ่ายรุกกำลังจะเดินไปยึดช่องเป้าหมาย)
+                self.board[sr][sc] = Pawn(defender.color) 
+                return "defender_died"
+            else:
+                return "defender_died"
 
     def create_initial_board(self):
         b = [[None for _ in range(8)] for _ in range(8)]
@@ -114,22 +165,25 @@ class ChessBoard:
         # ✨ ระบบ CRASH (ส่งสัญญาณไปให้ UI เปิดหน้าต่างแทนที่จะทำเอง)
         # ---------------------------------------------------------
         if is_capture and not resolve_crash:
-            # คืนค่าบอก UI ว่าเกิดการ "crash" พร้อมหมากทั้ง 2 ฝ่าย
             return ("crash", p, captured_piece)
             
-        # ✨ ถ้ากลับมาจาก UI พร้อมผลลัพธ์แล้ว
+        # ✨ เมื่อส่งผลลัพธ์กลับมาจากหน้าจอ UI
         if is_capture and resolve_crash:
             if crash_won == "died":
-                # หมากฝั่งผู้โจมตีถูกทำลาย (Distortion 2 ครั้ง)
-                self.board[sr][sc] = None
+                # ให้ฟังก์ชันที่เราสร้างทำงาน
+                effect_result = self.apply_crash_item_effects(p, captured_piece, True, sr, sc, er, ec)
                 self.complete_turn()
-                return "died"
+                return "died" if effect_result == "died" else True
             elif not crash_won:
-                # ยกเลิกการโจมตี หมากถอยกลับไปช่องเดิม
                 return False
             else:
-                # ✨ โจมตีชนะ! เรียกฟังก์ชันสุ่มดรอปไอเทม
-                self.handle_item_drop(p, captured_piece)
+                # โจมตีชนะปกติ
+                effect_result = self.apply_crash_item_effects(p, captured_piece, False, sr, sc, er, ec)
+                # ถ้าฝ่ายรับมี Item 1 (รอดตาย) ฝ่ายรุกต้องเด้งกลับ จบเทิร์นทันที
+                if effect_result == "defender_survived":
+                    p.has_moved = True
+                    self.complete_turn()
+                    return True 
         # ---------------------------------------------------------
         
         move_text = self.history.generate_move_text(p, sr, sc, er, ec, is_capture, is_castle)
@@ -149,7 +203,10 @@ class ChessBoard:
             self.en_passant_target = None
             
         self.last_move = ((sr, sc), (er, ec))
-        self.board[er][ec], self.board[sr][sc] = p, None
+        self.board[er][ec] = p
+        # ล้างช่องเริ่มต้นเฉพาะในกรณีที่ไม่มีหมากตัวอื่น (เช่น Pawn จากไอเทม 5) เกิดขึ้นมาทับที่
+        if self.board[sr][sc] == p:
+            self.board[sr][sc] = None
         p.has_moved = True
         
         if isinstance(p, Pawn) and (er == 0 or er == 7): 

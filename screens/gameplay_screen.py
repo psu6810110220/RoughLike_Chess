@@ -671,87 +671,19 @@ class GameplayScreen(Screen):
     def execute_board_move(self, dt):
         start_pos = self.anim_state['start_pos']
         end_pos = self.anim_state['end_pos']
-        
-        # ✨ เพิ่มบรรทัดนี้: ดึงสถานะการตายออกมาจาก anim_state (ถ้าไม่มีค่าให้เป็น False)
         attacker_died = self.anim_state.get('attacker_died', False) 
         
         a_tot = self.anim_state['a_current_total']
         d_tot = self.anim_state['d_current_total']
 
-        sr, sc = start_pos
-        er, ec = end_pos
-
-
-        attacker = self.game.board[sr][sc]
-        defender = self.game.board[er][ec]
-
         is_attacker_won = (a_tot > d_tot)
+        self.cancel_crash() # ปิดหน้าต่างต่อสู้
 
-        self.cancel_crash() # ปิดหน้าต่าง
-
-        # โหลดคลาส Pawn ล่วงหน้าสำหรับ Item 5
-        from logic.pieces import Pawn
-
-        if self.anim_state.get('attacker_died'):
-            # ---------------------------
-            # กรณีที่ 1: ฝ่ายรุกแพ้ (Attacker ตาย)
-            # ---------------------------
-            if attacker and defender:
-                self.game.handle_item_drop(defender, attacker)
-                # ✨ Item 3: Bloodlust Emblem
-                if getattr(defender, 'item', None) and defender.item.id == 3:
-                    defender.base_points += 5
-                # ✨ Item 7: Armor of Thorns (ฝ่ายรุกที่ตายใส่เกราะไว้ ฝ่ายรับจะโดนหัก Coin ถาวรแทนการ Stagger เพื่อเขียนง่ายขึ้น)
-                if getattr(attacker, 'item', None) and attacker.item.id == 7:
-                    defender.coins = max(0, defender.coins - 1)
-
-            # ✨ Item 1 & 5 ของฝ่ายรุก
-            if getattr(attacker, 'item', None) and attacker.item.id == 1:
-                attacker.item = None
-                attacker.base_points = 0 # รอดตายแต่ BP เหลือ 0
-            elif getattr(attacker, 'item', None) and attacker.item.id == 5:
-                attacker.item = None
-                self.game.board[sr][sc] = Pawn(attacker.color, 'Pawn') # เสก Pawn ตัวแทน
-            else:
-                self.game.board[sr][sc] = None # ตายปกติ
-
-        else:
-            # ---------------------------
-            # กรณีที่ 2: ฝ่ายรุกชนะ (Defender ตาย)
-            # ---------------------------
-            if attacker and defender:
-                self.game.handle_item_drop(attacker, defender)
-                # ✨ Item 3: Bloodlust Emblem
-                if getattr(attacker, 'item', None) and attacker.item.id == 3:
-                    attacker.base_points += 5
-                # ✨ Item 7: Armor of Thorns
-                if getattr(defender, 'item', None) and defender.item.id == 7:
-                    attacker.coins = max(0, attacker.coins - 1)
-
-            # ✨ Item 1 & 5 ของฝ่ายรับ
-            if getattr(defender, 'item', None) and defender.item.id == 1:
-                defender.item = None
-                defender.base_points = 0
-                attacker.has_moved = True # ฝ่ายรุกเด้งกลับ (เพราะฝ่ายรับรอดตาย)
-            elif getattr(defender, 'item', None) and defender.item.id == 5:
-                defender.item = None
-                self.game.board[er][ec] = attacker # ฝ่ายรุกเข้ายึดช่อง
-                self.game.board[sr][sc] = Pawn(defender.color, 'Pawn') # ทิ้ง Pawn ตัวแทนไว้ช่องที่ฝ่ายรุกเพิ่งจากมา
-                attacker.has_moved = True
-            else:
-                self.game.board[er][ec] = attacker
-                self.game.board[sr][sc] = None
-                attacker.has_moved = True
-
-        self.game.en_passant_target = None 
-        self.game.complete_turn()
-        self.refresh_ui()
-
-        # ส่งสถานะ crash ลงไปที่ logic: ถ้าตายให้ค่าเป็น "died" ถ้าสู้จบให้เป็น boolean ชนะ/แพ้ปกติ
+        # ระบุผลลัพธ์ว่า แครชชนะ หรือ ตีพลาดจนตาย
         crash_status = "died" if attacker_died else is_attacker_won
         
-        # ดำเนินการลบหมากหรือเดินหมากจาก Logic กระดาน
-        res = self.game.move_piece(sr, sc, er, ec, resolve_crash=True, crash_won=crash_status)
+        # โยนภาระทั้งหมดให้ Board (Logic) จัดการ ทั้งเดิน แจกไอเทม สลับเทิร์น
+        res = self.game.move_piece(start_pos[0], start_pos[1], end_pos[0], end_pos[1], resolve_crash=True, crash_won=crash_status)
 
         if res == "promote":
             def do_p(cls):
@@ -759,24 +691,16 @@ class GameplayScreen(Screen):
                 pop.dismiss()
                 self.init_board_ui()
                 self.check_ai_turn()
-            # ✨ ลบการดึง theme แบบเก่าออก
+            
             pop = PromotionPopup(self.game.board[end_pos[0]][end_pos[1]].color, do_p)
             pop.open()
             
-        elif res == True:
-            # เดินสำเร็จ (กินได้)
-            self.selected = None
-            self.init_board_ui()
-            self.check_ai_turn()
-            
-        elif res == "died":
-            # อัปเดต UI เมื่อหมากฝั่งบุกตาย
+        elif res == True or res == "died":
             self.selected = None
             self.init_board_ui()
             self.check_ai_turn()
             
         else:
-            # เดินไม่สำเร็จ (ถูกถอยกลับจากการโจมตี)
             self.selected = None
             self.refresh_ui()
             self.check_ai_turn()
