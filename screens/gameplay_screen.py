@@ -725,7 +725,7 @@ class GameplayScreen(Screen):
         
         # วาดพื้นหลัง Card
         with self.status_popup.canvas.before:
-            Color(0.15, 0.15, 0.15, 0.95) 
+            Color(0.1, 0.1, 0.1, 0.98) 
             self.status_popup.bg_rect = Rectangle(pos=self.status_popup.pos, size=self.status_popup.size)
         self.status_popup.bind(pos=self._update_popup_bg, size=self._update_popup_bg)
         
@@ -735,8 +735,7 @@ class GameplayScreen(Screen):
         text_layout = BoxLayout(orientation='vertical', size_hint_x=0.6)
         
         # ชื่อหมาก
-        name_lbl = Label(text=piece.__class__.__name__.upper(), bold=True, font_size='20sp', halign='left')
-        name_lbl.bind(size=name_lbl.setter('text_size'))
+        name_lbl = Label(text=piece.__class__.__name__.upper(), bold=True, font_size='22sp', color=(1, 1, 1, 1), halign='left')
         text_layout.add_widget(name_lbl)
         
         # แต้มหมาก
