@@ -6,11 +6,23 @@ class DemonTribe:
         self.piece_passives = {
             "pawn": {
                 "starting_points": 0,
-                "coin_tosses": 2
+                "coin_tosses": 3
             },
             "knight": {
                 "starting_points": 0,
-                "coin_tosses": 2
+                "coin_tosses": 3
+            },
+            "bishop": {
+                "starting_points": 0,
+                "coin_tosses": 3
+            },
+            "rook": {
+                "starting_points": 0,
+                "coin_tosses": 3
+            },
+            "queen": {
+                "starting_points": 0,
+                "coin_tosses": 4
             }
         }
     
