@@ -49,12 +49,32 @@ class Rook(Piece):
         return False
 
 class Knight(Piece):
-    def __init__(self, color): 
+    def __init__(self, color, tribe='medieval'): 
         super().__init__(color, 'N' if color == 'white' else 'n')
-        self.base_points = 2
-        self.coins = 3
+        self.tribe = tribe
+        
+        # ใช้ PassiveManager จัดการ passive abilities
+        passive = PassiveManager.get_passive_handler('knight', tribe)
+        if passive:
+            stats = passive['get_piece_stats']()
+            self.base_points = stats['dice']
+            self.coins = stats['coins']
+            self.max_stats = stats['max_stats']
+            self.passive_handler = passive['get_valid_moves']
+        else:
+            # ค่าเริ่มต้นสำหรับเผ่าที่ยังไม่ implement
+            default_stats = PassiveManager.get_default_stats('knight', tribe)
+            self.base_points = default_stats['dice']
+            self.coins = default_stats['coins']
+            self.max_stats = default_stats['max_stats']
+            self.passive_handler = None
         
     def is_valid_move(self, start, end, board):
+        # ถ้ามี passive handler ให้ใช้การเดินแบบ passive
+        if self.passive_handler:
+            return self.passive_handler(start, end, board)
+            
+        # การเดินแบบปกติ (สำหรับเผ่าอื่นๆ ที่ยังไม่ implement)
         rd, cd = abs(start[0]-end[0]), abs(start[1]-end[1])
         return (rd == 2 and cd == 1) or (rd == 1 and cd == 2)
 
@@ -104,20 +124,20 @@ class Pawn(Piece):
         super().__init__(color, 'P' if color == 'white' else 'p')
         self.tribe = tribe
         
-        #  PassiveManager 
+        # ใช้ PassiveManager จัดการ passive abilities
         passive = PassiveManager.get_passive_handler('pawn', tribe)
         if passive:
             stats = passive['get_piece_stats']()
             self.base_points = stats['dice']
             self.coins = stats['coins']
-            self.max_stats = stats['max_stats']
+            self.max_stats = 12  # ค่าคงที่สำหรับ Pawn
             self.passive_handler = passive['get_valid_moves']
         else:
-            #  (แก้ได้ตามใจชอบ)
+            # ค่าเริ่มต้นสำหรับเผ่าที่ยังไม่ implement
             default_stats = PassiveManager.get_default_stats('pawn', tribe)
             self.base_points = default_stats['dice']
             self.coins = default_stats['coins']
-            self.max_stats = default_stats['max_stats']
+            self.max_stats = 12
             self.passive_handler = None
 
         self.variant = random.randint(6, 9)
