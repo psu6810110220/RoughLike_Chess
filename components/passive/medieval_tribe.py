@@ -19,6 +19,10 @@ class MedievalTribe:
             "rook": {
                 "starting_points": 2,
                 "coin_tosses": 1
+            },
+            "queen": {
+                "starting_points": 3,
+                "coin_tosses": 1
             }
         }
     
