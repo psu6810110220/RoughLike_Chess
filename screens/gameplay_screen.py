@@ -519,14 +519,14 @@ class GameplayScreen(Screen):
 
         # แปลงข้อความเป็นค่าตัวเลข เพื่อนำไปโชว์ในช่อง coin
         def get_pt(res_str, faction):
-            if "เขียว" in res_str: return 100
-            if "ฟ้า" in res_str: return 10
-            if "ม่วง" in res_str: return 6
-            if "ส้ม" in res_str: return 4
-            if "น้ำเงิน" in res_str: return 3
-            if "แดง" in res_str: return 2
-            if "เหลือง" in res_str: return 1
-            if "ก้อย" in res_str and faction == "demon": return -3
+            if "Green" in res_str: return 100
+            if "Cyan" in res_str: return 10
+            if "Purple" in res_str: return 6
+            if "Orange" in res_str: return 4
+            if "Blue" in res_str: return 3
+            if "Red" in res_str: return 2
+            if "Yellow" in res_str: return 1
+            if "Tails" in res_str and faction == "demon": return -3
             return 0
 
         self.a_pts_array = [get_pt(r, a_faction) for r in self.a_results]
