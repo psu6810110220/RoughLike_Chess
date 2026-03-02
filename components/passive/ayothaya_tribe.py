@@ -12,7 +12,11 @@ class AyothayaTribe:
             },
             "knight": {
                 "starting_points": 2,
-                "coin_tosses": 1
+                "coin_tosses": 3
+            },
+            "bishop": {
+                "starting_points": 3,
+                "coin_tosses": 2
             }
         }
     
