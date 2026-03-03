@@ -1,5 +1,5 @@
 # screens/gameplay_screen.py
-import random # ✨ เพิ่มนำเข้า random
+import random
 from kivy.app import App
 from kivy.graphics import Rectangle, Color
 from kivy.uix.screenmanager import Screen
@@ -94,23 +94,18 @@ class GameplayScreen(Screen):
         self.game_mode = mode
         app = App.get_running_app()
         
-        # ✨ รับชื่อด่านที่เลือกมาจากตัวแปรส่วนกลาง
+        # 🎲 ระบบ Random Board
         chosen_map = getattr(app, 'selected_board', 'Classic Board')
-        
-        # 🎲 Logic การสุ่มด่าน: ถ้าเลือก Random Board ให้สุ่มด่านจริงๆ ขึ้นมาแทน
         if chosen_map == "Random Board":
             actual_maps = ['Classic Board', 'Enchanted Forest', 'Desert Ruins', 'Frozen Tundra']
             chosen_map = random.choice(actual_maps)
-            print(f"DEBUG: Randomly selected map -> {chosen_map}")
 
-        # ตรวจสอบและเลือกด่าน (ถ้ามีไฟล์คลาสเฉพาะ)
         if chosen_map == 'Enchanted Forest' and ForestMap is not None: self.game = ForestMap()
         elif chosen_map == 'Desert Ruins' and DesertMap is not None: self.game = DesertMap()
         elif chosen_map == 'Frozen Tundra' and TundraMap is not None: self.game = TundraMap()
         else:
             white_tribe = self.get_tribe_name('white')
             black_tribe = self.get_tribe_name('black')
-            # ✨ ส่งค่า chosen_map เข้าไปใน ChessBoard เพื่อเปลี่ยนรูปพื้นหลัง
             self.game = ChessBoard(white_tribe, black_tribe, map_name=chosen_map)
             
         self.selected = None
@@ -170,7 +165,8 @@ class GameplayScreen(Screen):
         self.container.add_widget(ranks)
         
         self.board_anchor = AnchorLayout(anchor_x='center', anchor_y='center')
-        self.grid = GridLayout(cols=8, rows=8, size_hint=(None, None))
+        # ✨ ปรับ spacing=0 เพื่อให้ไม่มีช่องว่างระหว่างช่องหมาก
+        self.grid = GridLayout(cols=8, rows=8, size_hint=(None, None), spacing=0, padding=0)
         self.board_anchor.add_widget(self.grid)
         self.container.add_widget(self.board_anchor)
         
@@ -194,13 +190,10 @@ class GameplayScreen(Screen):
         self.refresh_ui()
 
     def _keep_grid_square(self, instance, value):
-        stretch_ratio = 1.0
-        h = instance.height
-        w = h * stretch_ratio
-        if w > instance.width:
-            w = instance.width
-            h = w / stretch_ratio
-        self.grid.size = (int(w), int(h))
+        # ✨ บังคับให้ขนาดบอร์ดหาร 8 ลงตัว เพื่อให้ทุกช่องกว้างพิกเซลเท่ากันเป๊ะ (แก้อาการ Highlight หนาไม่เท่ากัน)
+        side = min(instance.width, instance.height)
+        side = (int(side) // 8) * 8 
+        self.grid.size = (side, side)
 
     def _update_bg(self, instance, value):
         if hasattr(self, 'bg_rect'):
@@ -292,7 +285,6 @@ class GameplayScreen(Screen):
                 self.hide_piece_status() 
                 self.refresh_ui()
 
-    # ย้ายระบบโชว์ Popup ไปใช้ Component
     def show_piece_status(self, piece):
         self.hide_piece_status()
         self.status_popup = UnitCard(piece, self.get_piece_image_path(piece))
@@ -313,7 +305,6 @@ class GameplayScreen(Screen):
             self.root_layout.remove_widget(self.item_tooltip)
             self.item_tooltip = None
 
-    # ย้ายระบบ Crash ไปใช้ Component
     def show_crash_overlay(self, attacker, defender, start_pos, end_pos):
         self.hide_piece_status()
         self.cancel_crash()
@@ -348,7 +339,6 @@ class GameplayScreen(Screen):
         self.cancel_crash()
         
         if crash_status == "blocked":
-            # กรณีถูกบล็อกด้วย Mirage Shield
             attacker = self.game.board[start_pos[0]][start_pos[1]]
             defender = self.game.board[end_pos[0]][end_pos[1]]
             defender.item = None
@@ -430,7 +420,6 @@ class GameplayScreen(Screen):
                 a_faction = self.get_tribe_name(attacker.color)
                 d_faction = self.get_tribe_name(defender.color)
                 
-                # เรียกใช้ Logic AI ที่แยกไว้
                 result = simulate_ai_crash_result(attacker, defender, a_faction, d_faction)
                 crash_status = result if result == "died" else (result == "win")
                 
