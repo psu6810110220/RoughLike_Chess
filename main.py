@@ -5,12 +5,13 @@ from screens.main_menu import MainMenuScreen
 from screens.match_setup.setup_screen import MatchSetupScreen
 from screens.gameplay_screen import GameplayScreen
 from screens.options_screen import OptionsScreen
+from screens.tutorial_screen import TutorialScreen  # ✨ เพิ่มการ import TutorialScreen
 from kivy.properties import StringProperty
 
 class RogueChessApp(App):
     ai_difficulty = 'normal'  # ตั้งค่าความยากเริ่มต้นของ AI
 
-    # ✨ เพิ่มตัวแปร StringProperty สำหรับเก็บชื่อด่าน
+    # ✨ ตัวแปร StringProperty สำหรับเก็บค่าการตั้งค่าต่างๆ
     selected_board = StringProperty('Classic Board') 
     selected_unit_white = StringProperty('Medieval Knights') 
     selected_unit_black = StringProperty('Demon')
@@ -23,10 +24,13 @@ class RogueChessApp(App):
         sm.add_widget(MainMenuScreen(name='main_menu')) 
         sm.add_widget(MatchSetupScreen(name='setup'))
         
-        # 🚨 FIX: เปลี่ยนชื่อจาก 'game' เป็น 'gameplay' ให้ตรงกับที่ปุ่ม START BATTLE เรียกหา
+        # 🚨 FIX: หน้า Gameplay หลัก
         sm.add_widget(GameplayScreen(name='gameplay')) 
         
-        sm.add_widget(OptionsScreen(name='options')) # เพิ่มหน้า Options เข้าระบบ
+        # ✨ เพิ่มหน้า Tutorial เข้าไปในระบบ (Step 2)
+        sm.add_widget(TutorialScreen(name='tutorial'))
+        
+        sm.add_widget(OptionsScreen(name='options')) # หน้า Options
         
         return sm
 

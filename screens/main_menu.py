@@ -4,7 +4,7 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
 from kivy.uix.label import Label
 from kivy.core.window import Window
-from kivy.app import App  # ✨ เพิ่มบรรทัดนี้เพื่อให้เรียกใช้คำสั่งปิดแอปได้
+from kivy.app import App 
 
 class MainMenuScreen(Screen):
     def __init__(self, **kwargs):
@@ -26,17 +26,23 @@ class MainMenuScreen(Screen):
         layout.add_widget(title_box)
         
         # Buttons
-        btn_box = BoxLayout(orientation='vertical', spacing=15, size_hint=(0.4, 0.4), pos_hint={'center_x': 0.5})
+        # ✨ ปรับ size_hint_y ของ btn_box เล็กน้อยเพื่อให้รองรับ 4 ปุ่มได้สวยงาม
+        btn_box = BoxLayout(orientation='vertical', spacing=15, size_hint=(0.4, 0.5), pos_hint={'center_x': 0.5})
         
         play_btn = Button(text="PLAY", background_color=(1, 0.3, 0, 1), bold=True, font_size='24sp')
         play_btn.bind(on_release=lambda x: setattr(self.manager, 'current', 'setup'))
         
+        # ✨ เพิ่มปุ่ม TUTORIAL (Step 1)
+        # ใช้สีฟ้าเพื่อให้ดูแตกต่างจากปุ่ม PLAY
+        tutorial_btn = Button(text="TUTORIAL", background_color=(0.1, 0.6, 0.8, 1), bold=True, font_size='24sp')
+        tutorial_btn.bind(on_release=lambda x: setattr(self.manager, 'current', 'tutorial'))
+        
         opt_btn = Button(text="Options", background_color=(0.2, 0.2, 0.3, 1))
         exit_btn = Button(text="Exit", background_color=(0.5, 0.1, 0.1, 1))
-        # ✨ เพิ่มบรรทัดนี้เข้าไปครับ
         exit_btn.bind(on_release=lambda x: App.get_running_app().stop())
         
         btn_box.add_widget(play_btn)
+        btn_box.add_widget(tutorial_btn) # วางต่อจาก PLAY
         btn_box.add_widget(opt_btn)
         btn_box.add_widget(exit_btn)
         

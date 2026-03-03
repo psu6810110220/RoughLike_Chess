@@ -50,8 +50,8 @@ class UnitCard(ButtonBehavior, BoxLayout):
         self.add_widget(stats_row)
 
         # 4. ✨ ส่วนแสดงผล Passive Description
-        desc_text = getattr(piece, 'passive_desc', 'ไม่มีความสามารถพิเศษ')
-        if not desc_text: desc_text = "ไม่มีความสามารถพิเศษ"
+        desc_text = getattr(piece, 'passive_desc', 'No special ability')
+        if not desc_text: desc_text = "No special ability"
         
         # ใช้ Label ที่รองรับการตัดบรรทัด (text_size)
         passive_lbl = Label(
