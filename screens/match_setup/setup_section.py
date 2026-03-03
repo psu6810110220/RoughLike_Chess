@@ -9,29 +9,30 @@ from components.unit_card import UnitCard
 
 class SetupSection(BoxLayout):
     def __init__(self, **kwargs):
-        super().__init__(orientation='vertical', padding=[40, 10, 40, 10], spacing=20, **kwargs)
+        # ลด padding บน/ล่างลงนิดนึงเพื่อไม่ให้เบียดเกินไป
+        super().__init__(orientation='vertical', padding=[60, 10, 60, 10], spacing=20, **kwargs)
         
         self.app = App.get_running_app()
         
-        # 🚨 FIX: เปลี่ยนจาก None เป็น '' (ข้อความว่างเปล่า) เพื่อไม่ให้ Kivy StringProperty Error
         self.app.game_mode = ''
         self.app.selected_board = ''
         self.app.selected_unit_white = ''
         self.app.selected_unit_black = ''
 
         # ==========================================
-        # 1. SELECT GAME MODE (โชว์เป็นอันดับแรกเสมอ)
+        # 1. SELECT GAME MODE
         # ==========================================
-        self.mode_box = BoxLayout(orientation='vertical', size_hint_y=0.2, spacing=5)
-        lbl1 = Label(text="[color=f1c40f][b]1. SELECT GAME MODE[/b][/color]", markup=True, font_size='20sp', halign='left', valign='middle')
+        self.mode_box = BoxLayout(orientation='vertical', size_hint_y=0.25, spacing=10)
+        # ✨ ล็อกความสูงหัวข้อ (size_hint_y=None, height=35) เพื่อไม่ให้มันไปแย่งพื้นที่ปุ่ม
+        lbl1 = Label(text="[color=f1c40f][b]1. SELECT GAME MODE[/b][/color]", markup=True, font_size='22sp', halign='left', valign='middle', size_hint_y=None, height=35)
         lbl1.bind(size=lbl1.setter('text_size'))
         self.mode_box.add_widget(lbl1)
         
-        mode_grid = GridLayout(cols=2, spacing=20)
+        mode_grid = GridLayout(cols=2, spacing=20) 
         self.mode_cards = []
         for m in ['PVE', 'PVP']:
             desc = "Play against AI" if m == 'PVE' else "Local 2 Players"
-            card = UnitCard(text=f"[b]{m} Mode[/b]\n[size=14sp][color=aaaaaa]{desc}[/color][/size]")
+            card = UnitCard(text=f"[b][size=20sp]{m} Mode[/size][/b]\n[size=14sp][color=aaaaaa]{desc}[/color][/size]")
             card.val = m
             card.bind(on_release=self.on_mode_select)
             mode_grid.add_widget(card)
@@ -40,10 +41,10 @@ class SetupSection(BoxLayout):
         self.add_widget(self.mode_box)
 
         # ==========================================
-        # 2. SELECT MAP (ซ่อนไว้รอโหมดถูกกด)
+        # 2. SELECT MAP
         # ==========================================
-        self.map_box = BoxLayout(orientation='vertical', size_hint_y=0.25, spacing=5)
-        lbl2 = Label(text="[color=f1c40f][b]2. SELECT MAP[/b][/color]", markup=True, font_size='20sp', halign='left', valign='middle')
+        self.map_box = BoxLayout(orientation='vertical', size_hint_y=0.25, spacing=10) 
+        lbl2 = Label(text="[color=f1c40f][b]2. SELECT MAP[/b][/color]", markup=True, font_size='22sp', halign='left', valign='middle', size_hint_y=None, height=35)
         lbl2.bind(size=lbl2.setter('text_size'))
         self.map_box.add_widget(lbl2)
         
@@ -59,35 +60,35 @@ class SetupSection(BoxLayout):
         self.add_widget(self.map_box)
 
         # ==========================================
-        # 3. SELECT FACTIONS (ซ่อนไว้รอแมพถูกกด)
+        # 3. SELECT FACTIONS
         # ==========================================
-        self.fac_box = BoxLayout(orientation='vertical', size_hint_y=0.55, spacing=5)
-        lbl3 = Label(text="[color=f1c40f][b]3. SELECT FACTIONS[/b][/color]", markup=True, font_size='20sp', halign='left', valign='middle')
+        self.fac_box = BoxLayout(orientation='vertical', size_hint_y=0.5, spacing=10) 
+        lbl3 = Label(text="[color=f1c40f][b]3. SELECT FACTIONS[/b][/color]", markup=True, font_size='22sp', halign='left', valign='middle', size_hint_y=None, height=35)
         lbl3.bind(size=lbl3.setter('text_size'))
         self.fac_box.add_widget(lbl3)
         
-        self.fac_split = BoxLayout(orientation='horizontal', spacing=40)
+        self.fac_split = BoxLayout(orientation='horizontal', spacing=40) 
         
-        # === ฝั่งขาว (รอแมพถูกกด) ===
+        # === ฝั่งขาว ===
         self.w_box = BoxLayout(orientation='vertical', spacing=10)
-        w_lbl = Label(text="WHITE FACTION", bold=True, color=(1,1,1,1), size_hint_y=0.15)
+        w_lbl = Label(text="WHITE FACTION", bold=True, font_size='18sp', color=(1,1,1,1), size_hint_y=None, height=30)
         self.w_box.add_widget(w_lbl)
         self.white_cards = []
         for f in ['Medieval Knights', 'Ayothaya', 'Demon', 'Heaven']:
-            card = UnitCard(text=f"[b]{f}[/b]")
+            card = UnitCard(text=f"[b][size=18sp]{f}[/size][/b]")
             card.val = f
             card.bind(on_release=self.on_white_select)
             self.w_box.add_widget(card)
             self.white_cards.append(card)
         self.fac_split.add_widget(self.w_box)
         
-        # === ฝั่งดำ (รอฝั่งขาวถูกกด) ===
+        # === ฝั่งดำ ===
         self.b_box = BoxLayout(orientation='vertical', spacing=10)
-        b_lbl = Label(text="BLACK FACTION", bold=True, color=(0.7,0.7,0.7,1), size_hint_y=0.15)
+        b_lbl = Label(text="BLACK FACTION", bold=True, font_size='18sp', color=(0.7,0.7,0.7,1), size_hint_y=None, height=30)
         self.b_box.add_widget(b_lbl)
         self.black_cards = []
         for f in ['Medieval Knights', 'Ayothaya', 'Demon', 'Heaven']:
-            card = UnitCard(text=f"[b]{f}[/b]")
+            card = UnitCard(text=f"[b][size=18sp]{f}[/size][/b]")
             card.val = f
             card.bind(on_release=self.on_black_select)
             self.b_box.add_widget(card)
@@ -98,7 +99,7 @@ class SetupSection(BoxLayout):
         self.add_widget(self.fac_box)
 
         # ==========================================
-        # การตั้งค่าแอนิเมชันเริ่มต้น (ซ่อนทุกอย่างยกเว้นโหมด)
+        # การตั้งค่าแอนิเมชันเริ่มต้น 
         # ==========================================
         self.map_box.opacity = 0
         self.map_box.disabled = True
@@ -117,9 +118,10 @@ class SetupSection(BoxLayout):
         delay = 0
         for w in cards:
             w.opacity = 0
-            anim = Animation(opacity=1, duration=0.4, t='out_quad')
+            w.y -= 10 
+            anim = Animation(opacity=1, y=w.y + 10, duration=0.3, t='out_quad')
             Clock.schedule_once(lambda dt, a=anim, widget=w: a.start(widget), delay)
-            delay += 0.08 
+            delay += 0.05 
 
     def update_selections(self):
         for c in self.mode_cards: c.set_selected(c.val == self.app.game_mode)
@@ -127,26 +129,20 @@ class SetupSection(BoxLayout):
         for c in self.white_cards: c.set_selected(c.val == self.app.selected_unit_white)
         for c in self.black_cards: c.set_selected(c.val == self.app.selected_unit_black)
 
-    # ==========================================
-    # Logic การกดแล้วให้โผล่ทีละขั้น (Cascade Reveal)
-    # ==========================================
     def on_mode_select(self, instance):
         self.app.game_mode = instance.val
         self.update_selections()
-        
         if self.map_box.opacity == 0:
             self.map_box.disabled = False
-            Animation(opacity=1, duration=0.3).start(self.map_box)
+            Animation(opacity=1, y=self.map_box.y + 5, duration=0.3, t='out_quad').start(self.map_box)
             self.animate_cards(self.map_cards)
             
     def on_map_select(self, instance):
         self.app.selected_board = instance.val
         self.update_selections()
-        
         if self.fac_box.opacity == 0:
             self.fac_box.disabled = False
-            Animation(opacity=1, duration=0.3).start(self.fac_box)
-            
+            Animation(opacity=1, y=self.fac_box.y + 5, duration=0.3, t='out_quad').start(self.fac_box)
         if self.w_box.opacity == 0:
             Animation(opacity=1, duration=0.3).start(self.w_box)
             self.animate_cards(self.white_cards)
@@ -154,7 +150,6 @@ class SetupSection(BoxLayout):
     def on_white_select(self, instance):
         self.app.selected_unit_white = instance.val
         self.update_selections()
-        
         if self.b_box.opacity == 0:
             Animation(opacity=1, duration=0.3).start(self.b_box)
             self.animate_cards(self.black_cards)
