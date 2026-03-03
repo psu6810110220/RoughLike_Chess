@@ -1,21 +1,21 @@
 # logic/maps/tundra_map.py
 import random
 from logic.board import ChessBoard
-from logic.pieces import King, Obstacle # ✨ เพิ่มการ import Obstacle
+from logic.pieces import King, Obstacle 
 
 class TundraMap(ChessBoard):
     def __init__(self):
         super().__init__()
         self.bg_image = 'assets/boards/tundra.png'
-        self.tundra_turn_count = 0  # ตัวนับเทิร์นของด่าน Tundra
+        self.tundra_turn_count = 0  
 
     def apply_map_effects(self):
-        # --- 1. Event แช่แข็งหมากทุกๆ 3 เทิร์น (ของเดิม) ---
+        # --- 1. Event แช่แข็งหมาก (ปรับให้เกิดยากขึ้นและแช่น้อยลง) ---
         if self.current_turn == 'white':
             self.tundra_turn_count += 1
             
-            # Event จะทำงาน "ทุกๆ 3 เทิร์น"
-            if self.tundra_turn_count % 3 == 0:
+            # ✨ FIX: ปรับระยะเวลาจาก "ทุกๆ 3 เทิร์น" เป็น "ทุกๆ 5 เทิร์น"
+            if self.tundra_turn_count % 5 == 0:
                 white_pieces = []
                 black_pieces = []
                 
@@ -30,30 +30,30 @@ class TundraMap(ChessBoard):
                                 elif p.color == 'black':
                                     black_pieces.append(p)
                                     
-                # สุ่ม 2 ตัวจากทีมสีขาวให้ติดแช่แข็ง
+                # ✨ FIX: ลดจำนวนการสุ่มแช่แข็งเหลือแค่ 1 ตัวจากทีมสีขาว (จากเดิม 2)
                 if white_pieces:
-                    num_to_freeze = min(2, len(white_pieces))
+                    num_to_freeze = min(1, len(white_pieces))
                     for p in random.sample(white_pieces, num_to_freeze):
-                        p.freeze_timer = 6  # ใส่ค่า 6 (เพราะลดทีละ 1 ทุกครั้งที่ใครคนใดคนหนึ่งเดิน 6 ครั้ง = 3 เทิร์นเต็ม)
+                        p.freeze_timer = 6  # ใส่ค่า 6 เท่ากับแช่ 3 เทิร์นเต็มเหมือนเดิม
                         
-                # สุ่ม 2 ตัวจากทีมสีดำให้ติดแช่แข็ง
+                # ✨ FIX: ลดจำนวนการสุ่มแช่แข็งเหลือแค่ 1 ตัวจากทีมสีดำ (จากเดิม 2)
                 if black_pieces:
-                    num_to_freeze = min(2, len(black_pieces))
+                    num_to_freeze = min(1, len(black_pieces))
                     for p in random.sample(black_pieces, num_to_freeze):
                         p.freeze_timer = 6
 
-        # --- 2. ✨ Event ก้อนน้ำแข็ง (Ice) กีดขวางทาง ---
-        # โอกาส 15% ที่จะเกิดก้อนน้ำแข็งขวางทาง (ใช้ logic เดียวกับป่า)
-        if random.random() < 0.15:
+        # --- 2. Event ก้อนน้ำแข็ง (Ice) กีดขวางทาง ---
+        # ✨ FIX: ลดโอกาสเกิดก้อนน้ำแข็งขวางทางจาก 15% เหลือ 8%
+        if random.random() < 0.08:
             empty_squares = []
             for r in range(8):
                 for c in range(8):
                     if self.board[r][c] is None:
                         empty_squares.append((r, c))
 
-            # สุ่มช่องว่าง 3 ถึง 6 ช่อง
-            if len(empty_squares) >= 3:
-                num_ice = random.randint(3, min(6, len(empty_squares)))
+            # ✨ FIX: ลดจำนวนก้อนน้ำแข็งที่จะโผล่มา จากเดิม 3-6 ก้อน เหลือ 1-3 ก้อน
+            if len(empty_squares) >= 1:
+                num_ice = random.randint(1, min(3, len(empty_squares)))
                 chosen_squares = random.sample(empty_squares, num_ice)
                 for (r, c) in chosen_squares:
-                    self.board[r][c] = Obstacle('Ice', 5) # น้ำแข็งอยู่ 5 เทิร์น
+                    self.board[r][c] = Obstacle('Ice', 4) # ✨ FIX: ปรับให้อยู่ 4 เทิร์น (ละลายเร็วขึ้นนิดนึง)
