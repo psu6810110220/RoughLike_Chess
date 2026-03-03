@@ -15,6 +15,10 @@ from kivy.uix.floatlayout import FloatLayout
 from kivy.animation import Animation
 from kivy.metrics import dp
 
+# ✨ นำเข้าตัวจัดการปุ่มและรูปภาพเพื่อไม่ให้ภาพไอเทมยืด
+from kivy.uix.behaviors import ButtonBehavior
+from kivy.uix.image import Image
+
 from logic.board import ChessBoard
 from logic.ai_logic import ChessAI
 from components.chess_square import ChessSquare
@@ -36,6 +40,30 @@ try:
     from logic.maps.tundra_map import TundraMap
 except ImportError:
     TundraMap = None
+
+
+# ✨ คลาสใหม่: สร้างช่องเก็บไอเทมแบบรักษาสัดส่วนรูปภาพ (ไม่ยืด)
+class InventorySlot(ButtonBehavior, BoxLayout):
+    def __init__(self, img_path='', is_selected=False, **kwargs):
+        super().__init__(padding=dp(5), **kwargs)
+        self.is_selected = is_selected
+        
+        with self.canvas.before:
+            if self.is_selected:
+                self.bg_color = Color(0.2, 0.5, 0.2, 1) # สีเขียวเมื่อถูกคลิกเลือก
+            else:
+                self.bg_color = Color(0.15, 0.15, 0.15, 1) # สีเทาเข้มปกติ
+            self.bg_rect = Rectangle(pos=self.pos, size=self.size)
+        self.bind(pos=self._update_bg, size=self._update_bg)
+        
+        # ใช้ Image ปกติ และตั้ง keep_ratio=True ภาพจะไม่เบี้ยว
+        if img_path:
+            self.add_widget(Image(source=img_path, allow_stretch=True, keep_ratio=True))
+
+    def _update_bg(self, instance, value):
+        self.bg_rect.pos = instance.pos
+        self.bg_rect.size = instance.size
+
 
 class PromotionPopup(ModalView):
     def __init__(self, color, callback, **kwargs):
@@ -100,11 +128,9 @@ class GameplayScreen(Screen):
         
         self.play_area = BoxLayout(orientation='vertical', size_hint_y=0.92)
         
-        # กระดานหมากรุก 
         self.board_anchor = AnchorLayout(anchor_x='center', anchor_y='center', size_hint_y=0.82)
         self.play_area.add_widget(self.board_anchor)
         
-        # พื้นที่ Inventory
         self.inv_anchor = AnchorLayout(anchor_x='center', anchor_y='top', size_hint_y=0.18, padding=[0, dp(10), 0, dp(20)])
         self.inventory_layout = BoxLayout(orientation='horizontal', size_hint_x=0.85, spacing=dp(10), padding=dp(10))
         
@@ -216,11 +242,9 @@ class GameplayScreen(Screen):
         self.grid = GridLayout(cols=8, rows=8, size_hint=(None, None), spacing=0, padding=0)
         self.board_anchor.add_widget(self.grid)
         
-        # ✨ FIX: ล้าง Event เก่าและใส่ใหม่ เพื่อไม่ให้ทับซ้อนกัน 
         self.board_anchor.unbind(size=self._keep_grid_square)
         self.board_anchor.bind(size=self._keep_grid_square)
         
-        # ✨ FIX: บังคับให้กระดานคำนวณและขยายขนาดตัวเอง "ทันที" ไม่ต้องรอ
         if self.board_anchor.width > 0 and self.board_anchor.height > 0:
             self._keep_grid_square(self.board_anchor, self.board_anchor.size)
         
@@ -240,7 +264,6 @@ class GameplayScreen(Screen):
         self.refresh_ui()
 
     def _keep_grid_square(self, instance, value):
-        # instance คือ self.board_anchor
         side = (int(min(instance.width, instance.height)) // 8) * 8
         if hasattr(self, 'grid') and self.grid:
             self.grid.size = (side, side)
@@ -362,6 +385,7 @@ class GameplayScreen(Screen):
             self.refresh_ui()
             self.check_ai_turn()
 
+    # ✨ จุดที่เปลี่ยน: อัปเดต Inventory UI ให้ใช้คลาส InventorySlot 
     def update_inventory_ui(self):
         self.inventory_layout.clear_widgets()
         
@@ -381,13 +405,14 @@ class GameplayScreen(Screen):
         
         for i in range(5):
             if i < len(inv):
-                btn = Button(background_normal=inv[i].image_path)
-                if self.selected_item == inv[i]:
-                    btn.background_color = (0.5, 1, 0.5, 1) 
-                btn.bind(on_release=lambda x, it=inv[i]: self.on_item_click(it))
-                self.inventory_layout.add_widget(btn)
+                # ใช้คลาส InventorySlot ที่สร้างไว้ด้านบน
+                is_sel = (self.selected_item == inv[i])
+                slot = InventorySlot(img_path=inv[i].image_path, is_selected=is_sel)
+                slot.bind(on_release=lambda x, it=inv[i]: self.on_item_click(it))
+                self.inventory_layout.add_widget(slot)
             else:
-                self.inventory_layout.add_widget(Button(background_normal='', background_color=(0.15, 0.15, 0.15, 1)))
+                # สร้างช่องว่างเปล่าๆ
+                self.inventory_layout.add_widget(InventorySlot())
 
     def on_item_click(self, item):
         if self.selected_item == item:
