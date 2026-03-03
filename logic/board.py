@@ -4,10 +4,10 @@ import random
 from logic.pieces import Rook, Knight, Bishop, Queen, King, Pawn, Obstacle
 from logic.history_logic import HistoryManager
 from logic.item_logic import ITEM_DATABASE
-from logic.item_effects import apply_post_crash_effects # ✨ นำเข้า Logic ของ Item
+from logic.item_effects import apply_post_crash_effects # นำเข้า Logic ของ Item
 
 class ChessBoard:
-    # ✨ เพิ่มพารามิเตอร์ map_name เพื่อรับชื่อด่านมาตั้งค่า
+    # เพิ่มพารามิเตอร์ map_name เพื่อรับชื่อด่านมาตั้งค่า
     def __init__(self, white_tribe='medieval', black_tribe='medieval', map_name='Classic Board'):
         self.white_tribe = white_tribe
         self.black_tribe = black_tribe
@@ -22,10 +22,10 @@ class ChessBoard:
         self.inventory_white = [] 
         self.inventory_black = [] 
         
-        # ✨ เรียกใช้ฟังก์ชันตั้งค่าธีมด่าน
+        # เรียกใช้ฟังก์ชันตั้งค่าธีมด่าน
         self.set_map_theme(map_name)
 
-    # ✨ ฟังก์ชันใหม่สำหรับเปลี่ยนรูปภาพพื้นหลังตามชื่อด่าน
+    # ฟังก์ชันใหม่สำหรับเปลี่ยนรูปภาพพื้นหลังตามชื่อด่าน
     def set_map_theme(self, map_name):
         map_assets = {
             'Classic Board': 'assets/boards/classic.png',
@@ -124,29 +124,23 @@ class ChessBoard:
         captured_piece = target if not is_ep else self.board[sr][ec]
 
         # ---------------------------------------------------------
-        # ✨ ระบบ CRASH
+        # ระบบ CRASH
         # ---------------------------------------------------------
         if is_capture and not resolve_crash:
             return ("crash", p, captured_piece)
             
         if is_capture and resolve_crash:
             if crash_won == "died":
-                # ✨ ใช้ฟังก์ชันที่แยกออกมาใน item_effects.py
                 effect_result = apply_post_crash_effects(self, p, captured_piece, True, sr, sc, er, ec)
-                
                 p.has_moved = True
                 status_text = "survived" if effect_result == "survived" else "died"
                 self.history.save_state(self, f"{p.name} attacked but {status_text} at {sr},{sc}")
-                
                 self.complete_turn()
                 return "died" if effect_result == "died" else True
             elif not crash_won:
                 return False
             else:
-                # โจมตีชนะปกติ
-                # ✨ ใช้ฟังก์ชันที่แยกออกมาใน item_effects.py
                 effect_result = apply_post_crash_effects(self, p, captured_piece, False, sr, sc, er, ec)
-                
                 if effect_result == "defender_survived":
                     p.has_moved = True
                     self.history.save_state(self, f"{p.name} attacked but {captured_piece.name} survived at {er},{ec}")
@@ -190,6 +184,11 @@ class ChessBoard:
         self.last_move = state['last_move']
         self.en_passant_target = state['en_passant_target']
         self.game_result = state['game_result']
+        
+        # ✨ FIX: ดึงไอเทมของทั้ง 2 ฝ่ายกลับมาจากการเซฟ
+        self.inventory_white = state.get('inventory_white', [])
+        self.inventory_black = state.get('inventory_black', [])
+        
         return True
 
     def find_king(self, color):

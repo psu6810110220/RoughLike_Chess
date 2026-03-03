@@ -26,7 +26,10 @@ class HistoryManager:
             'current_turn': board_obj.current_turn,
             'last_move': board_obj.last_move,
             'en_passant_target': board_obj.en_passant_target,
-            'game_result': board_obj.game_result
+            'game_result': board_obj.game_result,
+            # ✨ FIX: เพิ่มการบันทึกสถานะของกระเป๋าไอเทมทั้งสองฝ่าย
+            'inventory_white': list(board_obj.inventory_white),
+            'inventory_black': list(board_obj.inventory_black)
         }
         self.state_history.append(state)
         self.move_text_history.append(move_text)
