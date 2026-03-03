@@ -2,20 +2,13 @@
 import random
 
 def toss_coin_ayothaya():
-    """ทำการทอยเหรียญ 1 ครั้ง ตามกติกา Crash: ก้อย(+0), เหลือง(+1), แดง(+2), น้ำเงิน(+3)"""
-    # ระดับ 1: ก้อย (30%) vs เหลือง (70%)
     if random.random() < 0.30:
         return 0, "Tails"
-    
-    # ถ้าได้เหลือง มีโอกาส 60% ที่จะสุ่มต่อไประดับ 2
     if random.random() < 0.60:
-        # ระดับ 2: เหลือง (60%) vs แดง (40%)
         if random.random() < 0.60:
             return 1, "Yellow Heads"
         else:
-            # ถ้าได้แดง มีโอกาส 30% ที่จะสุ่มต่อไประดับ 3
             if random.random() < 0.30:
-                # ระดับ 3: แดง (70%) vs น้ำเงิน (30%)
                 if random.random() < 0.70:
                     return 2, "Red Heads"
                 else:
@@ -26,14 +19,9 @@ def toss_coin_ayothaya():
         return 1, "Yellow Heads"
 
 def toss_coin_medieval():
-    """ทำการทอยเหรียญ Medieval (สำหรับ Medieval Knight): ก้อย(+0), ฟ้า(s+10), เขียว(+100)"""
-    # ระดับ 1: ก้อย (50%) vs ฟ้า (50%)
     if random.random() < 0.50:
         return 0, "Tails"
-
-    # ถ้าได้ฟ้า มีโอกาส 1% ที่จะสุ่มต่อไประดับ 2
     if random.random() < 0.01:
-        # ระดับ 2: เขียว (1%) vs ฟ้า (99%)
         if random.random() < 0.01:
             return 100, "Green Heads"
         else:
@@ -42,14 +30,9 @@ def toss_coin_medieval():
         return 10, "Cyan Heads"
 
 def toss_coin_demon():
-    """ทอยเหรียญของ Demon: ก้อย(-3), ส้ม(+4), ม่วง(+6)"""
-    # ก้อย ต่อ หัว 40:60
     if random.random() < 0.40:
         return -3, "Tails"
-    
-    # ถ้าได้ฟ้า มีโอกาส 20% ที่จะสุ่มต่อไประดับ 2
     if random.random() < 0.20:
-        # ระดับ 2: ม่วง (20%) vs ส้ม (80%)
         if random.random() < 0.20:
             return 4, "Purple Heads"
         else:
@@ -58,16 +41,12 @@ def toss_coin_demon():
         return 6, "Orange Heads"
 
 def toss_coin_heaven():
-    """ทอยเหรียญของ Heaven: ก้อย(+0), เหลือง(+1)"""
-    # ก้อย ต่อ หัว 50:50
     if random.random() < 0.50:
         return 0, "Tails"
     else:
         return 1, "Yellow Heads"
 
-# เพิ่มพารามิเตอร์ faction เข้ามาเพื่อให้โค้ดทำงานได้
 def calculate_total_points(base_points, num_coins, faction):
-    """คำนวณแต้มรวมทั้งหมดจากการวนลูปทอยเหรียญโดยอิงตามเผ่า"""
     total = base_points
     results = []
     heads_count = 0
@@ -85,39 +64,52 @@ def calculate_total_points(base_points, num_coins, faction):
         results.append(color)
         if "Heads" in color: heads_count += 1
 
-    # ระบบพิเศษของ Heaven (Milestone Bonus)
     if faction == "heaven":
-        if heads_count >= 3:
-            total += 3  # ทอยได้หัว 3 ครั้งขึ้นไป ได้โบนัส +3
-        if heads_count >= 6:
-            total += 3  # ทอยได้หัว 6 ครั้งขึ้นไป ได้โบนัสเพิ่มอีก +3 (รวมเป็น +6)
+        if heads_count >= 3: total += 3
+        if heads_count >= 6: total += 3
             
     return total, results
 
-# เพิ่มพารามิเตอร์ faction ของทั้งสองฝ่าย
 def resolve_crash(p1_name, p1_faction, p1_base, p1_coins, p2_name, p2_faction, p2_base, p2_coins):
-    """ฟังก์ชันหลักสำหรับตัดสินการ Crash"""
-    
-    # ใช้ while True เพื่อรองรับระบบพิเศษของ Demon ที่ต้องทอยใหม่
     while True:
         p1_total, p1_results = calculate_total_points(p1_base, p1_coins, p1_faction)
         p2_total, p2_results = calculate_total_points(p2_base, p2_coins, p2_faction)
-        
-        # ระบบพิเศษ Demon: หากมีการใช้ Unit Demon และผลลัพธ์แต้มของใครคนใดคนหนึ่งเป็น 0 ให้ทอยใหม่
         has_demon = (p1_faction == "demon" or p2_faction == "demon")
         if has_demon and (p1_total == 0 or p2_total == 0):
-            continue  # วนลูปทอยใหม่ทั้งหมด
-            
-        break  # ถ้าแต้มไม่ใช่ 0 หรือไม่มี Demon ให้ออกจากลูป
+            continue 
+        break 
     
     winner = None
-    if p1_total > p2_total:
-        winner = p1_name
-    elif p2_total > p1_total:
-        winner = p2_name
+    if p1_total > p2_total: winner = p1_name
+    elif p2_total > p1_total: winner = p2_name
         
     return {
         "p1": {"name": p1_name, "faction": p1_faction, "total": p1_total, "results": p1_results},
         "p2": {"name": p2_name, "faction": p2_faction, "total": p2_total, "results": p2_results},
         "winner": winner
     }
+
+def simulate_ai_crash_result(attacker, defender, a_faction, d_faction):
+    """จำลองผลการต่อสู้สำหรับ AI (รองรับระบบ Draw/Stagger และ Item)"""
+    a_base = getattr(attacker, 'base_points', 5)
+    a_coins = getattr(attacker, 'coins', 3)
+    d_base = getattr(defender, 'base_points', 5)
+    d_coins = getattr(defender, 'coins', 3)
+    
+    # ไอเทมที่มีผลก่อนเริ่ม Crash
+    if getattr(defender, 'item', None) and defender.item.id == 4:
+        return "blocked" # โล่สะท้อนการโจมตี
+    if getattr(defender, 'item', None) and defender.item.id == 8: a_coins = max(0, a_coins - 1)
+    if getattr(attacker, 'item', None) and attacker.item.id == 8: d_coins = max(0, d_coins - 1)
+    if getattr(defender, 'item', None) and defender.item.id == 2: a_coins = 0
+
+    stagger_count = 0
+    while True:
+        a_tot, _ = calculate_total_points(a_base, a_coins, a_faction)
+        d_tot, _ = calculate_total_points(d_base, d_coins, d_faction)
+        
+        if a_tot > d_tot: return "win"
+        elif a_tot == d_tot: continue
+        else:
+            stagger_count += 1
+            if stagger_count >= 2: return "died"
