@@ -28,7 +28,8 @@ class SetupSection(BoxLayout):
         for m in ['PVE', 'PVP']:
             card = UnitCard(text=f"[b]{m} Mode[/b]\n[size=14sp]{'Play vs AI' if m=='PVE' else '2 Players'}[/size]")
             card.val = m
-            card.bind(on_release=self.on_mode_select)
+            # ✨ เพิ่ม on_press=self.play_sound
+            card.bind(on_press=self.play_sound, on_release=self.on_mode_select)
             self.mode_cards.append(card)
             mode_grid.add_widget(card)
         self.mode_box.add_widget(mode_grid)
@@ -45,7 +46,8 @@ class SetupSection(BoxLayout):
         for mp in ['Classic Board', 'Enchanted Forest', 'Desert Ruins', 'Frozen Tundra', 'Random Board']:
             card = UnitCard(text=f"[b][size=16sp]{mp}[/size][/b]")
             card.val = mp
-            card.bind(on_release=self.on_map_select)
+            # ✨ เพิ่ม on_press=self.play_sound
+            card.bind(on_press=self.play_sound, on_release=self.on_map_select)
             self.map_cards.append(card)
             map_grid.add_widget(card)
         self.map_box.add_widget(map_grid)
@@ -65,7 +67,8 @@ class SetupSection(BoxLayout):
         for f in ['Medieval Knights', 'Ayothaya', 'Demon', 'Heaven']:
             card = UnitCard(text=f"[b][size=18sp]{f}[/size][/b]")
             card.val = f
-            card.bind(on_release=self.on_white_select)
+            # ✨ เพิ่ม on_press=self.play_sound
+            card.bind(on_press=self.play_sound, on_release=self.on_white_select)
             self.white_cards.append(card)
             self.w_box.add_widget(card)
         # ฝั่งดำ
@@ -75,7 +78,8 @@ class SetupSection(BoxLayout):
         for f in ['Medieval Knights', 'Ayothaya', 'Demon', 'Heaven']:
             card = UnitCard(text=f"[b][size=18sp]{f}[/size][/b]")
             card.val = f
-            card.bind(on_release=self.on_black_select)
+            # ✨ เพิ่ม on_press=self.play_sound
+            card.bind(on_press=self.play_sound, on_release=self.on_black_select)
             self.black_cards.append(card)
             self.b_box.add_widget(card)
             
@@ -85,6 +89,11 @@ class SetupSection(BoxLayout):
         self.add_widget(self.fac_box)
 
         self.update_selections()
+
+    # ✨ ฟังก์ชันช่วยดึงคำสั่งเสียงจากตัวแอปมาเล่น
+    def play_sound(self, instance):
+        if hasattr(self.app, 'play_click_sound'):
+            self.app.play_click_sound()
 
     def update_selections(self):
         for c in self.mode_cards: c.set_selected(c.val == self.app.game_mode)

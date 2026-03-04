@@ -28,18 +28,18 @@ class MainMenuScreen(Screen):
         # Buttons
         btn_box = BoxLayout(orientation='vertical', spacing=15, size_hint=(0.4, 0.5), pos_hint={'center_x': 0.5})
         
+        # ✨ เพิ่ม on_press=self.play_btn_sound ให้เสียงดังทันทีที่กด ไม่ต้องรอตอนปล่อยนิ้ว
         play_btn = Button(text="PLAY", background_color=(1, 0.3, 0, 1), bold=True, font_size='24sp')
-        play_btn.bind(on_release=self.go_play)
+        play_btn.bind(on_press=self.play_btn_sound, on_release=self.go_play)
         
         tutorial_btn = Button(text="TUTORIAL", background_color=(0.1, 0.6, 0.8, 1), bold=True, font_size='24sp')
-        tutorial_btn.bind(on_release=self.go_tutorial)
+        tutorial_btn.bind(on_press=self.play_btn_sound, on_release=self.go_tutorial)
         
         opt_btn = Button(text="Options", background_color=(0.2, 0.2, 0.3, 1))
-        # ✨ FIX: เพิ่มคำสั่ง bind ให้ปุ่ม Options ทำงานแล้วครับ
-        opt_btn.bind(on_release=self.go_options) 
+        opt_btn.bind(on_press=self.play_btn_sound, on_release=self.go_options) 
         
         exit_btn = Button(text="Exit", background_color=(0.5, 0.1, 0.1, 1))
-        exit_btn.bind(on_release=self.do_exit)
+        exit_btn.bind(on_press=self.play_btn_sound, on_release=self.do_exit)
         
         btn_box.add_widget(play_btn)
         btn_box.add_widget(tutorial_btn)
@@ -51,24 +51,21 @@ class MainMenuScreen(Screen):
         
         self.add_widget(layout)
 
-    # ✨ สร้างฟังก์ชันแยกสำหรับแต่ละปุ่ม เพื่อให้เล่นเสียง Click ก่อนเปลี่ยนหน้าได้
-    def play_btn_sound(self):
+    # ✨ ให้ฟังก์ชันรองรับ instance เพื่อใช้กับ on_press ได้
+    def play_btn_sound(self, instance=None):
         app = App.get_running_app()
         if hasattr(app, 'play_click_sound'):
             app.play_click_sound()
 
+    # ✨ เอาการเล่นเสียงออกจาก on_release เพื่อไม่ให้เสียงซ้อนทับกัน
     def go_play(self, instance):
-        self.play_btn_sound()
         self.manager.current = 'setup'
 
     def go_tutorial(self, instance):
-        self.play_btn_sound()
         self.manager.current = 'tutorial'
 
     def go_options(self, instance):
-        self.play_btn_sound()
         self.manager.current = 'options'
 
     def do_exit(self, instance):
-        self.play_btn_sound()
         App.get_running_app().stop()
