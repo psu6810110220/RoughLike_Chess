@@ -169,7 +169,31 @@ class GameplayScreen(Screen):
         cp = self.game.find_king(self.game.current_turn) if self.game.is_in_check(self.game.current_turn) else None
         for (r, c), sq in self.squares.items():
             il = (r, c) in (self.game.last_move or [])
-            sq.update_square_style(highlight=(self.selected == (r, c)), is_legal=((r,c) in legal_moves), is_check=((r,c) == cp), is_last=il)
+            
+            # ✨ แยกแยะประเภทตาเดินเพื่อแสดงสี
+            is_legal = (r, c) in legal_moves
+            is_attack = False
+            
+            # ถ้าตาเดินนี้ถูกกฎ ให้เช็คว่าเป็นตาเดินกินหมากหรือไม่
+            if is_legal and self.selected:
+                target_piece = self.game.board[r][c]
+                selected_piece = self.game.board[self.selected[0]][self.selected[1]]
+                # ถ้ามีหมากศัตรูอยู่ หรือ เป็นกฎอองปาสอง (En Passant)
+                if target_piece and target_piece.color != selected_piece.color:
+                    is_attack = True
+                elif not target_piece and hasattr(selected_piece, 'type') and selected_piece.type == 'pawn':
+                    # ดักเคสพิเศษ En Passant ของเบี้ย
+                    sr, sc = self.selected
+                    if sc != c: # ถ้าเดินเฉียงแต่ไม่มีหมาก แปลว่าเป็น En Passant
+                        is_attack = True
+
+            # สั่ง update style: ถ้าเป็นตาเดินโจมตี ให้ส่ง is_legal เป็น 'attack' (เพื่อให้ Square จัดการต่อ)
+            sq.update_square_style(
+                highlight=(self.selected == (r, c)), 
+                is_legal=('attack' if is_attack else is_legal), # ส่ง 'attack' ไปแทน True
+                is_check=((r,c) == cp), 
+                is_last=il
+            )
             p = self.game.board[r][c]; sq.set_piece_icon(self.get_piece_image_path(p) if p else None, piece=p)
         self.sidebar.update_history_text(self.game.history.move_text_history)
 
@@ -190,6 +214,10 @@ class GameplayScreen(Screen):
 
     def on_square_tap(self, instance):
         App.get_running_app().play_click_sound() 
+        
+        # ✨ 1. ล็อกกระดาน! ถ้าระบบ Crash กำลังแสดงอยู่ ห้ามกดช่องอื่นเด็ดขาด
+        if getattr(self, 'crash_popup', None):
+            return
         
         if self.game.game_result: return
         if getattr(self, 'game_mode', 'PVP') == 'PVE' and self.game.current_turn == 'black': return
@@ -224,6 +252,7 @@ class GameplayScreen(Screen):
             res = self.game.move_piece(sr, sc, r, c)
             if isinstance(res, tuple) and res[0] == "crash": self.show_crash_overlay(res[1], res[2], (sr, sc), (r, c)); return
             
+            # ✨ เล่นเสียงเวลาเดินหมากบนกระดานปกติ
             if res in [True, "promote", "died"]:
                 App.get_running_app().play_move_sound()
 
@@ -255,6 +284,7 @@ class GameplayScreen(Screen):
             
         res = self.game.move_piece(start_pos[0], start_pos[1], end_pos[0], end_pos[1], resolve_crash=True, crash_won=(crash_status in ["won", "died"]))
         
+        # ✨ เล่นเสียงเดินหมากหลังต่อสู้เสร็จ
         if res in [True, "promote", "died"]:
             App.get_running_app().play_move_sound()
 
@@ -283,6 +313,10 @@ class GameplayScreen(Screen):
     def on_item_click(self, item):
         App.get_running_app().play_click_sound()
         
+        # ✨ 2. ล็อกไอเทม! ห้ามเปลี่ยนหรือกดใช้ไอเทมระหว่างสู้
+        if getattr(self, 'crash_popup', None):
+            return
+            
         if self.selected_item == item: self.selected_item = None; self.hide_item_tooltip()
         else: self.selected_item = item; self.show_item_tooltip(item)
         self.update_inventory_ui() 
@@ -314,6 +348,7 @@ class GameplayScreen(Screen):
             if res == "promote":
                 from logic.pieces import Queen; self.game.promote_pawn(er, ec, Queen)
                 
+            # ✨ เสียงเดินหมากของบอท
             if res in [True, "promote", "died"]:
                 App.get_running_app().play_move_sound()
                 
@@ -327,6 +362,11 @@ class GameplayScreen(Screen):
     
     def on_undo_click(self):
         App.get_running_app().play_click_sound() 
+        
+        # ✨ 3. ล็อกปุ่ม Undo! ห้ามกดย้อนกลับระหว่างที่กำลังสู้กัน
+        if getattr(self, 'crash_popup', None):
+            return
+            
         if self.game.undo_move(): self.selected = None; self.init_board_ui()
         
     def show_piece_status(self, piece):
