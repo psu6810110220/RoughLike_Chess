@@ -1,7 +1,7 @@
 # screens/gameplay_screen.py
 import random
 from kivy.app import App
-from kivy.graphics import Rectangle, Color, Line
+from kivy.graphics import Rectangle, Color, Line, RoundedRectangle # ✨ เพิ่ม Line และ RoundedRectangle
 from kivy.uix.screenmanager import Screen
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.boxlayout import BoxLayout
@@ -36,12 +36,18 @@ class InventorySlot(ButtonBehavior, BoxLayout):
     def __init__(self, img_path='', is_selected=False, **kwargs):
         super().__init__(padding=dp(5), **kwargs)
         with self.canvas.before:
-            self.bg_color = Color(0.2, 0.5, 0.2, 1) if is_selected else Color(0.15, 0.15, 0.15, 1)
-            self.bg_rect = Rectangle(pos=self.pos, size=self.size)
+            # ✨ อัปเกรดเป็น Glassmorphism ขอบทอง
+            self.bg_color = Color(0.15, 0.2, 0.15, 0.85) if is_selected else Color(0.1, 0.1, 0.12, 0.7)
+            self.bg_rect = RoundedRectangle(radius=[10])
+            self.border_color = Color(0.83, 0.68, 0.21, 1) if is_selected else Color(0.3, 0.3, 0.35, 1)
+            self.border_line = Line(rounded_rectangle=[self.x, self.y, self.width, self.height, 10], width=2.0 if is_selected else 1.2)
+            
         self.bind(pos=self._update_bg, size=self._update_bg)
         if img_path: self.add_widget(Image(source=img_path, allow_stretch=True, keep_ratio=True))
+        
     def _update_bg(self, instance, value):
         self.bg_rect.pos, self.bg_rect.size = instance.pos, instance.size
+        self.border_line.rounded_rectangle = [instance.x, instance.y, instance.width, instance.height, 10]
 
 class PromotionPopup(ModalView):
     def __init__(self, color, callback, **kwargs):
@@ -63,11 +69,27 @@ class GameplayScreen(Screen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.root_layout = FloatLayout()
+        
+        # ✨ 1. เพิ่มพื้นหลังของเกมเพลย์ให้เป็นรูปลานประลองแบบเบลอมืดๆ
+        with self.root_layout.canvas.before:
+            Color(1, 1, 1, 1)
+            self.main_bg_image = Rectangle(source='assets/ui/backgrounds/menu_bg.png', pos=self.pos, size=self.size)
+            Color(0.02, 0.02, 0.04, 0.9) # ทับให้มืดลง 90% ดันกระดานให้เด่น
+            self.main_bg_overlay = Rectangle(pos=self.pos, size=self.size)
+            
+        self.bind(pos=self._update_main_bg, size=self._update_main_bg)
+
         self.main_layout = BoxLayout(orientation='horizontal')
         self.root_layout.add_widget(self.main_layout)
         self.add_widget(self.root_layout)
         self.status_popup = self.crash_popup = self.item_tooltip = self.selected_item = None
         self._game_over_scheduled = False
+
+    def _update_main_bg(self, *args):
+        self.main_bg_image.pos = self.pos
+        self.main_bg_image.size = self.size
+        self.main_bg_overlay.pos = self.pos
+        self.main_bg_overlay.size = self.size
 
     def get_tribe_name(self, color):
         theme = getattr(App.get_running_app(), f'selected_unit_{color}', 'Medieval Knights')
@@ -86,7 +108,8 @@ class GameplayScreen(Screen):
         else: self.game = ChessBoard(self.get_tribe_name('white'), self.get_tribe_name('black'), map_name=chosen_map)
 
         self.board_area = BoxLayout(orientation='vertical', size_hint_x=0.75)
-        self.info_label = Label(text="WHITE'S TURN", size_hint_y=0.08, color=(1, 0.8, 0.2, 1), bold=True, font_size='22sp', markup=True)
+        # ✨ เปลี่ยนสีจากเหลืองสว่างเป็นสีทอง (0.83, 0.68, 0.21, 1)
+        self.info_label = Label(text="WHITE'S TURN", size_hint_y=0.08, color=(0.83, 0.68, 0.21, 1), bold=True, font_size='22sp', markup=True)
         self.board_area.add_widget(self.info_label)
         self.play_area = BoxLayout(orientation='vertical', size_hint_y=0.92)
         self.board_anchor = AnchorLayout(anchor_x='center', anchor_y='center', size_hint_y=0.82)
@@ -94,7 +117,7 @@ class GameplayScreen(Screen):
         self.inv_anchor = AnchorLayout(anchor_x='center', anchor_y='top', size_hint_y=0.18, padding=[0, dp(10), 0, dp(20)])
         self.inventory_layout = BoxLayout(orientation='horizontal', size_hint_x=0.85, spacing=dp(10), padding=dp(10))
         with self.inventory_layout.canvas.before:
-            Color(0.07, 0.07, 0.09, 1); self.inv_bg = Rectangle(pos=self.inventory_layout.pos, size=self.inventory_layout.size)
+            Color(0.05, 0.05, 0.07, 0.6); self.inv_bg = Rectangle(pos=self.inventory_layout.pos, size=self.inventory_layout.size)
         self.inventory_layout.bind(pos=self._update_inv_bg, size=self._update_inv_bg)
         self.inv_anchor.add_widget(self.inventory_layout)
         self.play_area.add_widget(self.inv_anchor); self.board_area.add_widget(self.play_area)
@@ -102,7 +125,7 @@ class GameplayScreen(Screen):
         
         self.sidebar_panel = BoxLayout(orientation='vertical', size_hint_x=0.25, padding=10, spacing=10)
         with self.sidebar_panel.canvas.before:
-            Color(0.05, 0.05, 0.07, 1); self.sb_bg = Rectangle(pos=self.sidebar_panel.pos, size=self.sidebar_panel.size)
+            Color(0.03, 0.03, 0.05, 0.85); self.sb_bg = Rectangle(pos=self.sidebar_panel.pos, size=self.sidebar_panel.size)
         self.sidebar_panel.bind(pos=self._update_sb_bg, size=self._update_sb_bg)
         self.info_zone = BoxLayout(orientation='vertical', size_hint_y=0.45); self.sidebar_panel.add_widget(self.info_zone)
         self.divider = Widget(size_hint_y=None, height=dp(2))
@@ -156,7 +179,6 @@ class GameplayScreen(Screen):
                     App.get_running_app().play_victory_sound()
                 elif "BLACK WINS" in self.game.game_result.upper() and getattr(self, 'game_mode', 'PVP') == 'PVE':
                     App.get_running_app().play_lose_sound()
-                # ลบเสียง Draw ออกจากตรงนี้แล้วครับ ✨
                 self._end_played = True
 
             if not self._game_over_scheduled: 
@@ -169,28 +191,21 @@ class GameplayScreen(Screen):
         cp = self.game.find_king(self.game.current_turn) if self.game.is_in_check(self.game.current_turn) else None
         for (r, c), sq in self.squares.items():
             il = (r, c) in (self.game.last_move or [])
-            
-            # ✨ แยกแยะประเภทตาเดินเพื่อแสดงสี
             is_legal = (r, c) in legal_moves
             is_attack = False
             
-            # ถ้าตาเดินนี้ถูกกฎ ให้เช็คว่าเป็นตาเดินกินหมากหรือไม่
             if is_legal and self.selected:
                 target_piece = self.game.board[r][c]
                 selected_piece = self.game.board[self.selected[0]][self.selected[1]]
-                # ถ้ามีหมากศัตรูอยู่ หรือ เป็นกฎอองปาสอง (En Passant)
                 if target_piece and target_piece.color != selected_piece.color:
                     is_attack = True
                 elif not target_piece and hasattr(selected_piece, 'type') and selected_piece.type == 'pawn':
-                    # ดักเคสพิเศษ En Passant ของเบี้ย
                     sr, sc = self.selected
-                    if sc != c: # ถ้าเดินเฉียงแต่ไม่มีหมาก แปลว่าเป็น En Passant
-                        is_attack = True
+                    if sc != c: is_attack = True
 
-            # สั่ง update style: ถ้าเป็นตาเดินโจมตี ให้ส่ง is_legal เป็น 'attack' (เพื่อให้ Square จัดการต่อ)
             sq.update_square_style(
                 highlight=(self.selected == (r, c)), 
-                is_legal=('attack' if is_attack else is_legal), # ส่ง 'attack' ไปแทน True
+                is_legal=('attack' if is_attack else is_legal), 
                 is_check=((r,c) == cp), 
                 is_last=il
             )
@@ -215,36 +230,19 @@ class GameplayScreen(Screen):
     def on_square_tap(self, instance):
         App.get_running_app().play_click_sound() 
         
-        # ✨ 1. ล็อกกระดาน! ถ้าระบบ Crash กำลังแสดงอยู่ ห้ามกดช่องอื่นเด็ดขาด
-        if getattr(self, 'crash_popup', None):
-            return
-        
+        if getattr(self, 'crash_popup', None): return
         if self.game.game_result: return
         if getattr(self, 'game_mode', 'PVP') == 'PVE' and self.game.current_turn == 'black': return
         
         r, c = instance.row, instance.col; piece = self.game.board[r][c]
         if self.selected_item:
             if piece and piece.color == self.game.current_turn:
-                
-                # 🚫 ✨ FIX: ดักจับไม่ให้สวมใส่ Item 9 ให้กับหมาก Knight
                 if self.selected_item.id == 9 and piece.__class__.__name__.lower() == 'knight':
-                    # ยกเลิกการเลือกไอเทมไปเลย (หรือจะใส่ Popup แจ้งเตือนผู้เล่นเพิ่มก็ได้)
-                    self.selected_item = None
-                    self.hide_item_tooltip()
-                    self.refresh_ui()
-                    return
-                
-                # 🚫 ✨ FIX: ดักจับไม่ให้สวมใส่ Item 10 ให้กับหมากที่ "ไม่ใช่" Pawn
+                    self.selected_item = None; self.hide_item_tooltip(); self.refresh_ui(); return
                 if self.selected_item.id == 10 and piece.__class__.__name__.lower() != 'pawn':
-                    self.selected_item = None
-                    self.hide_item_tooltip()
-                    self.refresh_ui()
-                    return
+                    self.selected_item = None; self.hide_item_tooltip(); self.refresh_ui(); return
                 
-                # ถ้าไม่ใช่ Knight ค่อยให้สวมใส่ไอเทมตามปกติ
                 piece.item = self.selected_item
-                
-                # ✨ RESTORE: เอาระบบคำนวณ Stat พิเศษของไอเทมกลับมา
                 if piece.item.id == 6: 
                     piece.coins += 1; piece.base_points = max(0, piece.base_points - 1)
                 elif piece.item.id == 10 and piece.__class__.__name__.lower() == 'pawn': 
@@ -261,19 +259,13 @@ class GameplayScreen(Screen):
                 self.selected = (r, c); self.refresh_ui(self.game.get_legal_moves((r, c))); self.show_piece_status(piece)
         else:
             sr, sc = self.selected
-            
             if sr == r and sc == c:
-                self.selected = None
-                self.hide_piece_status()
-                self.refresh_ui()
-                return
+                self.selected = None; self.hide_piece_status(); self.refresh_ui(); return
                 
             res = self.game.move_piece(sr, sc, r, c)
             if isinstance(res, tuple) and res[0] == "crash": self.show_crash_overlay(res[1], res[2], (sr, sc), (r, c)); return
             
-            # ✨ เล่นเสียงเวลาเดินหมากบนกระดานปกติ
-            if res in [True, "promote", "died"]:
-                App.get_running_app().play_move_sound()
+            if res in [True, "promote", "died"]: App.get_running_app().play_move_sound()
 
             if res == "promote":
                 self.hide_piece_status()
@@ -287,51 +279,34 @@ class GameplayScreen(Screen):
 
     def execute_board_move(self, start_pos, end_pos, crash_status):
         self.cancel_crash()
-        
-        # ✨ เพิ่มเสียง Draw สำหรับ Crash ฝั่งผู้เล่น
-        if crash_status in ["won", "died"]:
-            App.get_running_app().play_crash_win_sound()
-        elif crash_status == "draw":
-            App.get_running_app().play_draw_sound()
+        if crash_status in ["won", "died"]: App.get_running_app().play_crash_win_sound()
+        elif crash_status == "draw": App.get_running_app().play_draw_sound()
 
         if crash_status == "blocked":
             atk, df = self.game.board[start_pos[0]][start_pos[1]], self.game.board[end_pos[0]][end_pos[1]]
             if df: df.item = None
             if atk: atk.has_moved = True
-            self.game.history.save_state(self.game, "Shield Blocked!")
-            self.game.complete_turn()
-            
-            # ✨ FIX: เปลี่ยนมาใช้ init_board_ui() เพื่อบังคับให้ระบบวาดกระดานใหม่และพลิกหน้าจอตามเทิร์น
-            self.init_board_ui() 
-            self.check_ai_turn()
+            self.game.history.save_state(self.game, "Shield Blocked!"); self.game.complete_turn(); self.init_board_ui(); self.check_ai_turn()
             return
             
         res = self.game.move_piece(start_pos[0], start_pos[1], end_pos[0], end_pos[1], resolve_crash=True, crash_won=crash_status)
-        
-        # ✨ เล่นเสียงเดินหมากหลังต่อสู้เสร็จ
-        if res in [True, "promote", "died"]:
-            App.get_running_app().play_move_sound()
+        if res in [True, "promote", "died"]: App.get_running_app().play_move_sound()
 
         if res == "promote":
             def do_p(cls): 
                 self.game.promote_pawn(end_pos[0], end_pos[1], cls); pop.dismiss(); self.init_board_ui(); self.check_ai_turn()
             pop = PromotionPopup(self.game.board[end_pos[0]][end_pos[1]].color, do_p); pop.open()
-            
-        # ✨ FIX: เพิ่ม "survived" และ "defender_survived" เข้าไป เพื่อให้ระบบเรียก init_board_ui() เพื่อพลิกกระดาน
         elif res in [True, "died", "survived", "defender_survived"]: 
-            self.selected = None
-            self.init_board_ui() 
-            self.check_ai_turn()
+            self.selected = None; self.init_board_ui(); self.check_ai_turn()
         else: 
-            self.selected = None
-            self.refresh_ui()
-            self.check_ai_turn()
+            self.selected = None; self.refresh_ui(); self.check_ai_turn()
 
     def update_inventory_ui(self):
         self.inventory_layout.clear_widgets()
         info_box = BoxLayout(orientation='vertical', size_hint_x=None, width=dp(120))
         info_box.add_widget(Label(text="INVENTORY", bold=True, font_size='14sp', color=(0.8, 0.8, 0.8, 1)))
-        info_box.add_widget(Label(text=f"[{self.game.current_turn.upper()}]", bold=True, font_size='16sp', color=(1, 0.8, 0.2, 1)))
+        # ✨ เปลี่ยนสี [WHITE] / [BLACK] ให้เป็นทอง
+        info_box.add_widget(Label(text=f"[{self.game.current_turn.upper()}]", bold=True, font_size='16sp', color=(0.83, 0.68, 0.21, 1)))
         self.inventory_layout.add_widget(info_box)
         inv = getattr(self.game, f'inventory_{self.game.current_turn}', [])
         for i in range(5):
@@ -342,10 +317,7 @@ class GameplayScreen(Screen):
 
     def on_item_click(self, item):
         App.get_running_app().play_click_sound()
-        
-        # ✨ 2. ล็อกไอเทม! ห้ามเปลี่ยนหรือกดใช้ไอเทมระหว่างสู้
-        if getattr(self, 'crash_popup', None):
-            return
+        if getattr(self, 'crash_popup', None): return
             
         if self.selected_item == item: self.selected_item = None; self.hide_item_tooltip()
         else: self.selected_item = item; self.show_item_tooltip(item)
@@ -369,19 +341,13 @@ class GameplayScreen(Screen):
                 r = simulate_ai_crash_result(atk, df, self.get_tribe_name(atk.color), self.get_tribe_name(df.color))
                 res = self.game.move_piece(sr, sc, er, ec, resolve_crash=True, crash_won=r)
                 
-                # ✨ เพิ่มเสียง Draw สำหรับ Crash ฝั่งบอท
-                if r in ["win", "died"]:
-                    App.get_running_app().play_crash_win_sound()
-                elif r == "draw":
-                    App.get_running_app().play_draw_sound()
+                if r in ["win", "died"]: App.get_running_app().play_crash_win_sound()
+                elif r == "draw": App.get_running_app().play_draw_sound()
                 
             if res == "promote":
                 from logic.pieces import Queen; self.game.promote_pawn(er, ec, Queen)
                 
-            # ✨ เสียงเดินหมากของบอท
-            if res in [True, "promote", "died"]:
-                App.get_running_app().play_move_sound()
-                
+            if res in [True, "promote", "died"]: App.get_running_app().play_move_sound()
             self.init_board_ui()
 
     def on_quit(self): 
@@ -392,11 +358,7 @@ class GameplayScreen(Screen):
     
     def on_undo_click(self):
         App.get_running_app().play_click_sound() 
-        
-        # ✨ 3. ล็อกปุ่ม Undo! ห้ามกดย้อนกลับระหว่างที่กำลังสู้กัน
-        if getattr(self, 'crash_popup', None):
-            return
-            
+        if getattr(self, 'crash_popup', None): return
         if self.game.undo_move(): self.selected = None; self.init_board_ui()
         
     def show_piece_status(self, piece):

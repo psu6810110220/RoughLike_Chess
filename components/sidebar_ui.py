@@ -2,22 +2,23 @@
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.label import Label
-from kivy.uix.button import Button
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.widget import Widget
 from kivy.graphics import Color, Rectangle
 from kivy.clock import Clock
 from kivy.metrics import dp
+# ✨ นำเข้าปุ่มแบบ 3D จากหน้า Main Menu
+from screens.main_menu import RoundedButton 
 
 class SidebarUI(BoxLayout):
     def __init__(self, on_undo_callback, on_quit_callback, **kwargs):
         super().__init__(orientation='vertical', spacing=10, **kwargs)
         
-        # 1. หัวข้อ Move History
+        # 1. หัวข้อ Move History (✨ เปลี่ยนเป็นสีทอง #d4af37)
         title = Label(
             text="[b]Move History[/b]", 
             markup=True,
-            color=(1, 0.8, 0.2, 1), 
+            color=(0.83, 0.68, 0.21, 1), 
             size_hint_y=None, 
             height=dp(30), 
             font_size='18sp'
@@ -51,14 +52,11 @@ class SidebarUI(BoxLayout):
             scroll_type=['bars', 'content'] 
         )
         
-        # ✨ จุดแก้ไข: สร้าง Wrapper เพื่อดันข้อความให้ "ชิดบน" เสมอ
         self.history_wrapper = BoxLayout(orientation='vertical', size_hint_y=None)
         
-        # ตารางสำหรับใส่ข้อความ
         self.history_grid = GridLayout(cols=3, size_hint_y=None, spacing=[0, dp(5)])
         self.history_grid.bind(minimum_height=self.history_grid.setter('height'))
         
-        # ฟังก์ชันคำนวณความสูงให้ตัวดันทำงาน
         def update_wrapper_height(*args):
             self.history_wrapper.height = max(self.history_grid.minimum_height, self.scroll.height)
             
@@ -66,18 +64,18 @@ class SidebarUI(BoxLayout):
         self.scroll.bind(height=update_wrapper_height)
         
         self.history_wrapper.add_widget(self.history_grid)
-        self.history_wrapper.add_widget(Widget()) # ตัว Spacer ล่องหน ดันประวัติขึ้นไปติดด้านบน
+        self.history_wrapper.add_widget(Widget()) 
         
         self.scroll.add_widget(self.history_wrapper)
         self.add_widget(self.scroll)
         
-        # 4. โซนปุ่มกด
+        # 4. โซนปุ่มกด (✨ เปลี่ยนไปใช้ RoundedButton 3D)
         btn_layout = BoxLayout(orientation='vertical', size_hint_y=None, height=dp(110), spacing=10, padding=[0, 10, 0, 0])
         
-        undo_btn = Button(text="Undo Move", bold=True, font_size='18sp', background_color=(0.6, 0.2, 0.2, 1))
+        undo_btn = RoundedButton(text="Undo Move", bold=True, font_size='18sp', normal_color=(0.55, 0.15, 0.15, 0.95))
         undo_btn.bind(on_release=lambda x: on_undo_callback())
         
-        quit_btn = Button(text="Quit Match", bold=True, font_size='18sp', background_color=(0.4, 0.1, 0.1, 1))
+        quit_btn = RoundedButton(text="Quit Match", bold=True, font_size='18sp', normal_color=(0.35, 0.05, 0.05, 0.95))
         quit_btn.bind(on_release=lambda x: on_quit_callback())
         
         btn_layout.add_widget(undo_btn)
@@ -92,25 +90,20 @@ class SidebarUI(BoxLayout):
             return
 
         turn = 1
-        # ดึงข้อมูลมาทีละ 2 ช่อง (ฝั่งขาวและดำ)
         for i in range(0, len(text_list), 2):
             white_move = text_list[i]
             black_move = text_list[i+1] if i+1 < len(text_list) else ""
             
-            # 1. เลขเทิร์น
             self.history_grid.add_widget(Label(text=f"{turn}.", size_hint_y=None, height=dp(24), size_hint_x=0.2, color=(0.8,0.8,0.8,1)))
             
-            # 2. ฝั่งขาว
             w_lbl = Label(text=white_move, size_hint_y=None, height=dp(24), size_hint_x=0.4, halign='left', shorten=True, shorten_from='right', color=(1,1,1,1))
             w_lbl.bind(size=w_lbl.setter('text_size'))
             self.history_grid.add_widget(w_lbl)
             
-            # 3. ฝั่งดำ
             b_lbl = Label(text=black_move, size_hint_y=None, height=dp(24), size_hint_x=0.4, halign='left', shorten=True, shorten_from='right', color=(0.7,0.7,0.7,1))
             b_lbl.bind(size=b_lbl.setter('text_size'))
             self.history_grid.add_widget(b_lbl)
             
             turn += 1
             
-        # สั่งให้ Scrollbar ไหลลงมาอยู่ล่างสุดเสมอ (ดีเลย์ 0.1 วิ ให้ระบบวาดตารางให้เสร็จก่อน)
         Clock.schedule_once(lambda dt: setattr(self.scroll, 'scroll_y', 0), 0.1)
