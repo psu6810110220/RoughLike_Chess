@@ -108,12 +108,13 @@ class OptionsScreen(Screen):
             btn.set_selected(val == selected_val)
 
     def on_volume_change(self, instance, value):
-        # ใส่ Logic ปรับเสียงเพลงของแอปคุณตรงนี้
-        pass
+        # ปรับระดับเสียง BGM ของแอป
+        App.get_running_app().set_bgm_volume(value)
 
     def toggle_mute(self, instance):
         App.get_running_app().play_click_sound()
         self.vol_slider.value = 0
+        App.get_running_app().set_bgm_volume(0)
 
     def go_back(self, instance):
         App.get_running_app().play_click_sound()
