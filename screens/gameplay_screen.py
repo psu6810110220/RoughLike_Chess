@@ -55,7 +55,6 @@ class PromotionPopup(ModalView):
             mapping = {'queen': '2', 'rook': '3', 'knight': '4', 'bishop': '5'}
             path = f"assets/pieces/{tf}/{color}/chess {tf}{mapping[n]}.png"
             btn = Button(background_normal=path)
-            # ✨ เพิ่มเสียงคลิกเวลากดเลือกหมากที่จะโปรโมท
             btn.bind(on_release=lambda b, c=cls: (App.get_running_app().play_click_sound(), callback(c)))
             layout.add_widget(btn)
         self.add_widget(layout)
@@ -119,7 +118,6 @@ class GameplayScreen(Screen):
     def _update_div_bg(self, instance, value): self.div_rect.pos, self.div_rect.size = instance.pos, instance.size
 
     def _update_bg(self, *args):
-        # ล็อคพิกัดพื้นหลังกระดาน
         if hasattr(self, 'bg_rect') and hasattr(self, 'grid'):
             self.bg_rect.pos, self.bg_rect.size = self.grid.pos, self.grid.size
 
@@ -153,18 +151,22 @@ class GameplayScreen(Screen):
         if self.game.game_result:
             self.info_label.text = f"[color=ff3333][b]{self.game.game_result}[/b][/color]"
             
-            # เช็คเงื่อนไขชนะ: ถ้าผู้เล่น (ฝั่งขาว) ชนะ และกำลังเล่น PVE ให้เปิดเพลง Victory
-            if "WHITE WINS" in self.game.game_result.upper() and getattr(self, 'game_mode', 'PVP') == 'PVE':
-                if not getattr(self, '_victory_played', False):
+            # ✨ ระบบเสียงตอนจบเกม ครบทั้ง 3 รูปแบบ (ชนะ, แพ้, เสมอ)
+            if not getattr(self, '_end_played', False):
+                if "WHITE WINS" in self.game.game_result.upper() and getattr(self, 'game_mode', 'PVP') == 'PVE':
                     App.get_running_app().play_victory_sound()
-                    self._victory_played = True
+                elif "BLACK WINS" in self.game.game_result.upper() and getattr(self, 'game_mode', 'PVP') == 'PVE':
+                    App.get_running_app().play_lose_sound()
+                elif "DRAW" in self.game.game_result.upper():
+                    App.get_running_app().play_draw_sound()
+                self._end_played = True
 
             if not self._game_over_scheduled: 
                 self._game_over_scheduled = True
                 Clock.schedule_once(self.auto_quit_to_setup, 2.5)
         else: 
             self.info_label.text = f"{self.game.current_turn.upper()}'S TURN"
-            self._victory_played = False # รีเซ็ตเพลงให้พร้อมสำหรับรอบต่อไป
+            self._end_played = False 
 
         cp = self.game.find_king(self.game.current_turn) if self.game.is_in_check(self.game.current_turn) else None
         for (r, c), sq in self.squares.items():
@@ -189,11 +191,9 @@ class GameplayScreen(Screen):
         return f"assets/pieces/{tf}/{p_c}/chess {tf}{num}.png"
 
     def on_square_tap(self, instance):
-        # ✨ เพิ่มเสียงคลิกเวลากดเลือกหมากหรือเดินบนกระดาน
-        App.get_running_app().play_click_sound()
+        App.get_running_app().play_click_sound() 
         
         if self.game.game_result: return
-        
         if getattr(self, 'game_mode', 'PVP') == 'PVE' and self.game.current_turn == 'black': return
         
         r, c = instance.row, instance.col; piece = self.game.board[r][c]
@@ -218,6 +218,9 @@ class GameplayScreen(Screen):
             sr, sc = self.selected; res = self.game.move_piece(sr, sc, r, c)
             if isinstance(res, tuple) and res[0] == "crash": self.show_crash_overlay(res[1], res[2], (sr, sc), (r, c)); return
             
+            # ✨ เล่นเสียงเวลาเดินหมากบนกระดานปกติ
+            App.get_running_app().play_move_sound()
+
             if res == "promote":
                 self.hide_piece_status()
                 def do_p(cls): 
@@ -231,6 +234,10 @@ class GameplayScreen(Screen):
     def execute_board_move(self, start_pos, end_pos, crash_status):
         self.cancel_crash()
         
+        # ✨ เล่นเสียง Stagger/Crash Win ถ้าผลลัพธ์คือมีหมากตายในการต่อสู้
+        if crash_status in ["won", "died"]:
+            App.get_running_app().play_crash_win_sound()
+
         if crash_status == "blocked":
             atk, df = self.game.board[start_pos[0]][start_pos[1]], self.game.board[end_pos[0]][end_pos[1]]
             if df: df.item = None
@@ -240,6 +247,9 @@ class GameplayScreen(Screen):
             
         res = self.game.move_piece(start_pos[0], start_pos[1], end_pos[0], end_pos[1], resolve_crash=True, crash_won=(crash_status in ["won", "died"]))
         
+        # ✨ เล่นเสียงเดินหมากหลังต่อสู้เสร็จ
+        App.get_running_app().play_move_sound()
+
         if res == "promote":
             def do_p(cls): 
                 self.game.promote_pawn(end_pos[0], end_pos[1], cls); pop.dismiss(); self.init_board_ui(); self.check_ai_turn()
@@ -263,7 +273,6 @@ class GameplayScreen(Screen):
             else: self.inventory_layout.add_widget(InventorySlot())
 
     def on_item_click(self, item):
-        # ✨ เพิ่มเสียงคลิกเวลากดเลือกใช้ไอเทม
         App.get_running_app().play_click_sound()
         
         if self.selected_item == item: self.selected_item = None; self.hide_item_tooltip()
@@ -288,13 +297,18 @@ class GameplayScreen(Screen):
                 r = simulate_ai_crash_result(atk, df, self.get_tribe_name(atk.color), self.get_tribe_name(df.color))
                 res = self.game.move_piece(sr, sc, er, ec, resolve_crash=True, crash_won=(r in ["win", "died"]))
                 
+                # ✨ เสียงชนะต่อสู้ของบอท
+                if r in ["win", "died"]:
+                    App.get_running_app().play_crash_win_sound()
+                
             if res == "promote":
                 from logic.pieces import Queen; self.game.promote_pawn(er, ec, Queen)
                 
+            # ✨ เสียงเดินหมากของบอท
+            App.get_running_app().play_move_sound()
             self.init_board_ui()
 
     def on_quit(self): 
-        # ✨ เพิ่มเสียงคลิกเวลากดปุ่ม Quit Match
         App.get_running_app().play_click_sound()
         self.manager.current = 'setup'
         
@@ -315,7 +329,6 @@ class GameplayScreen(Screen):
     def show_crash_overlay(self, attacker, defender, start, end):
         self.info_zone.clear_widgets()
         
-        # สั่งเล่นเสียงทอยเหรียญเมื่อเริ่ม Crash 
         App.get_running_app().play_coin_sound()
         
         self.crash_popup = CrashOverlay(attacker, defender, start, end, self.get_tribe_name(attacker.color), self.get_tribe_name(defender.color), self.get_piece_image_path, self.execute_board_move, self.cancel_crash)
