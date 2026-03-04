@@ -13,5 +13,5 @@ class AyothayaTribe:
     def get_piece_passive(self, piece_type): return self.piece_passives.get(piece_type.lower(), {})
     def get_starting_points(self, p): return self.get_piece_passive(p).get("starting_points", 0)
     def get_coin_tosses(self, p): return self.get_piece_passive(p).get("coin_tosses", 0)
-    def get_max_points(self, p): return self.get_piece_passive(p).get("max_points", 20)
+    def get_max_points(self, p): return 999  # ปิดการใช้งาน max point
     def get_description(self, p): return self.get_piece_passive(p).get("description", "")
