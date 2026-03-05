@@ -29,7 +29,6 @@ class CrashOverlay(BoxLayout):
         self.bind(pos=self._update_bg, size=self._update_bg)
         self._setup_ui()
         
-        from kivy.app import App
         app = App.get_running_app()
         screen = app.root.get_screen('gameplay') if app.root and app.root.has_screen('gameplay') else None
         game_mode = getattr(screen, 'game_mode', 'PVP') if screen else 'PVP'
