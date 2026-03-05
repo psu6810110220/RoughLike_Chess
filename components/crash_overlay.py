@@ -28,7 +28,7 @@ class CrashOverlay(BoxLayout):
             self.bg_rect = Rectangle(pos=self.pos, size=self.size)
         self.bind(pos=self._update_bg, size=self._update_bg)
         self._setup_ui()
-        
+
         app = App.get_running_app()
         screen = app.root.get_screen('gameplay') if app.root and app.root.has_screen('gameplay') else None
         game_mode = getattr(screen, 'game_mode', 'PVP') if screen else 'PVP'
@@ -164,7 +164,6 @@ class CrashOverlay(BoxLayout):
                 w.opacity = 1.0; w.source = self._get_coin_img(res[s['coin_idx']], fac)
                 
                 # Play sound precisely when the coin result is revealed
-                from kivy.app import App
                 App.get_running_app().play_coin_sound()
                 
                 # 1. บวกแต้มหน้าเหรียญปกติ
