@@ -183,7 +183,7 @@ class GameplayScreen(Screen):
         self.board_anchor.clear_widgets()
         gm = getattr(self, 'game_mode', 'PVP')
         vp = 'white' if gm in ['TUTORIAL', 'PVE'] else self.game.current_turn
-        
+
         # ✨ FIX: ระบบ Caching บอร์ด ถ้ากระดานหันถูกทางแล้ว และเคยวาดช่องไปแล้ว 
         # ให้ใช้วิธี refresh_ui อย่างเดียว ไม่ต้องทำลายและสร้างปุ่ม 64 ช่องใหม่ (แก้เกมหน่วง)
         if hasattr(self, 'current_vp') and self.current_vp == vp and hasattr(self, 'grid') and self.grid in self.board_anchor.children:
@@ -346,7 +346,6 @@ class GameplayScreen(Screen):
         if res == "promote":
             pcolor = self.game.board[end_pos[0]][end_pos[1]].color
             if getattr(self, 'game_mode', 'PVP') == 'PVE' and pcolor == 'black':
-                if getattr(self, 'game_mode', 'PVP') == 'PVE' and pcolor == 'black':
                 from logic.pieces import Queen
                 self.game.promote_pawn(end_pos[0], end_pos[1], Queen)
                 self.init_board_ui(); self.check_ai_turn()
@@ -481,7 +480,8 @@ class GameplayScreen(Screen):
                 return
                 
             if res == "promote":
-                from logic.pieces import Queen; self.game.promote_pawn(er, ec, Queen)
+                from logic.pieces import Queen
+                self.game.promote_pawn(er, ec, Queen)
                 
             if res in [True, "promote", "died"]: App.get_running_app().play_move_sound()
             self.init_board_ui()
