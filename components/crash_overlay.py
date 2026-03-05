@@ -7,6 +7,8 @@ from kivy.graphics import Rectangle, Color
 from kivy.clock import Clock
 from logic.crash_logic import calculate_total_points
 from kivy.uix.gridlayout import GridLayout
+from kivy.app import App
+from kivy.core.audio import SoundLoader
 
 class CrashOverlay(BoxLayout):
     def __init__(self, attacker, defender, start_pos, end_pos, a_faction, d_faction, get_img_path_func, on_finish, on_cancel, **kwargs):
@@ -154,6 +156,11 @@ class CrashOverlay(BoxLayout):
         if s['coin_idx'] < len(widgets):
             w = widgets[s['coin_idx']]
             w.opacity = 1.0 if (s['ticks'] % 4) < 2 else 0.3
+            
+            # Play coin sound when coin starts spinning (first tick)
+            if s['ticks'] == 1:
+                App.get_running_app().play_coin_sound()
+            
             if s['ticks'] >= s['max_ticks']:
                 w.opacity = 1.0; w.source = self._get_coin_img(res[s['coin_idx']], fac)
                 
@@ -193,6 +200,7 @@ class CrashOverlay(BoxLayout):
             self.crash_btn.text = "DRAW!"
             self.crash_btn.font_size = '24sp'
             self.crash_btn.background_color = (1, 1, 0, 1)  # เหลือง
+            App.get_running_app().play_draw_sound()
             Clock.schedule_once(lambda dt: self.start_crash_animation(), 1.2)
         else:
             self.crash_stagger_count += 1
@@ -205,6 +213,7 @@ class CrashOverlay(BoxLayout):
                 self.crash_btn.text = "DISTORTION!"
                 self.crash_btn.font_size = '24sp'
                 self.crash_btn.background_color = (1, 0, 0, 1)  # แดง
+                App.get_running_app().play_distortion_sound()
                 Clock.schedule_once(lambda dt: self.on_finish(self.start_pos, self.end_pos, "died"), 1.2)
 
     def force_cancel(self):

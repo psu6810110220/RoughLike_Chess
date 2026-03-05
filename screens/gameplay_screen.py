@@ -132,10 +132,14 @@ class GameplayScreen(Screen):
         chosen_map = getattr(app, 'selected_board', 'Classic Board')
         if chosen_map == "Random Board": chosen_map = random.choice(['Classic Board', 'Enchanted Forest', 'Desert Ruins', 'Frozen Tundra'])
         
-        if chosen_map == 'Enchanted Forest' and ForestMap: self.game = ForestMap()
-        elif chosen_map == 'Desert Ruins' and DesertMap: self.game = DesertMap()
-        elif chosen_map == 'Frozen Tundra' and TundraMap: self.game = TundraMap()
-        else: self.game = ChessBoard(self.get_tribe_name('white'), self.get_tribe_name('black'), map_name=chosen_map)
+        if chosen_map == 'Enchanted Forest' and ForestMap: 
+            self.game = ForestMap(self.get_tribe_name('white'), self.get_tribe_name('black'))
+        elif chosen_map == 'Desert Ruins' and DesertMap: 
+            self.game = DesertMap(self.get_tribe_name('white'), self.get_tribe_name('black'))
+        elif chosen_map == 'Frozen Tundra' and TundraMap: 
+            self.game = TundraMap(self.get_tribe_name('white'), self.get_tribe_name('black'))
+        else: 
+            self.game = ChessBoard(self.get_tribe_name('white'), self.get_tribe_name('black'), map_name=chosen_map)
 
         self.board_area = BoxLayout(orientation='vertical', size_hint_x=0.75)
         self.info_label = Label(text="WHITE'S TURN", size_hint_y=0.08, color=(0.83, 0.68, 0.21, 1), bold=True, font_size='22sp', markup=True)
@@ -354,7 +358,7 @@ class GameplayScreen(Screen):
         inv = getattr(self.game, f'inventory_{self.game.current_turn}', [])
         for i in range(5):
             if i < len(inv):
-                slot = InventorySlot(img_path=inv[i].image_path, is_selected=(self.selected_item == inv[i]))
+                slot = InventorySlot(img_path=inv[i].image_path, is_selected=(self.selected_item and self.selected_item is inv[i]))
                 slot.bind(on_release=lambda x, it=inv[i]: self.on_item_click(it)); self.inventory_layout.add_widget(slot)
             else: self.inventory_layout.add_widget(InventorySlot())
 
@@ -362,7 +366,7 @@ class GameplayScreen(Screen):
         App.get_running_app().play_click_sound()
         if getattr(self, 'crash_popup', None): return
             
-        if self.selected_item == item: self.selected_item = None; self.hide_item_tooltip()
+        if self.selected_item is item: self.selected_item = None; self.hide_item_tooltip()
         else: self.selected_item = item; self.show_item_tooltip(item)
         self.update_inventory_ui() 
 
