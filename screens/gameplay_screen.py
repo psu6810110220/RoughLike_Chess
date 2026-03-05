@@ -331,9 +331,15 @@ class GameplayScreen(Screen):
         if res in [True, "promote", "died"]: App.get_running_app().play_move_sound()
 
         if res == "promote":
-            def do_p(cls): 
-                self.game.promote_pawn(end_pos[0], end_pos[1], cls); pop.dismiss(); self.init_board_ui(); self.check_ai_turn()
-            pop = PromotionPopup(self.game.board[end_pos[0]][end_pos[1]].color, do_p); pop.open()
+            pcolor = self.game.board[end_pos[0]][end_pos[1]].color
+            if getattr(self, 'game_mode', 'PVP') == 'PVE' and pcolor == 'black':
+                from logic.pieces import Queen
+                self.game.promote_pawn(end_pos[0], end_pos[1], Queen)
+                self.init_board_ui(); self.check_ai_turn()
+            else:
+                def do_p(cls): 
+                    self.game.promote_pawn(end_pos[0], end_pos[1], cls); pop.dismiss(); self.init_board_ui(); self.check_ai_turn()
+                pop = PromotionPopup(pcolor, do_p); pop.open()
         elif res in [True, "died", "survived", "defender_survived"]: 
             self.selected = None; self.init_board_ui(); self.check_ai_turn()
         else: 
@@ -375,11 +381,9 @@ class GameplayScreen(Screen):
                 if getattr(df, 'item', None) and df.item.id == 4:
                     df.item = None; atk.has_moved = True; self.game.history.save_state(self.game, "Shield Blocked!"); self.game.complete_turn(); self.init_board_ui(); return 
                 
-                r = simulate_ai_crash_result(atk, df, self.get_tribe_name(atk.color), self.get_tribe_name(df.color))
-                res = self.game.move_piece(sr, sc, er, ec, resolve_crash=True, crash_won=r)
-                
-                if r in ["win", "died"]: App.get_running_app().play_crash_win_sound()
-                elif r == "draw": App.get_running_app().play_draw_sound()
+                # Show the crash overlay for AI attacks too, instead of auto-resolving
+                self.show_crash_overlay(atk, df, (sr, sc), (er, ec))
+                return
                 
             if res == "promote":
                 from logic.pieces import Queen; self.game.promote_pawn(er, ec, Queen)
