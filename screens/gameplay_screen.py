@@ -390,8 +390,6 @@ class GameplayScreen(Screen):
                     item_to_use = inv[0] # Use the first item
                     chosen_piece.item = item_to_use
                     inv.remove(item_to_use)
-                    
-                    from kivy.app import App
                     App.get_running_app().play_click_sound()
                     self.init_board_ui()
                     self.update_inventory_ui()
