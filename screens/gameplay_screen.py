@@ -340,6 +340,7 @@ class GameplayScreen(Screen):
         if res == "promote":
             pcolor = self.game.board[end_pos[0]][end_pos[1]].color
             if getattr(self, 'game_mode', 'PVP') == 'PVE' and pcolor == 'black':
+                if getattr(self, 'game_mode', 'PVP') == 'PVE' and pcolor == 'black':
                 from logic.pieces import Queen
                 self.game.promote_pawn(end_pos[0], end_pos[1], Queen)
                 self.init_board_ui(); self.check_ai_turn()
@@ -478,7 +479,7 @@ class GameplayScreen(Screen):
                 
             if res in [True, "promote", "died"]: App.get_running_app().play_move_sound()
             self.init_board_ui()
-            
+
         self.ai_event = None
         self.check_ai_turn()
 
