@@ -44,8 +44,8 @@ class ChessBoard:
             if piece_type in ['rook', 'bishop', 'knight']:
                 should_receive = True
         else:
-            # 🛡️ ฝ่ายรับ (Defender): Knight, Rook, Bishop จะ *ไม่ได้* ไอเทม
-            if piece_type not in ['knight', 'rook', 'bishop', 'queen', 'king']:
+            # 🛡️ ฝ่ายรับ (Defender): Knight, Rook, Bishop, Queen, King, Pawn จะ *ไม่ได้* ไอเทม
+            if piece_type not in ['knight', 'rook', 'bishop', 'queen', 'king', 'pawn']:
                 should_receive = True
         
         if should_receive:
