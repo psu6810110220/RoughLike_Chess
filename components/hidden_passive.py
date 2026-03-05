@@ -17,18 +17,10 @@ class HiddenPassive:
     
     # กำหนดคำอธิบาย passive แต่ละประเภท
     PASSIVE_VALUES = {
-        'buff1': {
-            'description': 'เหรียญทอยเพิ่ม'
-        },
-        'buff2': {
-            'description': 'แต้มเริ่มต้นเพิ่ม'
-        },
-        'debuff1': {
-            'description': 'เหรียญทอยลด'
-        },
-        'debuff2': {
-            'description': 'แต้มเริ่มต้นลด'
-        }
+        'buff1': {'description': 'Bonus Coins'},
+        'buff2': {'description': 'Bonus Points'},
+        'debuff1': {'description': 'Reduce Coins'},
+        'debuff2': {'description': 'Reduce Points'}
     }
     
     def __init__(self):
@@ -53,7 +45,7 @@ class HiddenPassive:
         if self.passive_type == 'no_passive' or self.passive_type is None:
             self.passive_type = None
             self.passive_value = {}
-            self.description = 'ไม่มี passive แฝง'
+            self.description = 'no hidden passive'
             return
         
         # กำหนดค่า passive ให้ตรงตามคอมเมนต์
@@ -98,15 +90,15 @@ class HiddenPassive:
         if not self.passive_type:
             return {
                 'type': None,
-                'description': 'ไม่มี passive แฝง',
+                'description': 'no hidden passive',
                 'modifier': {}
             }
         
         modifier_text = ''
         if 'coins' in self.passive_value:
-            modifier_text = f"{self.passive_value['coins']} เหรียญ"
+            modifier_text = f"{self.passive_value['coins']} coins"
         elif 'points' in self.passive_value:
-            modifier_text = f"{self.passive_value['points']} แต้ม"
+            modifier_text = f"{self.passive_value['points']} points"
         
         return {
             'type': self.passive_type,

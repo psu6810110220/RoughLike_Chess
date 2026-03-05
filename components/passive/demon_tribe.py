@@ -3,7 +3,7 @@ class DemonTribe:
     def __init__(self):
         self.tribe_name = "demon"
         self.piece_passives = {
-            "pawn":   {"starting_points": 0, "coin_tosses": 2, "max_points": 6, "description": "Demon Minion: Unpredictable attack power."},
+            "pawn":   {"starting_points": 0, "coin_tosses": 3, "max_points": 6, "description": "Demon Minion: Unpredictable attack power."},
             "knight": {"starting_points": 0, "coin_tosses": 3, "max_points": 12, "description": "Dark Knight: Risk-taker for massive damage."},
             "bishop": {"starting_points": 0, "coin_tosses": 3, "max_points": 12, "description": "Dark Mage: Focuses on random destruction."},
             "rook":   {"starting_points": 0, "coin_tosses": 3, "max_points": 12, "description": "Infernal Fortress: Luck-based defense."},
