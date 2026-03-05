@@ -3,7 +3,7 @@ import copy
 import random
 from logic.pieces import Rook, Knight, Bishop, Queen, King, Pawn, Obstacle
 from logic.history_logic import HistoryManager
-from logic.item_logic import ITEM_DATABASE
+from logic.item_logic import ITEM_DATABASE, Item
 from logic.item_effects import apply_post_crash_effects # นำเข้า Logic ของ Item
 
 class ChessBoard:
@@ -54,7 +54,9 @@ class ChessBoard:
             if len(target_inv) < 5:
                 # สุ่มไอเทมจากคลัง (ID 1-10)
                 random_item_id = random.randint(1, 10)
-                item = ITEM_DATABASE[random_item_id]
+                template_item = ITEM_DATABASE[random_item_id]
+                # สร้างวัตถุใหม่เพื่อป้องกันปัญหา singleton
+                item = Item(template_item.id, template_item.name, template_item.description, template_item.image_path)
                 target_inv.append(item)
                 print(f"DEBUG: {winner.color} {piece_type} received {item.name} from {'Defense' if is_defender else 'Attack'}!")
 
