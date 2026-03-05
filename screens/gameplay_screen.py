@@ -48,21 +48,53 @@ class InventorySlot(ButtonBehavior, BoxLayout):
         self.bg_rect.pos, self.bg_rect.size = instance.pos, instance.size
         self.border_line.rounded_rectangle = [instance.x, instance.y, instance.width, instance.height, 10]
 
+class _PromotionOption(ButtonBehavior, BoxLayout):
+    def __init__(self, img_path, **kwargs):
+        super().__init__(orientation='vertical', padding=dp(4), **kwargs)
+        from kivy.graphics import Color as GColor, RoundedRectangle as GRRect
+        with self.canvas.before:
+            GColor(0.15, 0.15, 0.2, 0.8)
+            self._bg_rr = GRRect(pos=self.pos, size=self.size, radius=[dp(8)])
+        self.bind(pos=lambda i, v: setattr(self._bg_rr, 'pos', v),
+                  size=lambda i, v: setattr(self._bg_rr, 'size', v))
+        self.add_widget(Image(source=img_path, fit_mode='contain'))
+
 class PromotionPopup(ModalView):
     def __init__(self, color, callback, **kwargs):
-        super().__init__(size_hint=(0.6, 0.2), auto_dismiss=False, **kwargs)
-        layout = GridLayout(cols=4, padding=10, spacing=10)
+        super().__init__(size_hint=(0.45, 0.3), auto_dismiss=False,
+                         background='', background_color=(0, 0, 0, 0), **kwargs)
+        from kivy.graphics import Color as GColor, RoundedRectangle as GRRect
+        root = BoxLayout(orientation='vertical', padding=dp(10), spacing=dp(8))
+        with root.canvas.before:
+            GColor(0.08, 0.08, 0.1, 0.95)
+            self._bg = GRRect(pos=root.pos, size=root.size, radius=[dp(12)])
+        root.bind(pos=lambda i, v: setattr(self._bg, 'pos', v),
+                  size=lambda i, v: setattr(self._bg, 'size', v))
+
+        title = Label(text='Choose Your Piece', font_size='16sp', bold=True,
+                      color=(1, 0.25, 0.25, 1), size_hint_y=0.18)
+        root.add_widget(title)
+
+        layout = GridLayout(cols=4, padding=dp(5), spacing=dp(10), size_hint_y=0.82)
         from logic.pieces import Queen, Rook, Bishop, Knight
-        ops, names = [Queen, Rook, Bishop, Knight], ['queen', 'rook', 'bishop', 'knight']
+        ops = [Queen, Rook, Bishop, Knight]
+        names = ['queen', 'rook', 'bishop', 'knight']
+        display_names = {'queen': 'Queen', 'rook': 'Rook', 'bishop': 'Bishop', 'knight': 'Knight'}
         theme = getattr(App.get_running_app(), f'selected_unit_{color}', 'Medieval Knights')
+        tf = "ayothaya" if theme=="Ayothaya" else "demon" if theme=="Demon" else "heaven" if theme=="Heaven" else "medieval"
+        mapping = {'queen': '2', 'rook': '3', 'knight': '4', 'bishop': '5'}
+
         for cls, n in zip(ops, names):
-            tf = "ayothaya" if theme=="Ayothaya" else "demon" if theme=="Demon" else "heaven" if theme=="Heaven" else "medieval"
-            mapping = {'queen': '2', 'rook': '3', 'knight': '4', 'bishop': '5'}
             path = f"assets/pieces/{tf}/{color}/chess {tf}{mapping[n]}.png"
-            btn = Button(background_normal=path)
-            btn.bind(on_release=lambda b, c=cls: (App.get_running_app().play_click_sound(), callback(c)))
-            layout.add_widget(btn)
-        self.add_widget(layout)
+            col = BoxLayout(orientation='vertical', spacing=dp(2))
+            opt = _PromotionOption(img_path=path)
+            opt.bind(on_release=lambda b, c=cls: (App.get_running_app().play_click_sound(), callback(c)))
+            col.add_widget(opt)
+            lbl = Label(text=display_names[n], font_size='13sp', size_hint_y=0.18, color=(0.9, 0.9, 0.9, 1))
+            col.add_widget(lbl)
+            layout.add_widget(col)
+        root.add_widget(layout)
+        self.add_widget(root)
 
 class GameplayScreen(Screen):
     def __init__(self, **kwargs):

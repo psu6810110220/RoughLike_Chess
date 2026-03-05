@@ -31,26 +31,30 @@ class CrashOverlay(BoxLayout):
         self.bg_rect.pos, self.bg_rect.size = instance.pos, instance.size
 
     def _setup_ui(self):
-        self.add_widget(Label(text="CRASH!", bold=True, font_size='28sp', color=(1, 0.2, 0.2, 1), size_hint_y=0.15))
-        vs_box = BoxLayout(orientation='horizontal', size_hint_y=0.55)
+        self.add_widget(Label(text="CRASH!", bold=True, font_size='28sp', color=(1, 0.2, 0.2, 1), size_hint_y=0.12))
+        vs_box = BoxLayout(orientation='horizontal', size_hint_y=0.58)
         
         # ATK
-        atk = BoxLayout(orientation='vertical')
-        atk.add_widget(Image(source=self.get_img_path_func(self.attacker), size_hint_y=0.4))
-        self.a_coins_layout = GridLayout(cols=3, spacing=2, size_hint_y=0.3)
+        atk = BoxLayout(orientation='vertical', padding=5, spacing=2)
+        atk.add_widget(Image(source=self.get_img_path_func(self.attacker), size_hint_y=0.45, allow_stretch=True, keep_ratio=True))
+        atk_name = self.attacker.__class__.__name__.upper()
+        atk.add_widget(Label(text=atk_name, bold=True, font_size='13sp', color=(1, 0.85, 0.4, 1), size_hint_y=0.08))
+        self.a_coins_layout = GridLayout(cols=3, spacing=2, size_hint_y=0.22)
         atk.add_widget(self.a_coins_layout)
-        self.a_val_lbl = Label(text=f"ATK: {getattr(self.attacker, 'base_points', 5)}", bold=True, size_hint_y=0.3)
+        self.a_val_lbl = Label(text=f"ATK: {getattr(self.attacker, 'base_points', 5)}", bold=True, size_hint_y=0.25)
         atk.add_widget(self.a_val_lbl)
         vs_box.add_widget(atk)
         
-        vs_box.add_widget(Label(text="VS", size_hint_x=0.2, bold=True))
+        vs_box.add_widget(Label(text="VS", size_hint_x=0.2, bold=True, font_size='20sp', color=(1, 0.3, 0.3, 1)))
         
         # DEF
-        dfn = BoxLayout(orientation='vertical')
-        dfn.add_widget(Image(source=self.get_img_path_func(self.defender), size_hint_y=0.4))
-        self.d_coins_layout = GridLayout(cols=3, spacing=2, size_hint_y=0.3)
+        dfn = BoxLayout(orientation='vertical', padding=5, spacing=2)
+        dfn.add_widget(Image(source=self.get_img_path_func(self.defender), size_hint_y=0.45, allow_stretch=True, keep_ratio=True))
+        def_name = self.defender.__class__.__name__.upper()
+        dfn.add_widget(Label(text=def_name, bold=True, font_size='13sp', color=(1, 0.85, 0.4, 1), size_hint_y=0.08))
+        self.d_coins_layout = GridLayout(cols=3, spacing=2, size_hint_y=0.22)
         dfn.add_widget(self.d_coins_layout)
-        self.d_val_lbl = Label(text=f"DEF: {getattr(self.defender, 'base_points', 5)}", bold=True, size_hint_y=0.3)
+        self.d_val_lbl = Label(text=f"DEF: {getattr(self.defender, 'base_points', 5)}", bold=True, size_hint_y=0.25)
         dfn.add_widget(self.d_val_lbl)
         vs_box.add_widget(dfn)
         
