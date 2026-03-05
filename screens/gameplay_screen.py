@@ -382,8 +382,11 @@ class GameplayScreen(Screen):
 
     def check_ai_turn(self):
         if getattr(self, 'game_mode', 'PVE') == 'PVE' and self.game.current_turn == 'black' and not self.game.game_result: 
-            Clock.schedule_once(self.trigger_ai_move, 0.8)
-
+            self.is_input_locked = True  # ✨ ล็อกหน้าจอผู้เล่น
+            self.ai_event = Clock.schedule_once(self.trigger_ai_move, 0.8)
+        else:
+            self.is_input_locked = False # ✨ ปลดล็อกเมื่อกลับมาเทิร์นผู้เล่น
+            
     def trigger_ai_move(self, dt):
         if self.game.game_result: return
         
