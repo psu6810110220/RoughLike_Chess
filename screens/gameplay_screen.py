@@ -316,7 +316,7 @@ class GameplayScreen(Screen):
         inv = getattr(self.game, f'inventory_{self.game.current_turn}', [])
         for i in range(5):
             if i < len(inv):
-                slot = InventorySlot(img_path=inv[i].image_path, is_selected=(self.selected_item == inv[i]))
+                slot = InventorySlot(img_path=inv[i].image_path, is_selected=(self.selected_item and self.selected_item is inv[i]))
                 slot.bind(on_release=lambda x, it=inv[i]: self.on_item_click(it)); self.inventory_layout.add_widget(slot)
             else: self.inventory_layout.add_widget(InventorySlot())
 
@@ -324,7 +324,7 @@ class GameplayScreen(Screen):
         App.get_running_app().play_click_sound()
         if getattr(self, 'crash_popup', None): return
             
-        if self.selected_item == item: self.selected_item = None; self.hide_item_tooltip()
+        if self.selected_item is item: self.selected_item = None; self.hide_item_tooltip()
         else: self.selected_item = item; self.show_item_tooltip(item)
         self.update_inventory_ui() 
 
