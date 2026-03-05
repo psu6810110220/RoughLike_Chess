@@ -30,8 +30,9 @@ class TutorialScreen(GameplayScreen):
         black_k = King('black', 'demon'); black_k.setup_stats('king', 'demon')
         self.game.board[4][4] = black_k
         
-        from logic.item_logic import ITEM_DATABASE
-        self.game.inventory_white = [ITEM_DATABASE[3]]
+        from logic.item_logic import ITEM_DATABASE, Item
+        template_item = ITEM_DATABASE[3]
+        self.game.inventory_white = [Item(template_item.id, template_item.name, template_item.description, template_item.image_path)]
         self.game.current_turn = 'white'
         
         if hasattr(self, 'board_anchor'): self._keep_grid_square(self.board_anchor, self.board_anchor.size)
