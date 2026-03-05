@@ -164,7 +164,12 @@ class CrashOverlay(BoxLayout):
                 w.opacity = 1.0; w.source = self._get_coin_img(res[s['coin_idx']], fac)
                 
                 # Play sound precisely when the coin result is revealed
-                App.get_running_app().play_coin_sound()
+                import time
+                if not hasattr(self, 'last_coin_sound_time'): 
+                    self.last_coin_sound_time = 0
+                if time.time() - self.last_coin_sound_time > 0.08: # ดีเลย์ 0.08 วินาที
+                    App.get_running_app().play_coin_sound()
+                    self.last_coin_sound_time = time.time()
                 
                 # 1. บวกแต้มหน้าเหรียญปกติ
                 s[key] += pts[s['coin_idx']]
