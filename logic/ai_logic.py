@@ -22,17 +22,17 @@ class ChessAI:
 
     @staticmethod
     def get_best_move(board_obj, ai_color='black'):
-        # 1. ดึงค่าระดับความยากปัจจุบันจากตัวเกมหลัก
         try:
             app = App.get_running_app()
             difficulty = getattr(app, 'ai_difficulty', 'normal')
         except:
-            difficulty = 'normal' # ค่าเริ่มต้นกันเหนียว
+            difficulty = 'normal'
 
         best_moves = []
         highest_score = -9999
+        enemy_color = 'white' if ai_color == 'black' else 'black'
 
-        # ดึงตาเดินที่ถูกกฎทั้งหมดของ AI
+        # ดึงตาเดินที่ถูกกฎทั้งหมด
         all_legal_moves = []
         for r in range(8):
             for c in range(8):
@@ -43,13 +43,14 @@ class ChessAI:
                         all_legal_moves.append(((r, c), move))
 
         if not all_legal_moves:
-            return None # จนมุม หรือเดินไม่ได้แล้ว
+            return None
 
-        # 🟢 ระดับ EASY: สุ่มเดินมั่ว 100% ไม่คิดอะไรเลย
+        # 🟢 ระดับ EASY: มีโอกาส 50% ที่จะเดินมั่วๆ (เพื่อจำลองการเดินพลาด/ไม่ได้คิด)
         if difficulty == 'easy':
-            return random.choice(all_legal_moves)
+            import random
+            if random.random() < 0.5:
+                return random.choice(all_legal_moves)
 
-        # 🟡/🔴 ระดับ NORMAL และ HARD: ประเมินคะแนนแต่ละตาเดิน
         for start_pos, end_pos in all_legal_moves:
             sr, sc = start_pos
             er, ec = end_pos
@@ -58,24 +59,34 @@ class ChessAI:
             target_piece = board_obj.board[er][ec]
             our_piece = board_obj.board[sr][sc]
             
-            # 1. ถ้าตาเดินนี้กินหมากศัตรูได้ ให้คะแนนตามมูลค่าหมากศัตรู
+            # 1. คะแนนพื้นฐาน: เล็งกินหมากศัตรู
             if target_piece and target_piece.color != ai_color:
-                score += ChessAI.get_piece_value(target_piece)
+                score += ChessAI.get_piece_value(target_piece) * 10
             
-            # 2. ให้โบนัสเล็กน้อยถ้าเดินไปคุมพื้นที่ตรงกลางกระดาน
+            # 2. คะแนนโบนัส: เดินไปคุมพื้นที่ตรงกลางกระดาน
             if 3 <= er <= 4 and 3 <= ec <= 4:
-                score += 2
+                score += 5
 
-            # 🔴 ระดับ HARD: คิดล่วงหน้า 1 สเต็ป (ป้องกันการเดินไปแจกฟรี)
+            # 🔴 ระดับ HARD: คิดหน้าคิดหลัง และการหนีตายแบบขั้นสุด
             if difficulty == 'hard':
-                # จำลองย้ายหมากชั่วคราวไปที่เป้าหมาย
+                # ประเมินว่าตำแหน่งที่ยืนอยู่ปัจจุบันกำลังจะโดนกินไหม (ถ้าหนีได้ให้คะแนนโบนัสหนีตาย)
+                is_currently_safe = True
+                for rr in range(8):
+                    for cc in range(8):
+                        ep = board_obj.board[rr][cc]
+                        if ep and ep.color == enemy_color and ep.is_valid_move((rr, cc), (sr, sc), board_obj.board):
+                            is_currently_safe = False
+                            break
+                    if not is_currently_safe: break
+                
+                if not is_currently_safe:
+                    score += ChessAI.get_piece_value(our_piece) * 5 # โบนัสหนีตาย ยิ่งตัวแพงยิ่งต้องหนี
+
+                # จำลองการเดินชั่วคราว เพื่อดูว่าเดินไปแล้วจะโดนกินไหม
                 board_obj.board[sr][sc] = None
                 board_obj.board[er][ec] = our_piece
                 
                 is_safe = True
-                enemy_color = 'white' if ai_color == 'black' else 'black'
-                
-                # สแกนดูว่าตาหน้า ศัตรูสามารถเดินมากินช่องนี้ได้ไหม
                 for rr in range(8):
                     for cc in range(8):
                         epiece = board_obj.board[rr][cc]
@@ -85,15 +96,18 @@ class ChessAI:
                                 break
                     if not is_safe: break
                 
-                # ถอยหมากจำลองกลับที่เดิม
                 board_obj.board[er][ec] = target_piece
                 board_obj.board[sr][sc] = our_piece
                 
-                # หักคะแนนอย่างหนักถ้าเดินไปแล้วโดนกินฟรี / ให้โบนัสถ้าเป็นช่องปลอดภัย
                 if not is_safe:
-                    score -= ChessAI.get_piece_value(our_piece) 
+                    score -= ChessAI.get_piece_value(our_piece) * 15 # หักคะแนนหนักมาก ห้ามเดินไปแจกฟรี
                 else:
-                    score += 3
+                    score += 10 # โบนัสเลือกตาเดินที่ปลอดภัย
+
+            # 🟢 ระดับ EASY (ในกรณีที่ไม่สุ่มในตอนแรก): สุ่มแกว่งคะแนนให้รวนๆ (เพื่อให้บางทีเมินตัวกินฟรี)
+            if difficulty == 'easy':
+                import random
+                score += random.randint(-30, 30)
 
             # เก็บตาเดินที่คะแนนดีที่สุดไว้
             if score > highest_score:
@@ -102,4 +116,5 @@ class ChessAI:
             elif score == highest_score:
                 best_moves.append((start_pos, end_pos))
 
-        return random.choice(best_moves)
+        import random
+        return random.choice(best_moves) if best_moves else random.choice(all_legal_moves)
