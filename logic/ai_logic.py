@@ -83,6 +83,7 @@ class ChessAI:
                     score += ChessAI.get_piece_value(our_piece) * 5 # โบนัสหนีตาย ยิ่งตัวแพงยิ่งต้องหนี
 
                 # จำลองการเดินชั่วคราว เพื่อดูว่าเดินไปแล้วจะโดนกินไหม
+                mock_board = [row[:] for row in board_obj.board] # Copy แถวทั้งหมด
                 board_obj.board[sr][sc] = None
                 board_obj.board[er][ec] = our_piece
                 
