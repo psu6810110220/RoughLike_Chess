@@ -184,6 +184,12 @@ class GameplayScreen(Screen):
         gm = getattr(self, 'game_mode', 'PVP')
         vp = 'white' if gm in ['TUTORIAL', 'PVE'] else self.game.current_turn
         
+        # ✨ FIX: ระบบ Caching บอร์ด ถ้ากระดานหันถูกทางแล้ว และเคยวาดช่องไปแล้ว 
+        # ให้ใช้วิธี refresh_ui อย่างเดียว ไม่ต้องทำลายและสร้างปุ่ม 64 ช่องใหม่ (แก้เกมหน่วง)
+        if hasattr(self, 'current_vp') and self.current_vp == vp and hasattr(self, 'grid') and self.grid in self.board_anchor.children:
+            self.refresh_ui()
+            return
+        
         self.grid = GridLayout(cols=8, rows=8, size_hint=(None, None), spacing=0, padding=0)
         self.board_anchor.add_widget(self.grid); self.board_anchor.bind(size=self._keep_grid_square)
         if self.board_anchor.width > 0: self._keep_grid_square(self.board_anchor, self.board_anchor.size)
