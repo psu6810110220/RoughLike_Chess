@@ -1,6 +1,8 @@
 # screens/match_setup/setup_section.py
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.gridlayout import GridLayout
+from kivy.uix.anchorlayout import AnchorLayout
+from kivy.uix.widget import Widget
 from kivy.uix.button import Button
 from kivy.uix.label import Label
 from kivy.app import App
@@ -8,6 +10,78 @@ from kivy.clock import Clock
 from kivy.animation import Animation
 from kivy.graphics import Color, RoundedRectangle, Line
 from kivy.metrics import dp
+from kivy.core.window import Window
+
+# ✨ คลาสสำหรับกล่องข้อความ Tooltip (ลอยอยู่เหนือ UI)
+class HoverTooltip(Label):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.size_hint = (None, None)
+        self.markup = True
+        self.font_size = '13sp'
+        self.halign = 'left'
+        self.valign = 'middle'
+        
+        with self.canvas.before:
+            Color(0.05, 0.05, 0.08, 0.95)
+            self.bg = RoundedRectangle(radius=[dp(8)])
+            Color(0.83, 0.68, 0.21, 1)
+            self.border = Line(rounded_rectangle=[self.x, self.y, self.width, self.height, dp(8)], width=1.2)
+            
+        self.bind(pos=self.update_graphics, size=self.update_graphics, texture_size=self.update_size)
+
+    def update_graphics(self, *args):
+        self.bg.pos = self.pos
+        self.bg.size = self.size
+        self.border.rounded_rectangle = [self.x, self.y, self.width, self.height, dp(8)]
+
+    def update_size(self, *args):
+        self.size = (self.texture_size[0] + dp(30), self.texture_size[1] + dp(20))
+
+# ✨ คลาสไอคอน ? ที่ตรวจจับเมาส์ Hover ได้
+class HoverInfoIcon(Label):
+    def __init__(self, info_text, **kwargs):
+        super().__init__(**kwargs)
+        self.text = "[b]?[/b]"
+        self.markup = True
+        self.color = (0.83, 0.68, 0.21, 1)
+        self.size_hint = (None, None)
+        self.size = (dp(22), dp(22))
+        self.info_text = info_text
+        self._tooltip = None
+
+        with self.canvas.before:
+            Color(0.15, 0.15, 0.18, 1)
+            self.bg = RoundedRectangle(radius=[self.height/2])
+            Color(0.83, 0.68, 0.21, 1)
+            self.border = Line(rounded_rectangle=[self.x, self.y, self.width, self.height, self.height/2], width=1)
+            
+        self.bind(pos=self.update_bg, size=self.update_bg)
+        Window.bind(mouse_pos=self.on_mouse_pos)
+
+    def update_bg(self, *args):
+        self.bg.pos = self.pos
+        self.bg.size = self.size
+        self.bg.radius = [self.height/2]
+        self.border.rounded_rectangle = [self.x, self.y, self.width, self.height, self.height/2]
+
+    def on_mouse_pos(self, window, pos):
+        # ป้องกันบั๊กเวลาสลับหน้าจอ
+        if not self.get_root_window(): return
+        
+        # เช็คว่าเมาส์อยู่ในอาณาเขตของปุ่ม ? หรือไม่ (แปลงเป็น Window Coordinates)
+        wx, wy = self.to_window(self.x, self.y)
+        if wx <= pos[0] <= wx + self.width and wy <= pos[1] <= wy + self.height:
+            if not self._tooltip:
+                self._tooltip = HoverTooltip(text=self.info_text)
+                Window.add_widget(self._tooltip)
+            # ให้กล่อง Tooltip ขยับตามเมาส์นิดๆ แต่อยู่เยื้องลงมาด้านขวาล่าง
+            self._tooltip.pos = (pos[0] + dp(15), pos[1] - self._tooltip.height - dp(15))
+        else:
+            if self._tooltip:
+                Window.remove_widget(self._tooltip)
+                self._tooltip = None
+
 
 class SelectionCard(Button):
     def __init__(self, **kwargs):
@@ -20,7 +94,6 @@ class SelectionCard(Button):
         self.is_selected = False
         
         with self.canvas.before:
-            # ✨ เปลี่ยนชื่อตัวแปรให้มีคำว่า card_ นำหน้าทั้งหมด หนีตัวแปรระบบ Kivy
             self.card_bg_color = Color(0.1, 0.1, 0.12, 0.7) 
             self.card_rect = RoundedRectangle(radius=[12])
             
@@ -78,9 +151,16 @@ class SetupSection(BoxLayout):
         self.mode_box.add_widget(mode_grid)
         self.add_widget(self.mode_box)
 
-        # 2. SELECT MAP
+        # 2. SELECT MAP (✨ อัปเดตส่วนนี้เพื่อใส่ Tooltip แผนที่ภาษาอังกฤษ)
         self.map_box = BoxLayout(orientation='vertical', size_hint_y=0.25, spacing=5, opacity=0, disabled=True)
-        self.add_header(self.map_box, "2. STRATEGIC BATTLEFIELD")
+        
+        map_descriptions = (
+            "[color=ffcc00][b]Classic:[/b][/color] Standard chess battlefield.\n"
+            "[color=00ff44][b]Enchanted Forest:[/b][/color] Thorny vines may sprout to block squares for 3 turns.\n"
+            "[color=ffaa00][b]Desert Ruins:[/b][/color] Empty rows/columns may trigger a sandstorm lasting 3 turns.\n"
+            "[color=00ccff][b]Frozen Tundra:[/b][/color] Every 3 turns, 2 random pieces per side freeze \n(cannot move or be captured). Ice blocks may also spawn for 3 turns."
+        )
+        self.add_header(self.map_box, "2. STRATEGIC BATTLEFIELD", tooltip_text=map_descriptions)
         
         map_grid = GridLayout(cols=5, spacing=12)
         self.map_cards = []
@@ -129,10 +209,23 @@ class SetupSection(BoxLayout):
 
         self.update_selections()
 
-    def add_header(self, parent_box, text):
-        lbl = Label(text=f"[color=d4af37][b]{text}[/b][/color]", markup=True, font_size='20sp', halign='left', size_hint_y=None, height=35)
-        lbl.bind(size=lbl.setter('text_size'))
-        parent_box.add_widget(lbl)
+    # ✨ ปรับฟังก์ชัน add_header ให้รองรับไอคอน ?
+    def add_header(self, parent_box, text, tooltip_text=None):
+        header_layout = BoxLayout(orientation='horizontal', size_hint_y=None, height=dp(35), spacing=dp(10))
+        
+        lbl = Label(text=f"[color=d4af37][b]{text}[/b][/color]", markup=True, font_size='20sp', halign='left', size_hint_x=None)
+        lbl.bind(texture_size=lambda instance, value: setattr(instance, 'width', value[0]))
+        header_layout.add_widget(lbl)
+        
+        if tooltip_text:
+            icon = HoverInfoIcon(info_text=tooltip_text)
+            icon_container = AnchorLayout(anchor_x='left', anchor_y='center', size_hint_x=1)
+            icon_container.add_widget(icon)
+            header_layout.add_widget(icon_container)
+        else:
+            header_layout.add_widget(Widget(size_hint_x=1))
+            
+        parent_box.add_widget(header_layout)
 
     def play_sound(self, instance):
         if hasattr(self.app, 'play_click_sound'):
