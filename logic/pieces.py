@@ -8,7 +8,7 @@ class Piece:
         self.color, self.name, self.item, self.has_moved = color, name, None, False
         self.hidden_passive = HiddenPassive()
         self.passive_desc = "" # เก็บคำอธิบายสกิลติดตัวของหมาก
-        self.tribe = "medieval" # ✨ เพิ่มค่าเริ่มต้นเผ่า
+        self.tribe = "medieval" # ✨ ให้มีค่าเริ่มต้นป้องกันบั๊ก
 
     def is_path_clear(self, start, end, board):
         """ตรวจสอบว่าเส้นทางการเดินไม่มีหมากตัวอื่นขวางกั้น"""
@@ -25,7 +25,11 @@ class Piece:
 
     def setup_stats(self, piece_type, tribe):
         """ตั้งค่าพลัง (Dice, Coins, Max) และคำอธิบายสกิลจากเผ่าที่เลือก"""
-        self.tribe = tribe # ✨ ให้ตัวหมากเก็บค่าเผ่าเอาไว้เชื่อมกับฝั่ง UI ภาพ
+        # ✨ FIX: ป้องกันกรณีค่าเผ่าถูกส่งมาเป็นค่าว่าง
+        if not tribe:
+            tribe = 'medieval'
+        self.tribe = tribe 
+        
         passive = PassiveManager.get_passive_handler(piece_type, tribe)
         if passive:
             stats = passive['get_piece_stats']()
@@ -49,10 +53,8 @@ class Rook(Piece):
 
     def is_valid_move(self, s, e, b):
         if s == e: return False
-        # Item 9: Pegasus Boots ให้เดินแบบม้าได้
         if getattr(self, 'item', None) and self.item.id == 9 and self.check_knight_move(s, e):
             return True
-        # เดินแนวตรง
         return (s[0] == e[0] or s[1] == e[1]) and self.is_path_clear(s, e, b)
 
 class Knight(Piece):
@@ -63,7 +65,6 @@ class Knight(Piece):
     def is_valid_move(self, s, e, b):
         if s == e: return False
         target = b[e[0]][e[1]]
-        # ม้าสามารถกระโดดข้ามได้ ไม่ต้องเช็ค is_path_clear
         if self.check_knight_move(s, e):
             return target is None or target.color != self.color
         return False
@@ -77,7 +78,6 @@ class Bishop(Piece):
         if s == e: return False
         if getattr(self, 'item', None) and self.item.id == 9 and self.check_knight_move(s, e):
             return True
-        # เดินแนวทแยง
         return abs(s[0]-e[0]) == abs(s[1]-e[1]) and self.is_path_clear(s, e, b)
 
 class Queen(Piece):
@@ -89,7 +89,6 @@ class Queen(Piece):
         if s == e: return False
         if getattr(self, 'item', None) and self.item.id == 9 and self.check_knight_move(s, e):
             return True
-        # เดินได้ทั้งแนวตรงและแนวทแยง
         is_straight = (s[0] == e[0] or s[1] == e[1])
         is_diagonal = (abs(s[0]-e[0]) == abs(s[1]-e[1]))
         return (is_straight or is_diagonal) and self.is_path_clear(s, e, b)
@@ -103,7 +102,6 @@ class King(Piece):
         if s == e: return False
         if getattr(self, 'item', None) and self.item.id == 9 and self.check_knight_move(s, e):
             return True
-        # เดินได้ 1 ช่องรอบตัว
         return max(abs(s[0]-e[0]), abs(s[1]-e[1])) == 1
 
 class Pawn(Piece):
@@ -120,11 +118,8 @@ class Pawn(Piece):
         sr, sc, er, ec, dr = s[0], s[1], e[0], e[1], (-1 if self.color == 'white' else 1)
         target = b[er][ec]
         
-        # เดินตรง 1 ช่อง
         if sc == ec and er == sr + dr and not target: return True
-        # เดินตรง 2 ช่องจากจุดเริ่มต้น
         if sc == ec and sr == (6 if self.color == 'white' else 1) and er == sr + 2*dr and not target and not b[sr+dr][sc]: return True
-        # กินหมากเฉียง (รวมถึง En Passant)
         if abs(sc - ec) == 1 and er == sr + dr:
             if target: return True
             if ep_target and (er, ec) == ep_target:
@@ -135,8 +130,8 @@ class Pawn(Piece):
 
 class Obstacle(Piece):
     def __init__(self, n, l):
-        # สิ่งกีดขวางไม่มีระบบเผ่าหรือ Passive แฝง
         self.color, self.name, self.item, self.lifespan, self.base_points, self.coins, self.has_moved = 'neutral', n, None, l, 0, 0, False
+        self.tribe = "neutral" # ✨ ป้องกันบั๊กรูปไอเทมกิจกรรมแหว่ง
 
     def is_valid_move(self, s, e, b):
         return False
