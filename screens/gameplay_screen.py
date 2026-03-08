@@ -60,7 +60,7 @@ class _PromotionOption(ButtonBehavior, BoxLayout):
         self.add_widget(Image(source=img_path, fit_mode='contain'))
 
 class PromotionPopup(ModalView):
-    def __init__(self, color, callback, **kwargs):
+    def __init__(self, color, tribe, callback, **kwargs):
         super().__init__(size_hint=(0.45, 0.3), auto_dismiss=False,
                          background='', background_color=(0, 0, 0, 0), **kwargs)
         from kivy.graphics import Color as GColor, RoundedRectangle as GRRect
@@ -81,7 +81,7 @@ class PromotionPopup(ModalView):
         names = ['queen', 'rook', 'bishop', 'knight']
         display_names = {'queen': 'Queen', 'rook': 'Rook', 'bishop': 'Bishop', 'knight': 'Knight'}
         theme = getattr(App.get_running_app(), f'selected_unit_{color}', 'Medieval Knights')
-        tf = "ayothaya" if theme=="Ayothaya" else "demon" if theme=="Demon" else "heaven" if theme=="Heaven" else "medieval"
+        tf = tribe
         mapping = {'queen': '2', 'rook': '3', 'knight': '4', 'bishop': '5'}
 
         for cls, n in zip(ops, names):
@@ -263,7 +263,7 @@ class GameplayScreen(Screen):
         if p_n == 'obstacle':
             ot = piece.name.lower(); return f"assets/pieces/event/event{'1' if ot=='thorn' else '2' if ot=='sandstorm' else '3'}.png"
         theme = getattr(App.get_running_app(), f'selected_unit_{p_c}', 'Medieval Knights')
-        tf = "ayothaya" if theme=="Ayothaya" else "demon" if theme=="Demon" else "heaven" if theme=="Heaven" else "medieval"
+        tf = getattr(piece, 'tribe', 'medieval')
         num = getattr(piece, 'variant', 6) if p_n == 'pawn' else {'king': 1, 'queen': 2, 'rook': 3, 'knight': 4, 'bishop': 5}.get(p_n, 1)
         return f"assets/pieces/{tf}/{p_c}/chess {tf}{num}.png"
 
@@ -320,9 +320,11 @@ class GameplayScreen(Screen):
 
             if res == "promote":
                 self.hide_piece_status()
+                promoted_pawn = self.game.board[r][c] # ✨ ดึง Pawn ตัวนี้มา
                 def do_p(cls): 
                     self.game.promote_pawn(r, c, cls); pop.dismiss(); self.init_board_ui(); self.check_ai_turn()
-                pop = PromotionPopup(self.game.board[r][c].color, do_p); pop.open()
+                pop = PromotionPopup(promoted_pawn.color, getattr(promoted_pawn, 'tribe', self.get_tribe_name(promoted_pawn.color)), do_p)
+                pop.open()
             elif res in [True, "died"]: 
                 self.selected = None; self.hide_piece_status(); self.init_board_ui(); self.check_ai_turn()
             else: 
@@ -346,6 +348,7 @@ class GameplayScreen(Screen):
 
         if res == "promote":
             pcolor = self.game.board[end_pos[0]][end_pos[1]].color
+            ptribe = getattr(self.game.board[end_pos[0]][end_pos[1]], 'tribe', self.get_tribe_name(pcolor)) # ✨ ดึงเผ่า
             if getattr(self, 'game_mode', 'PVP') == 'PVE' and pcolor == 'black':
                 from logic.pieces import Queen
                 self.game.promote_pawn(end_pos[0], end_pos[1], Queen)
@@ -353,7 +356,7 @@ class GameplayScreen(Screen):
             else:
                 def do_p(cls): 
                     self.game.promote_pawn(end_pos[0], end_pos[1], cls); pop.dismiss(); self.init_board_ui(); self.check_ai_turn()
-                pop = PromotionPopup(pcolor, do_p); pop.open()
+                pop = PromotionPopup(pcolor, ptribe, do_p); pop.open()
         elif res in [True, "died", "survived", "defender_survived"]: 
             self.selected = None; self.init_board_ui(); self.check_ai_turn()
         else: 
@@ -512,7 +515,11 @@ class GameplayScreen(Screen):
     def show_crash_overlay(self, attacker, defender, start, end):
         self.info_zone.clear_widgets()
         App.get_running_app().play_coin_sound()
-        self.crash_popup = CrashOverlay(attacker, defender, start, end, self.get_tribe_name(attacker.color), self.get_tribe_name(defender.color), self.get_piece_image_path, self.execute_board_move, self.cancel_crash)
+        # ✨ ดึงเผ่ามาแสดงผลตอนหน้าต่าง Crash อย่างแม่นยำ
+        atk_tribe = getattr(attacker, 'tribe', self.get_tribe_name(attacker.color))
+        def_tribe = getattr(defender, 'tribe', self.get_tribe_name(defender.color))
+        
+        self.crash_popup = CrashOverlay(attacker, defender, start, end, atk_tribe, def_tribe, self.get_piece_image_path, self.execute_board_move, self.cancel_crash)
         self.info_zone.add_widget(self.crash_popup)
         
     def cancel_crash(self): self.info_zone.clear_widgets(); self.crash_popup = None; self.refresh_ui()

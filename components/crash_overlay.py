@@ -75,7 +75,6 @@ class CrashOverlay(BoxLayout):
         self.crash_btn.bind(on_release=self.start_crash_animation)
         self.add_widget(self.crash_btn)
 
-    # ✨ FIX: นำระบบแอนิเมชันทอยเหรียญทั้งหมดกลับมา
     def start_crash_animation(self, *args):
         self.crash_btn.disabled = True
         if getattr(self.defender, 'item', None) and self.defender.item.id == 4:
@@ -126,10 +125,12 @@ class CrashOverlay(BoxLayout):
         self.a_pts_array = [get_pt(r, self.a_faction) for r in self.a_results]
         self.d_pts_array = [get_pt(r, self.d_faction) for r in self.d_results]
 
+        # ✨ เพิ่มตัวแปรเพื่อนับเหรียญติดลบของ Demon ในแอนิเมชัน
         self.anim_state = {
             'side': 'atk', 'coin_idx': 0, 'ticks': 0, 'max_ticks': 10,
             'a_current_total': a_base, 'd_current_total': d_base,
-            'a_heads': 0, 'd_heads': 0
+            'a_heads': 0, 'd_heads': 0,
+            'a_demon_minus': 0, 'd_demon_minus': 0 
         }
         self.spin_event = Clock.schedule_interval(self.animate_coin_step, 0.08)
 
@@ -156,33 +157,43 @@ class CrashOverlay(BoxLayout):
             w = widgets[s['coin_idx']]
             w.opacity = 1.0 if (s['ticks'] % 4) < 2 else 0.3
             
-            # Play coin sound when coin starts spinning (first tick)
             if s['ticks'] == 1:
                 App.get_running_app().play_coin_sound()
             
             if s['ticks'] >= s['max_ticks']:
                 w.opacity = 1.0; w.source = self._get_coin_img(res[s['coin_idx']], fac)
                 
-                # Play sound precisely when the coin result is revealed
                 import time
                 if not hasattr(self, 'last_coin_sound_time'): 
                     self.last_coin_sound_time = 0
-                if time.time() - self.last_coin_sound_time > 0.08: # ดีเลย์ 0.08 วินาที
+                if time.time() - self.last_coin_sound_time > 0.08:
                     App.get_running_app().play_coin_sound()
                     self.last_coin_sound_time = time.time()
                 
                 # 1. บวกแต้มหน้าเหรียญปกติ
                 s[key] += pts[s['coin_idx']]
                 
-                # 2. ✨ FIX: ระบบนับจำนวนหัวและโบนัสเผ่า Heaven
+                # 2. ✨ FIX: ระบบนับจำนวนหัว (Heaven) และกะโหลก (Demon)
                 heads_key = 'a_heads' if side == 'atk' else 'd_heads'
+                demon_key = 'a_demon_minus' if side == 'atk' else 'd_demon_minus'
+
                 if "Heads" in res[s['coin_idx']]:
                     s[heads_key] += 1
                     if fac == "heaven":
-                        if s[heads_key] == 3:  # ครบ 3 หัวแรก บวก 3 แต้ม
+                        if s[heads_key] == 3:
                             s[key] += 3
-                        elif s[heads_key] == 6: # ครบ 6 หัว บวกอีก 3 แต้ม
+                        elif s[heads_key] == 6: 
                             s[key] += 3
+                
+                # ✨ ลอจิกแอนิเมชันสำหรับเผ่า Demon
+                elif "Tails" in res[s['coin_idx']] and fac == "demon":
+                    s[demon_key] += 1
+                    if s[demon_key] == 2:
+                        # ถ้าได้กะโหลกที่ 2 ให้คืนค่า 2 ครั้งที่เสียไป (-6 ให้บวก 12 จะกลายเป็น +6)
+                        s[key] += 12
+                    elif s[demon_key] > 2:
+                        # ถ้าได้กะโหลกตั้งแต่ครั้งที่ 3 เป็นต้นไป ให้คืนค่า 1 ครั้งที่เสียไป (-3 ให้บวก 6 จะกลายเป็น +3)
+                        s[key] += 6
                             
                 # 3. อัปเดตตัวเลขขึ้นหน้าจอ
                 lbl.text = f"{s[key]}"

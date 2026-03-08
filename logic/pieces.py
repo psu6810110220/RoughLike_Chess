@@ -8,6 +8,7 @@ class Piece:
         self.color, self.name, self.item, self.has_moved = color, name, None, False
         self.hidden_passive = HiddenPassive()
         self.passive_desc = "" # เก็บคำอธิบายสกิลติดตัวของหมาก
+        self.tribe = "medieval" # ✨ เพิ่มค่าเริ่มต้นเผ่า
 
     def is_path_clear(self, start, end, board):
         """ตรวจสอบว่าเส้นทางการเดินไม่มีหมากตัวอื่นขวางกั้น"""
@@ -24,6 +25,7 @@ class Piece:
 
     def setup_stats(self, piece_type, tribe):
         """ตั้งค่าพลัง (Dice, Coins, Max) และคำอธิบายสกิลจากเผ่าที่เลือก"""
+        self.tribe = tribe # ✨ ให้ตัวหมากเก็บค่าเผ่าเอาไว้เชื่อมกับฝั่ง UI ภาพ
         passive = PassiveManager.get_passive_handler(piece_type, tribe)
         if passive:
             stats = passive['get_piece_stats']()
