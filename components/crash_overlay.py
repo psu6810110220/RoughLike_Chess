@@ -115,8 +115,8 @@ class CrashOverlay(BoxLayout):
         def get_pt(res_str, faction):
             if "Green" in res_str: return 100
             if "Cyan" in res_str: return 10
-            if "Purple" in res_str: return 4
-            if "Orange" in res_str: return 6
+            if "Purple" in res_str: return 6
+            if "Orange" in res_str: return 4
             if "Blue" in res_str: return 3
             if "Red" in res_str: return 2
             if "Yellow" in res_str: return 1
@@ -147,10 +147,6 @@ class CrashOverlay(BoxLayout):
         else: pts, res, fac, widgets, lbl, key = self.d_pts_array, self.d_results, self.d_faction, self.d_coin_widgets, self.d_val_lbl, 'd_current_total'
         
         if s['coin_idx'] >= len(pts):
-            if fac == "demon" and s[key] < 0:
-                s[key] = abs(s[key])
-                lbl.text = f"{s[key]}"
-                
             if side == 'atk': s['side'], s['coin_idx'], s['ticks'] = 'def', 0, 0
             else: self.spin_event.cancel(); self.finish_crash_animation()
             return
