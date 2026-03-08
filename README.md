@@ -1,50 +1,52 @@
-ROGUELIKE CHESS (Enter the Dark Battlefield)
-ROGUELIKE CHESS คือเกมหมากรุกที่ผสมผสานองค์ประกอบของแนว Roguelike เข้าไปอย่างลงตัว โดยมีการเพิ่มระบบเผ่าพันธุ์ (Tribes), ด่าน (Maps), ระบบไอเทม (Items), และการต่อสู้ที่ต้องใช้ค่าสถานะจริงในการตัดสินผล (Crash System)
+# ♟️ ROGUELIKE CHESS — Enter the Dark Battlefield
 
-Key Features
-4 Strategic Battlefields: เลือกสนามรบได้ 4 รูปแบบ ได้แก่ Classic, Enchanted Forest, Desert Ruins และ Frozen Tundra ซึ่งแต่ละด่านจะมีธีมที่แตกต่างกัน
+> เกมหมากรุกที่ผสมผสานกลิ่นอายความเป็น Roguelike เข้าไปอย่างลงตัว | พัฒนาด้วย Python + Kivy
 
-Divine Order & Dark Abyss (Tribes): ระบบเผ่าพันธุ์ที่มีให้เลือกถึง 4 เผ่า ได้แก่ Medieval Knights, Ayothaya, Demon และ Heaven โดยแต่ละเผ่าจะให้ความรู้สึกและคุณสมบัติที่ต่างกัน
+---
 
-Combat & Crash System: การกินหมากไม่ใช่แค่การยึดพื้นที่ แต่คือการปะทะ (Crash) ที่ต้องคำนวณผลลัพธ์ว่าใครจะเป็นผู้รอดชีวิต (Attacker vs Defender)
+## 🎮 เกมนี้คืออะไร?
 
-Rogue Inventory & Items: ระบบดรอปไอเทมแบบสุ่มเมื่อชนะการปะทะ 
+**ROGUELIKE CHESS** ไม่ใช่แค่เกมกระดานธรรมดา แต่คือเกมหมากรุกที่ถูกยกระดับด้วยการเพิ่ม **ระบบเผ่าพันธุ์ (Tribes)**, **สภาพแวดล้อม (Maps)**, **ระบบไอเทม (Items)** และเปลี่ยนการกินหมากแบบเดิมๆ ให้กลายเป็นการต่อสู้ที่ต้องใช้ค่าสถานะจริงในการตัดสินผลลัพธ์ **(Crash System)**
 
-Intelligent AI: ระบบสมองกลที่รองรับทั้งโหมดสุ่มเดิน (Random Move) และโหมดเน้นการกินหมาก (Priority Capture)
+---
 
-Project Structure
-โปรเจกต์ถูกออกแบบโดยแยกส่วน Logic ออกจากหน้าจอการแสดงผล (UI) เพื่อความสะดวกในการทดสอบ:
+## ✨ ฟีเจอร์
 
-logic/: ประกอบด้วยไฟล์ Board, Pieces, Crash Logic, Item Logic และ AI Logic
+- 🗺️ **4 Strategic Battlefields** — เลือกสนามรบได้ 4 ธีมที่แตกต่างกัน ได้แก่ *Classic, Enchanted Forest, Desert Ruins* และ *Frozen Tundra*
+- ⚔️ **Divine Order & Dark Abyss (Tribes)** — เลือกเล่นจาก 4 เผ่าพันธุ์ที่มีเอกลักษณ์เฉพาะตัว: *Medieval Knights, Ayothaya, Demon* และ *Heaven*
+- 💥 **Combat & Crash System** — การกินหมากคือ "การปะทะ" ต้องคำนวณผลลัพธ์ระหว่างผู้โจมตี (Attacker) และผู้ตั้งรับ (Defender) ว่าใครจะเป็นผู้รอดชีวิต
+- 🎒 **Rogue Inventory & Items** — ระบบสุ่มดรอปไอเทมเมื่อคุณชนะการปะทะ เพิ่มความได้เปรียบและพลิกแพลงสถานการณ์
+- 🤖 **Intelligent AI** — ระบบสมองกลที่รองรับทั้งโหมดสุ่มเดิน (Random Move) และโหมดเน้นการไล่ล่ากินหมาก (Priority Capture)
 
-screens/: ส่วนการแสดงผลโดยใช้เฟรมเวิร์ก Kivy
+---
 
-tests/: รวมไฟล์ทดสอบระบบอัตโนมัติ (Automated Testing) ทั้งหมด
+## 🚀 วิธีติดตั้งและรันโปรแกรม
 
-Technical Requirements
-Language: Python 3.12.10
+**ความต้องการของระบบ:** `Python 3.12.10`
 
-Environment: Virtual Environment (venv)
+```bash
+# 1. สร้าง Virtual Environment
+python -m venv venv
 
-Libraries: Kivy (UI Framework), Pytest (Testing Framework)
+# 2. เปิดใช้งาน (Activate) Virtual Environment
+# สำหรับ Windows:
+venv\Scripts\activate
+# สำหรับ Linux/Mac:
+source venv/bin/activate
 
-Installation & Setup
-ทำตามขั้นตอนต่อไปนี้เพื่อเตรียมสภาพแวดล้อมสำหรับการรันเกมและระบบเทสครับ:
-1.ติดตั้ง Python 3.12.10
+# 3. ติดตั้งไลบรารีที่จำเป็น
+pip install kivy pytest
 
-2.สร้าง Virtual Environment: python -m venv venv
+# 4. เริ่มเข้าสู่สมรภูมิ!
+python main.py
 
-3.Activate Virtual Environment: venv\Scripts\activate (Windows) หรือ source venv/bin/activate (Linux/Mac)
+ROGUELIKE-CHESS/
+├── logic/           # ระบบกระดาน (Board), หมาก (Pieces), Crash Logic, Item Logic และ AI Logic
+├── screens/         # ส่วนการแสดงผลและ UI ทั้งหมดโดยใช้ Kivy
+├── tests/           # รวมไฟล์ทดสอบระบบอัตโนมัติ (Automated Testing) ทั้งหมด
+└── main.py          # จุดเริ่มต้นการรันโปรแกรม
 
-4.ติดตั้ง Library ที่จำเป็น (Kivy, Pytest): pip install kivy pytest
-
-How to Run
-1.รันเกม: python main.py
-
-Development Team
-6810110200 นายปัณณวิชญ์ กังพานิช หน้าที่ เขียนระบบ passive ,hidden passive, ออกแบบร่างตัวเกมพืนฐานโดยใช้ figma และ เป็นคนปรับ balance เกม
-
-6810110220 นายพรหมธาดา คูนิอาจ  หน้าที่ setup base chess,เขียนระบบและออกแบบแมพ, uxui, sound effect ,testing ,เกมระบบ event และ ระบบ AI
-
-6810110432 นายอิศม์อนีติ เพ็งแจ่ม หน้าที่ เขียนส่วนของ logic เกม ระบบการ crash ,ระบบเผ่า, item และวาด artของเกม
-
+รหัสนักศึกษา,ชื่อ-นามสกุล,หน้าที่รับผิดชอบ
+6810110200,นายปัณณวิชญ์ กังพานิช,"เขียนระบบ Passive / Hidden Passive, ออกแบบร่างตัวเกมพื้นฐานด้วย Figma, ปรับสมดุลเกม (Balance)"
+6810110220,นายพรหมธาดา คูนิอาจ,"Setup Base Chess, เขียนระบบและออกแบบแผนที่, UX/UI, Sound Effect, Testing, ระบบ Event และระบบ AI"
+6810110432,นายอิศม์อนีติ เพ็งแจ่ม,"เขียนระบบ Logic เกม, ระบบการ Crash, ระบบเผ่าพันธุ์, ระบบไอเทม และวาด Art ของเกม"
