@@ -337,6 +337,7 @@ class GameplayScreen(Screen):
             atk, df = self.game.board[start_pos[0]][start_pos[1]], self.game.board[end_pos[0]][end_pos[1]]
             if df: df.item = None
             if atk: atk.has_moved = True
+            self.game.en_passant_target = None
             self.game.history.save_state(self.game, "Shield Blocked!"); self.game.complete_turn(); self.init_board_ui(); self.check_ai_turn()
             return
             

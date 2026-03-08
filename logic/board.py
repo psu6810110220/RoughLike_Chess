@@ -138,6 +138,7 @@ class ChessBoard:
             self.history.save_state(self, move_text)
             
         if is_capture and resolve_crash:
+            self.en_passant_target = None
             if crash_won == "died": # 🛡️ ฝ่ายรับ (Defender) ชนะการปะทะ
                 effect_result = apply_post_crash_effects(self, p, captured_piece, True, sr, sc, er, ec)
                 p.has_moved = True

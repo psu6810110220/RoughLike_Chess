@@ -123,7 +123,12 @@ class Pawn(Piece):
         # เดินตรง 2 ช่องจากจุดเริ่มต้น
         if sc == ec and sr == (6 if self.color == 'white' else 1) and er == sr + 2*dr and not target and not b[sr+dr][sc]: return True
         # กินหมากเฉียง (รวมถึง En Passant)
-        if abs(sc - ec) == 1 and er == sr + dr and (target or (ep_target and (er, ec) == ep_target)): return True
+        if abs(sc - ec) == 1 and er == sr + dr:
+            if target: return True
+            if ep_target and (er, ec) == ep_target:
+                ep_pawn = b[sr][ec]
+                if ep_pawn and getattr(ep_pawn, 'color', None) != self.color and isinstance(ep_pawn, Pawn):
+                    return True
         return False
 
 class Obstacle(Piece):
