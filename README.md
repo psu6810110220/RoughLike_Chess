@@ -1,6 +1,7 @@
 # ♟️ ROGUELIKE CHESS — Enter the Dark Battlefield
 
-> เกมหมากรุกที่ผสมผสานกลิ่นอายความเป็น Roguelike เข้าไปอย่างลงตัว | พัฒนาด้วย Python + Kivy
+> เกมหมากรุกที่ผสมผสานกลิ่นอายความเป็น Roguelike เข้าไปอย่างลงตัว ด้วย concept All or nothing 
+> พัฒนาด้วย Python + Kivy
 
 ---
 
